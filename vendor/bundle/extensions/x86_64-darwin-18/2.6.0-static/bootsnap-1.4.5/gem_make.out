@@ -1,0 +1,15 @@
+current directory: /Users/hoguchi/media_sample/vendor/bundle/gems/bootsnap-1.4.5/ext/bootsnap
+/Users/hoguchi/.rbenv/versions/2.6.3/bin/ruby -I /Users/hoguchi/.rbenv/versions/2.6.3/lib/ruby/2.6.0 -r ./siteconf20191022-1126-1gi6omk.rb extconf.rb
+creating Makefile
+
+current directory: /Users/hoguchi/media_sample/vendor/bundle/gems/bootsnap-1.4.5/ext/bootsnap
+make "DESTDIR=" clean
+
+current directory: /Users/hoguchi/media_sample/vendor/bundle/gems/bootsnap-1.4.5/ext/bootsnap
+make "DESTDIR="
+compiling bootsnap.c
+linking shared-object bootsnap/bootsnap.bundle
+
+current directory: /Users/hoguchi/media_sample/vendor/bundle/gems/bootsnap-1.4.5/ext/bootsnap
+make "DESTDIR=" install
+/usr/bin/install -c -m 0755 bootsnap.bundle ./.gem.20191022-1126-3l2j14/bootsnap
