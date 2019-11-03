@@ -1,0 +1,21 @@
+<div class="container">
+  <h1 class="purple lighten-5 center">ペットたち</h1>
+  <div class="row">
+    <% @posts.each do |post| %>
+      <div class="col s12 m7">
+        <div class="card">
+          <div class="card-image">
+            <%= image_tag post.image.to_s %>
+            <span class="card-title">
+              <%= post.title %>
+            </span>
+            <div class="card-contents">
+              <%= post.content %>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>
+
