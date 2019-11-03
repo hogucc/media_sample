@@ -3,14 +3,14 @@
 module ActiveSupport
   module RangeWithFormat
     RANGE_FORMATS = {
-      db: -> (start, stop) do
+      db: lambda do |start, stop|
         case start
         when String then "BETWEEN '#{start}' AND '#{stop}'"
         else
           "BETWEEN '#{start.to_s(:db)}' AND '#{stop.to_s(:db)}'"
         end
       end
-    }
+    }.freeze
 
     # Convert range to a formatted string. See RANGE_FORMATS for predefined formats.
     #
@@ -33,8 +33,8 @@ module ActiveSupport
       end
     end
 
-    alias_method :to_default_s, :to_s
-    alias_method :to_formatted_s, :to_s
+    alias to_default_s to_s
+    alias to_formatted_s to_s
   end
 end
 

@@ -18,23 +18,24 @@ module ActiveModel
       end
 
       private
-        def setup!(klass)
-          klass.attr_reader(*attributes.map do |attribute|
-            :"#{attribute}_confirmation" unless klass.method_defined?(:"#{attribute}_confirmation")
-          end.compact)
 
-          klass.attr_writer(*attributes.map do |attribute|
-            :"#{attribute}_confirmation" unless klass.method_defined?(:"#{attribute}_confirmation=")
-          end.compact)
-        end
+      def setup!(klass)
+        klass.attr_reader(*attributes.map do |attribute|
+          :"#{attribute}_confirmation" unless klass.method_defined?(:"#{attribute}_confirmation")
+        end.compact)
 
-        def confirmation_value_equal?(record, attribute, value, confirmed)
-          if !options[:case_sensitive] && value.is_a?(String)
-            value.casecmp(confirmed) == 0
-          else
-            value == confirmed
-          end
+        klass.attr_writer(*attributes.map do |attribute|
+          :"#{attribute}_confirmation" unless klass.method_defined?(:"#{attribute}_confirmation=")
+        end.compact)
+      end
+
+      def confirmation_value_equal?(_record, _attribute, value, confirmed)
+        if !options[:case_sensitive] && value.is_a?(String)
+          value.casecmp(confirmed) == 0
+        else
+          value == confirmed
         end
+      end
     end
 
     module HelperMethods

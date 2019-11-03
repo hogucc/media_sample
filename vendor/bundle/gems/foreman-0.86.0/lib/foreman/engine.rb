@@ -1,16 +1,13 @@
-require "foreman"
-require "foreman/env"
-require "foreman/process"
-require "foreman/procfile"
-require "tempfile"
-require "fileutils"
-require "thread"
-
+require 'foreman'
+require 'foreman/env'
+require 'foreman/process'
+require 'foreman/procfile'
+require 'tempfile'
+require 'fileutils'
 class Foreman::Engine
-
   # The signals that the engine cares about.
   #
-  HANDLED_SIGNALS = [ :TERM, :INT, :HUP, :USR1, :USR2 ]
+  HANDLED_SIGNALS = [:TERM, :INT, :HUP, :USR1, :USR2].freeze
 
   attr_reader :env
   attr_reader :options
@@ -24,10 +21,10 @@ class Foreman::Engine
   # @option options [Fixnum] :port      (5000)     The base port to assign to processes
   # @option options [String] :root      (Dir.pwd)  The root directory from which to run processes
   #
-  def initialize(options={})
+  def initialize(options = {})
     @options = options.dup
 
-    @options[:formation] ||= "all=1"
+    @options[:formation] ||= 'all=1'
     @options[:timeout] ||= 5
 
     @env       = {}
@@ -42,7 +39,7 @@ class Foreman::Engine
     reader, writer       = create_pipe
     reader.close_on_exec = true if reader.respond_to?(:close_on_exec)
     writer.close_on_exec = true if writer.respond_to?(:close_on_exec)
-    @selfpipe            = { :reader => reader, :writer => writer }
+    @selfpipe            = { reader: reader, writer: writer }
 
     # Set up a global signal queue
     # http://blog.rubybestpractices.com/posts/ewong/016-Implementing-Signal-Handlers.html
@@ -66,9 +63,7 @@ class Foreman::Engine
   #
   def register_signal_handlers
     HANDLED_SIGNALS.each do |sig|
-      if ::Signal.list.include? sig.to_s
-        trap(sig) { Thread.main[:signal_queue] << sig ; notice_signal }
-      end
+      trap(sig) { Thread.main[:signal_queue] << sig; notice_signal } if ::Signal.list.include? sig.to_s
     end
   end
 
@@ -83,7 +78,7 @@ class Foreman::Engine
   # Wake the main thread up via the selfpipe when there's a signal
   #
   def notice_signal
-    @selfpipe[:writer].write_nonblock( '.' )
+    @selfpipe[:writer].write_nonblock('.')
   rescue Errno::EAGAIN
     # Ignore writes that would block
   rescue Errno::EINTR
@@ -114,21 +109,21 @@ class Foreman::Engine
   # Handle a TERM signal
   #
   def handle_term_signal
-    system "SIGTERM received, starting shutdown"
+    system 'SIGTERM received, starting shutdown'
     @shutdown = true
   end
 
   # Handle an INT signal
   #
   def handle_interrupt
-    system "SIGINT received, starting shutdown"
+    system 'SIGINT received, starting shutdown'
     @shutdown = true
   end
 
   # Handle a HUP signal
   #
   def handle_hangup
-    system "SIGHUP received, starting shutdown"
+    system 'SIGHUP received, starting shutdown'
     @shutdown = true
   end
 
@@ -145,9 +140,9 @@ class Foreman::Engine
   #
   # @option options [Hash] :env  A custom environment for this process
   #
-  def register(name, command, options={})
+  def register(name, command, options = {})
     options[:env] ||= env
-    options[:cwd] ||= File.dirname(command.split(" ").first)
+    options[:cwd] ||= File.dirname(command.split(' ').first)
     process = Foreman::Process.new(command, options)
     @names[process] = name
     @processes << process
@@ -167,7 +162,7 @@ class Foreman::Engine
   def load_procfile(filename)
     options[:root] ||= File.dirname(filename)
     Foreman::Procfile.new(filename).entries do |name, command|
-      register name, command, :cwd => options[:root]
+      register name, command, cwd: options[:root]
     end
     self
   end
@@ -186,9 +181,9 @@ class Foreman::Engine
   #
   # @param [String] signal  The signal to send to each process
   #
-  def kill_children(signal="SIGTERM")
+  def kill_children(signal = 'SIGTERM')
     if Foreman.windows?
-      @running.each do |pid, (process, index)|
+      @running.each do |pid, (_process, _index)|
         system "sending #{signal} to #{name_for(pid)} at pid #{pid}"
         begin
           Process.kill(signal, pid)
@@ -208,7 +203,7 @@ class Foreman::Engine
   #
   # @param [String] signal  The signal to send
   #
-  def killall(signal="SIGTERM")
+  def killall(signal = 'SIGTERM')
     if Foreman.windows?
       kill_children(signal)
     else
@@ -268,7 +263,7 @@ class Foreman::Engine
   #
   # @returns [Fixnum] port  The port to use for this instance of this process
   #
-  def port_for(process, instance, base=nil)
+  def port_for(process, instance, base = nil)
     if base
       base + (@processes.index(process.process) * 100) + (instance - 1)
     else
@@ -281,7 +276,7 @@ class Foreman::Engine
   # @returns [Fixnum] port  The base port
   #
   def base_port
-    (options[:port] || env["PORT"] || ENV["PORT"] || 5000).to_i
+    (options[:port] || env['PORT'] || ENV['PORT'] || 5000).to_i
   end
 
   # deprecated
@@ -289,26 +284,26 @@ class Foreman::Engine
     env
   end
 
-private
+  private
 
-### Engine API ######################################################
+  ### Engine API ######################################################
 
   def startup
-    raise TypeError, "must use a subclass of Foreman::Engine"
+    raise TypeError, 'must use a subclass of Foreman::Engine'
   end
 
-  def output(name, data)
-    raise TypeError, "must use a subclass of Foreman::Engine"
+  def output(_name, _data)
+    raise TypeError, 'must use a subclass of Foreman::Engine'
   end
 
   def shutdown
-    raise TypeError, "must use a subclass of Foreman::Engine"
+    raise TypeError, 'must use a subclass of Foreman::Engine'
   end
 
-## Helpers ##########################################################
+  ## Helpers ##########################################################
 
   def create_pipe
-    IO.method(:pipe).arity.zero? ? IO.pipe : IO.pipe("BINARY")
+    IO.method(:pipe).arity.zero? ? IO.pipe : IO.pipe('BINARY')
   end
 
   def name_for(pid)
@@ -317,16 +312,15 @@ private
   end
 
   def name_for_index(process, index)
-    [ @names[process], index.to_s ].compact.join(".")
+    [@names[process], index.to_s].compact.join('.')
   end
 
   def parse_formation(formation)
-    pairs = formation.to_s.gsub(/\s/, "").split(",")
+    pairs = formation.to_s.gsub(/\s/, '').split(',')
 
-    pairs.inject(Hash.new(0)) do |ax, pair|
-      process, amount = pair.split("=")
-      process == "all" ? ax.default = amount.to_i : ax[process] = amount.to_i
-      ax
+    pairs.each_with_object(Hash.new(0)) do |pair, ax|
+      process, amount = pair.split('=')
+      process == 'all' ? ax.default = amount.to_i : ax[process] = amount.to_i
     end
   end
 
@@ -337,7 +331,7 @@ private
   end
 
   def system(message)
-    output_with_mutex "system", message
+    output_with_mutex 'system', message
   end
 
   def termination_message_for(status)
@@ -346,7 +340,7 @@ private
     elsif status.signaled?
       "terminated by SIG#{Signal.list.invert[status.termsig]}"
     else
-      "died a mysterious death"
+      'died a mysterious death'
     end
   end
 
@@ -357,17 +351,17 @@ private
     end
   end
 
-## Engine ###########################################################
+  ## Engine ###########################################################
 
   def spawn_processes
     @processes.each do |process|
       1.upto(formation[@names[process]]) do |n|
         reader, writer = create_pipe
         begin
-          pid = process.run(:output => writer, :env => {
-            "PORT" => port_for(process, n).to_s,
-            "PS" => name_for_index(process, n)
-          })
+          pid = process.run(output: writer, env: {
+                              'PORT' => port_for(process, n).to_s,
+                              'PS' => name_for_index(process, n)
+                            })
           writer.puts "started with pid #{pid}"
         rescue Errno::ENOENT
           writer.puts "unknown command: #{process.command}"
@@ -386,7 +380,7 @@ private
 
   def handle_signals
     while sig = Thread.main[:signal_queue].shift
-      self.handle_signal(sig)
+      handle_signal(sig)
     end
   end
 
@@ -395,7 +389,7 @@ private
       next if reader == @selfpipe[:reader]
 
       if reader.eof?
-        @readers.delete_if { |key, value| value == reader }
+        @readers.delete_if { |_key, value| value == reader }
       else
         data = reader.gets
         output_with_mutex name_for(@readers.invert[reader]), data
@@ -405,17 +399,15 @@ private
 
   def watch_for_output
     Thread.new do
-      begin
-        loop do
-          io = IO.select([@selfpipe[:reader]] + @readers.values, nil, nil, 30)
-          read_self_pipe
-          handle_signals
-          handle_io(io ? io.first : [])
-        end
-      rescue Exception => ex
-        puts ex.message
-        puts ex.backtrace
+      loop do
+        io = IO.select([@selfpipe[:reader]] + @readers.values, nil, nil, 30)
+        read_self_pipe
+        handle_signals
+        handle_io(io ? io.first : [])
       end
+    rescue Exception => e
+      puts e.message
+      puts e.backtrace
     end
   end
 
@@ -443,8 +435,8 @@ private
     # Check if any of the children have died off
     pid, status = begin
       Process.wait2(-1, Process::WNOHANG)
-    rescue Errno::ECHILD
-      return nil
+                  rescue Errno::ECHILD
+                    return nil
     end
 
     # record the exit status
@@ -458,7 +450,7 @@ private
 
     # Delete it from the list of running processes and return its pid
     @running.delete(pid)
-    return pid
+    pid
   end
 
   def terminate_gracefully
@@ -466,17 +458,18 @@ private
 
     # Tell all children to stop gracefully
     if Foreman.windows?
-      system  "sending SIGKILL to all processes"
-      kill_children "SIGKILL"
+      system 'sending SIGKILL to all processes'
+      kill_children 'SIGKILL'
     else
-      system  "sending SIGTERM to all processes"
-      kill_children "SIGTERM"
+      system 'sending SIGTERM to all processes'
+      kill_children 'SIGTERM'
     end
 
     # Wait for all children to stop or until the time comes to kill them all
     start_time = Time.now
     while Time.now - start_time <= options[:timeout]
       return if @running.empty?
+
       check_for_termination
 
       # Sleep for a moment and do not blow up if more signals are coming our way
@@ -488,7 +481,7 @@ private
     end
 
     # Ok, we have no other option than to kill all of our children
-    system  "sending SIGKILL to all processes"
-    kill_children "SIGKILL"
+    system 'sending SIGKILL to all processes'
+    kill_children 'SIGKILL'
   end
 end

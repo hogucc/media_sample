@@ -38,9 +38,10 @@ module ActiveRecord
       end
 
       private
-        def klasses
-          Thread.current[:no_touching_classes] ||= []
-        end
+
+      def klasses
+        Thread.current[:no_touching_classes] ||= []
+      end
     end
 
     # Returns +true+ if the class has +no_touching+ set, +false+ otherwise.

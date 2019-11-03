@@ -1,9 +1,9 @@
-require "execjs/runtime"
+require 'execjs/runtime'
 
 module ExecJS
   class RubyRhinoRuntime < Runtime
     class Context < Runtime::Context
-      def initialize(runtime, source = "", options = {})
+      def initialize(_runtime, source = '', _options = {})
         source = encode(source)
 
         @rhino_context = ::Rhino::Context.new
@@ -21,7 +21,7 @@ module ExecJS
         end
       end
 
-      def eval(source, options = {})
+      def eval(source, _options = {})
         source = encode(source)
 
         if /\S/ =~ source
@@ -38,18 +38,17 @@ module ExecJS
       end
 
       def unbox(value)
-        case value = ::Rhino::to_ruby(value)
+        case value = ::Rhino.to_ruby(value)
         when Java::OrgMozillaJavascript::NativeFunction
           nil
         when Java::OrgMozillaJavascript::NativeObject
-          value.inject({}) do |vs, (k, v)|
+          value.each_with_object({}) do |(k, v), vs|
             case v
             when Java::OrgMozillaJavascript::NativeFunction, ::Rhino::JS::Function
               nil
             else
               vs[k] = unbox(v)
             end
-            vs
           end
         when Array
           value.map { |v| unbox(v) }
@@ -61,11 +60,11 @@ module ExecJS
       def wrap_error(e)
         return e unless e.is_a?(::Rhino::JSError)
 
-        error_class = e.message == "syntax error" ? RuntimeError : ProgramError
+        error_class = e.message == 'syntax error' ? RuntimeError : ProgramError
 
         stack = e.backtrace
-        stack = stack.map { |line| line.sub(" at ", "").sub("<eval>", "(execjs)").strip }
-        stack.unshift("(execjs):1") if e.javascript_backtrace.empty?
+        stack = stack.map { |line| line.sub(' at ', '').sub('<eval>', '(execjs)').strip }
+        stack.unshift('(execjs):1') if e.javascript_backtrace.empty?
 
         error = error_class.new(e.value.to_s)
         error.set_backtrace(stack)
@@ -73,22 +72,23 @@ module ExecJS
       end
 
       private
-        # Disables bytecode compiling which limits you to 64K scripts
-        def fix_memory_limit!(context)
-          if context.respond_to?(:optimization_level=)
-            context.optimization_level = -1
-          else
-            context.instance_eval { @native.setOptimizationLevel(-1) }
-          end
+
+      # Disables bytecode compiling which limits you to 64K scripts
+      def fix_memory_limit!(context)
+        if context.respond_to?(:optimization_level=)
+          context.optimization_level = -1
+        else
+          context.instance_eval { @native.setOptimizationLevel(-1) }
         end
+      end
     end
 
     def name
-      "therubyrhino (Rhino)"
+      'therubyrhino (Rhino)'
     end
 
     def available?
-      require "rhino"
+      require 'rhino'
       true
     rescue LoadError
       false

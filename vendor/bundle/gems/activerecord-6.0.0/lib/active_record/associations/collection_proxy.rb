@@ -134,6 +134,7 @@ module ActiveRecord
       #   #    ]
       def find(*args)
         return super if block_given?
+
         @association.find(*args)
       end
 
@@ -315,7 +316,7 @@ module ActiveRecord
       def build(attributes = {}, &block)
         @association.build(attributes, &block)
       end
-      alias_method :new, :build
+      alias new build
 
       # Returns a new object of the collection type that has been instantiated with
       # attributes, linked to this object and that has already been saved (if it
@@ -1025,12 +1026,12 @@ module ActiveRecord
       def <<(*records)
         proxy_association.concat(records) && self
       end
-      alias_method :push, :<<
-      alias_method :append, :<<
-      alias_method :concat, :<<
+      alias push <<
+      alias append <<
+      alias concat <<
 
-      def prepend(*args) # :nodoc:
-        raise NoMethodError, "prepend on association is not defined. Please use <<, push or append"
+      def prepend(*_args) # :nodoc:
+        raise NoMethodError, 'prepend on association is not defined. Please use <<, push or append'
       end
 
       # Equivalent to +delete_all+. The difference is that returns +self+, instead
@@ -1093,36 +1094,36 @@ module ActiveRecord
 
       delegate_methods = [
         QueryMethods,
-        SpawnMethods,
-      ].flat_map { |klass|
+        SpawnMethods
+      ].flat_map do |klass|
         klass.public_instance_methods(false)
-      } - self.public_instance_methods(false) - [:select] + [:scoping, :values]
+      end - public_instance_methods(false) - [:select] + [:scoping, :values]
 
       delegate(*delegate_methods, to: :scope)
 
       private
 
-        def find_nth_with_limit(index, limit)
-          load_target if find_from_target?
-          super
-        end
+      def find_nth_with_limit(index, limit)
+        load_target if find_from_target?
+        super
+      end
 
-        def find_nth_from_last(index)
-          load_target if find_from_target?
-          super
-        end
+      def find_nth_from_last(index)
+        load_target if find_from_target?
+        super
+      end
 
-        def null_scope?
-          @association.null_scope?
-        end
+      def null_scope?
+        @association.null_scope?
+      end
 
-        def find_from_target?
-          @association.find_from_target?
-        end
+      def find_from_target?
+        @association.find_from_target?
+      end
 
-        def exec_queries
-          load_target
-        end
+      def exec_queries
+        load_target
+      end
     end
   end
 end

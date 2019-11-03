@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require "byebug/subcommands"
+require 'byebug/subcommands'
 
-require "byebug/commands/enable/breakpoints"
-require "byebug/commands/enable/display"
+require 'byebug/commands/enable/breakpoints'
+require 'byebug/commands/enable/display'
 
 module Byebug
   #
@@ -27,7 +27,7 @@ module Byebug
     end
 
     def self.short_description
-      "Enables breakpoints or displays"
+      'Enables breakpoints or displays'
     end
   end
 end

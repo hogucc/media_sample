@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "strscan"
+require 'strscan'
 
 module ActionDispatch
   module Journey # :nodoc:
@@ -24,13 +24,13 @@ module ActionDispatch
           input = StringScanner.new(string)
           state = tt.eclosure(0)
           until input.eos?
-            sym   = input.scan(%r([/.?]|[^/.?]+))
+            sym   = input.scan(%r{[/.?]|[^/.?]+})
             state = tt.eclosure(tt.move(state, sym))
           end
 
-          acceptance_states = state.find_all { |s|
-            tt.accepting?(tt.eclosure(s).sort.last)
-          }
+          acceptance_states = state.find_all do |s|
+            tt.accepting?(tt.eclosure(s).max)
+          end
 
           return if acceptance_states.empty?
 
@@ -39,8 +39,8 @@ module ActionDispatch
           MatchData.new(memos)
         end
 
-        alias :=~    :simulate
-        alias :match :simulate
+        alias =~    simulate
+        alias match simulate
       end
     end
   end

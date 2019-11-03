@@ -60,7 +60,7 @@ module ActiveModel
             options = options.dup
             options[:on] = Array(options[:on])
             options[:if] = Array(options[:if])
-            options[:if].unshift ->(o) {
+            options[:if].unshift lambda { |o|
               !(options[:on] & Array(o.validation_context)).empty?
             }
           end
@@ -102,7 +102,7 @@ module ActiveModel
           if options.key?(:on)
             options[:on] = Array(options[:on])
             options[:if] = Array(options[:if])
-            options[:if].unshift ->(o) {
+            options[:if].unshift lambda { |o|
               !(options[:on] & Array(o.validation_context)).empty?
             }
           end
@@ -111,7 +111,7 @@ module ActiveModel
         end
       end
 
-    private
+      private
 
       # Overwrite run validations to include callbacks.
       def run_validations!

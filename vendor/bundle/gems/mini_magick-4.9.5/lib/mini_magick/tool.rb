@@ -1,4 +1,4 @@
-require "mini_magick/shell"
+require 'mini_magick/shell'
 
 module MiniMagick
   ##
@@ -14,9 +14,8 @@ module MiniMagick
   #   end
   #
   class Tool
-
     CREATION_OPERATORS = %w[xc canvas logo rose gradient radial-gradient plasma
-                            pattern text pango]
+                            pattern text pango].freeze
 
     ##
     # Aside from classic instantiation, it also accepts a block, and then
@@ -51,7 +50,7 @@ module MiniMagick
     #     identify.help # returns exit status 1, which would otherwise throw an error
     #   end
     def initialize(name, options = {})
-      warn "MiniMagick::Tool.new(false) is deprecated and will be removed in MiniMagick 5, use MiniMagick::Tool.new(whiny: false) instead." if !options.is_a?(Hash)
+      warn 'MiniMagick::Tool.new(false) is deprecated and will be removed in MiniMagick 5, use MiniMagick::Tool.new(whiny: false) instead.' unless options.is_a?(Hash)
 
       @name  = name
       @args  = []
@@ -80,7 +79,7 @@ module MiniMagick
     #
     def call(*args)
       options = args[-1].is_a?(Hash) ? args.pop : {}
-      warn "Passing whiny to MiniMagick::Tool#call is deprecated and will be removed in MiniMagick 5, use MiniMagick::Tool.new(whiny: false) instead." if args.any?
+      warn 'Passing whiny to MiniMagick::Tool#call is deprecated and will be removed in MiniMagick 5, use MiniMagick::Tool.new(whiny: false) instead.' if args.any?
       whiny = args.fetch(0, @whiny)
 
       options[:whiny] = whiny
@@ -130,8 +129,8 @@ module MiniMagick
     #
     def executable
       exe = [name]
-      exe.unshift "magick" if MiniMagick.imagemagick7? && name != "magick"
-      exe.unshift "gm" if MiniMagick.graphicsmagick?
+      exe.unshift 'magick' if MiniMagick.imagemagick7? && name != 'magick'
+      exe.unshift 'gm' if MiniMagick.graphicsmagick?
       exe.unshift File.join(MiniMagick.cli_path, exe.shift) if MiniMagick.cli_path
       Array(MiniMagick.cli_prefix).reverse_each { |p| exe.unshift p } if MiniMagick.cli_prefix
       exe
@@ -171,7 +170,7 @@ module MiniMagick
     #
     def +(*values)
       args[-1] = args[-1].sub(/^-/, '+')
-      self.merge!(values)
+      merge!(values)
       self
     end
 
@@ -191,9 +190,9 @@ module MiniMagick
     #   # executes `convert wand.gif \( wizard.gif -rotate 30 \) +append images.gif`
     #
     def stack
-      self << "("
+      self << '('
       yield self
-      self << ")"
+      self << ')'
     end
 
     ##
@@ -206,7 +205,7 @@ module MiniMagick
     #   # executes `identify -` with the given standard input
     #
     def stdin
-      self << "-"
+      self << '-'
     end
 
     ##
@@ -221,7 +220,7 @@ module MiniMagick
     #   # executes `convert input.jpg -auto-orient -` which returns file contents
     #
     def stdout
-      self << "-"
+      self << '-'
     end
 
     ##
@@ -244,7 +243,7 @@ module MiniMagick
     #
     def clone(*args)
       self << '-clone'
-      self.merge!(args)
+      merge!(args)
       self
     end
 
@@ -259,39 +258,38 @@ module MiniMagick
     def method_missing(name, *args)
       option = "-#{name.to_s.tr('_', '-')}"
       self << option
-      self.merge!(args)
+      merge!(args)
       self
     end
 
     def self.option_methods
-      @option_methods ||= (
+      @option_methods ||= begin
         tool = new(whiny: false)
-        tool << "-help"
+        tool << '-help'
         help_page = tool.call(stderr: false)
 
         cli_options = help_page.scan(/^\s+-[a-z\-]+/).map(&:strip)
-        if tool.name == "mogrify" && MiniMagick.graphicsmagick?
+        if tool.name == 'mogrify' && MiniMagick.graphicsmagick?
           # These options were undocumented before 2015-06-14 (see gm bug 302)
           cli_options |= %w[-box -convolve -gravity -linewidth -mattecolor -render -shave]
         end
 
-        cli_options.map { |o| o[1..-1].tr('-','_') }
-      )
+        cli_options.map { |o| o[1..-1].tr('-', '_') }
+      end
     end
-
   end
 end
 
-require "mini_magick/tool/animate"
-require "mini_magick/tool/compare"
-require "mini_magick/tool/composite"
-require "mini_magick/tool/conjure"
-require "mini_magick/tool/convert"
-require "mini_magick/tool/display"
-require "mini_magick/tool/identify"
-require "mini_magick/tool/import"
-require "mini_magick/tool/magick"
-require "mini_magick/tool/mogrify"
-require "mini_magick/tool/mogrify_restricted"
-require "mini_magick/tool/montage"
-require "mini_magick/tool/stream"
+require 'mini_magick/tool/animate'
+require 'mini_magick/tool/compare'
+require 'mini_magick/tool/composite'
+require 'mini_magick/tool/conjure'
+require 'mini_magick/tool/convert'
+require 'mini_magick/tool/display'
+require 'mini_magick/tool/identify'
+require 'mini_magick/tool/import'
+require 'mini_magick/tool/magick'
+require 'mini_magick/tool/mogrify'
+require 'mini_magick/tool/mogrify_restricted'
+require 'mini_magick/tool/montage'
+require 'mini_magick/tool/stream'

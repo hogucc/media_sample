@@ -10,9 +10,7 @@ require 'rspec/shared_spec_matchers'
 #   Selenium::WebDriver::Edge::Service.driver_path = '/usr/local/bin/msedgedriver'
 # end
 
-if ::Selenium::WebDriver::Platform.mac?
-  Selenium::WebDriver::EdgeChrome.path = '/Applications/Microsoft Edge Dev.app/Contents/MacOS/Microsoft Edge Dev'
-end
+Selenium::WebDriver::EdgeChrome.path = '/Applications/Microsoft Edge Dev.app/Contents/MacOS/Microsoft Edge Dev' if ::Selenium::WebDriver::Platform.mac?
 
 Capybara.register_driver :selenium_edge do |app|
   # ::Selenium::WebDriver.logger.level = "debug"
@@ -28,7 +26,7 @@ module TestSessions
   SeleniumEdge = Capybara::Session.new(:selenium_edge, TestApp)
 end
 
-skipped_tests = %i[response_headers status_code trigger]
+skipped_tests = [:response_headers, :status_code, :trigger]
 
 Capybara::SpecHelper.log_selenium_driver_version(Selenium::WebDriver::EdgeChrome) if ENV['CI']
 

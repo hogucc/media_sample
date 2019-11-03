@@ -16,7 +16,6 @@ require 'builder'
 require 'builder/xmlevents'
 
 class TestEvents < Builder::Test
-
   class Target
     attr_reader :events
 
@@ -31,17 +30,15 @@ class TestEvents < Builder::Test
     def end_tag(tag)
       @events << [:end_tag, tag]
     end
-    
+
     def text(string)
       @events << [:text, string]
     end
-    
   end
-
 
   def setup
     @target = Target.new
-    @xml = Builder::XmlEvents.new(:target=>@target)
+    @xml = Builder::XmlEvents.new(target: @target)
   end
 
   def test_simple
@@ -61,81 +58,81 @@ class TestEvents < Builder::Test
   end
 
   def test_text
-    @xml.one("a")
+    @xml.one('a')
     expect [:start_tag, :one, nil]
-    expect [:text, "a"]
+    expect [:text, 'a']
     expect [:end_tag, :one]
     expect_done
   end
 
   def test_special_text
-    @xml.one("H&R")
+    @xml.one('H&R')
     expect [:start_tag, :one, nil]
-    expect [:text, "H&R"]
+    expect [:text, 'H&R']
     expect [:end_tag, :one]
     expect_done
   end
 
   def test_text_with_entity
-    @xml.one("H&amp;R")
+    @xml.one('H&amp;R')
     expect [:start_tag, :one, nil]
-    expect [:text, "H&amp;R"]
+    expect [:text, 'H&amp;R']
     expect [:end_tag, :one]
     expect_done
   end
 
   def test_attributes
-    @xml.a(:b=>"c", :x=>"y")
-    expect [:start_tag, :a, {:x => "y", :b => "c"}]
+    @xml.a(b: 'c', x: 'y')
+    expect [:start_tag, :a, { x: 'y', b: 'c' }]
     expect [:end_tag, :a]
     expect_done
   end
 
   def test_moderately_complex
-    @xml.tag! "address-book" do |x|
-      x.entry :id=>"1" do
-	x.name {
-	  x.first "Bill"
-	  x.last "Smith"
-	}
-	x.address "Cincinnati"
+    @xml.tag! 'address-book' do |x|
+      x.entry id: '1' do
+        x.name do
+          x.first 'Bill'
+          x.last 'Smith'
+        end
+        x.address 'Cincinnati'
       end
-      x.entry :id=>"2" do
-	x.name {
-	  x.first "John"
-	  x.last "Doe"
-	}
-	x.address "Columbus"
+      x.entry id: '2' do
+        x.name do
+          x.first 'John'
+          x.last 'Doe'
+        end
+        x.address 'Columbus'
       end
     end
-    expect [:start_tag, "address-book".intern, nil]
-    expect [:start_tag, :entry, {:id => "1"}]
+    expect [:start_tag, 'address-book'.intern, nil]
+    expect [:start_tag, :entry, { id: '1' }]
     expect [:start_tag, :name, nil]
     expect [:start_tag, :first, nil]
-    expect [:text, "Bill"]
+    expect [:text, 'Bill']
     expect [:end_tag, :first]
     expect [:start_tag, :last, nil]
-    expect [:text, "Smith"]
+    expect [:text, 'Smith']
     expect [:end_tag, :last]
     expect [:end_tag, :name]
     expect [:start_tag, :address, nil]
-    expect [:text, "Cincinnati"]
+    expect [:text, 'Cincinnati']
     expect [:end_tag, :address]
     expect [:end_tag, :entry]
-    expect [:start_tag, :entry, {:id => "2"}]
+    expect [:start_tag, :entry, { id: '2' }]
     expect [:start_tag, :name, nil]
     expect [:start_tag, :first, nil]
-    expect [:text, "John"]
+    expect [:text, 'John']
     expect [:end_tag, :first]
     expect [:start_tag, :last, nil]
-    expect [:text, "Doe"]
+    expect [:text, 'Doe']
     expect [:end_tag, :last]
     expect [:end_tag, :name]
     expect [:start_tag, :address, nil]
-    expect [:text, "Columbus"]
+    expect [:text, 'Columbus']
     expect [:end_tag, :address]
     expect [:end_tag, :entry]
-    expect [:end_tag, "address-book".intern]
+    expect [:end_tag, 'address-book'.intern]
     expect_done
   end
 
@@ -146,5 +143,4 @@ class TestEvents < Builder::Test
   def expect_done
     assert_nil @target.events.shift
   end
-
 end

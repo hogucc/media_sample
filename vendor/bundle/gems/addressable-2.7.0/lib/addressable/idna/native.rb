@@ -17,8 +17,7 @@
 #    limitations under the License.
 #++
 
-
-require "idn"
+require 'idn'
 
 module Addressable
   module IDNA
@@ -26,9 +25,9 @@ module Addressable
       IDN::Punycode.encode(value.to_s)
     end
 
-     def self.punycode_decode(value)
-       IDN::Punycode.decode(value.to_s)
-     end
+    def self.punycode_decode(value)
+      IDN::Punycode.decode(value.to_s)
+    end
 
     def self.unicode_normalize_kc(value)
       IDN::Stringprep.nfkc_normalize(value.to_s)
@@ -36,7 +35,7 @@ module Addressable
 
     def self.to_ascii(value)
       value.to_s.split('.', -1).map do |segment|
-        if segment.size > 0 && segment.size < 64
+        if !segment.empty? && segment.size < 64
           IDN::Idna.toASCII(segment, IDN::Idna::ALLOW_UNASSIGNED)
         elsif segment.size >= 64
           segment
@@ -48,7 +47,7 @@ module Addressable
 
     def self.to_unicode(value)
       value.to_s.split('.', -1).map do |segment|
-        if segment.size > 0 && segment.size < 64
+        if !segment.empty? && segment.size < 64
           IDN::Idna.toUnicode(segment, IDN::Idna::ALLOW_UNASSIGNED)
         elsif segment.size >= 64
           segment

@@ -1,5 +1,5 @@
 begin
-  require "readline"
+  require 'readline'
 rescue LoadError
 end
 
@@ -23,7 +23,7 @@ class Foreman::Thor
         end
       end
 
-    private
+      private
 
       def add_to_history?
         options.fetch(:add_to_history, true)
@@ -59,10 +59,10 @@ class Foreman::Thor
           relative_matches
         end
 
-      private
+        private
 
         def relative_matches
-          absolute_matches.map { |path| path.sub(base_path, "") }
+          absolute_matches.map { |path| path.sub(base_path, '') }
         end
 
         def absolute_matches

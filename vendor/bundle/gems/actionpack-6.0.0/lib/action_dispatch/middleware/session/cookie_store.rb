@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require "active_support/core_ext/hash/keys"
-require "action_dispatch/middleware/session/abstract_store"
-require "rack/session/cookie"
+require 'active_support/core_ext/hash/keys'
+require 'action_dispatch/middleware/session/abstract_store'
+require 'rack/session/cookie'
 
 module ActionDispatch
   module Session
@@ -51,10 +51,10 @@ module ActionDispatch
         super(app, options.merge!(cookie_only: true))
       end
 
-      def delete_session(req, session_id, options)
+      def delete_session(req, _session_id, options)
         new_sid = generate_sid unless options[:drop]
         # Reset hash and Assign the new session id
-        req.set_header("action_dispatch.request.unsigned_session_cookie", new_sid ? { "session_id" => new_sid } : {})
+        req.set_header('action_dispatch.request.unsigned_session_cookie', new_sid ? { 'session_id' => new_sid } : {})
         new_sid
       end
 
@@ -62,52 +62,52 @@ module ActionDispatch
         stale_session_check! do
           data = unpacked_cookie_data(req)
           data = persistent_session_id!(data)
-          [data["session_id"], data]
+          [data['session_id'], data]
         end
       end
 
       private
 
-        def extract_session_id(req)
-          stale_session_check! do
-            unpacked_cookie_data(req)["session_id"]
-          end
+      def extract_session_id(req)
+        stale_session_check! do
+          unpacked_cookie_data(req)['session_id']
         end
+      end
 
-        def unpacked_cookie_data(req)
-          req.fetch_header("action_dispatch.request.unsigned_session_cookie") do |k|
-            v = stale_session_check! do
-              if data = get_cookie(req)
-                data.stringify_keys!
-              end
-              data || {}
+      def unpacked_cookie_data(req)
+        req.fetch_header('action_dispatch.request.unsigned_session_cookie') do |k|
+          v = stale_session_check! do
+            if data = get_cookie(req)
+              data.stringify_keys!
             end
-            req.set_header k, v
+            data || {}
           end
+          req.set_header k, v
         end
+      end
 
-        def persistent_session_id!(data, sid = nil)
-          data ||= {}
-          data["session_id"] ||= sid || generate_sid
-          data
-        end
+      def persistent_session_id!(data, sid = nil)
+        data ||= {}
+        data['session_id'] ||= sid || generate_sid
+        data
+      end
 
-        def write_session(req, sid, session_data, options)
-          session_data["session_id"] = sid
-          session_data
-        end
+      def write_session(_req, sid, session_data, _options)
+        session_data['session_id'] = sid
+        session_data
+      end
 
-        def set_cookie(request, session_id, cookie)
-          cookie_jar(request)[@key] = cookie
-        end
+      def set_cookie(request, _session_id, cookie)
+        cookie_jar(request)[@key] = cookie
+      end
 
-        def get_cookie(req)
-          cookie_jar(req)[@key]
-        end
+      def get_cookie(req)
+        cookie_jar(req)[@key]
+      end
 
-        def cookie_jar(request)
-          request.cookie_jar.signed_or_encrypted
-        end
+      def cookie_jar(request)
+        request.cookie_jar.signed_or_encrypted
+      end
     end
   end
 end

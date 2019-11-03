@@ -1,13 +1,12 @@
 module CarrierWave
-
   # this is an internal class, used by CarrierWave::Mount so that
   # we don't pollute the model with a lot of methods.
   class Mounter #:nodoc:
     attr_reader :column, :record, :remote_urls, :integrity_errors,
-      :processing_errors, :download_errors
+                :processing_errors, :download_errors
     attr_accessor :remove, :remote_request_headers
 
-    def initialize(record, column, options={})
+    def initialize(record, column, _options = {})
       @record = record
       @column = column
       @options = record.class.uploader_options[column]
@@ -42,6 +41,7 @@ module CarrierWave
 
     def cache(new_files)
       return if !new_files.is_a?(Array) && new_files.blank?
+
       old_uploaders = uploaders
       @uploaders = new_files.map do |new_file|
         handle_error do
@@ -74,15 +74,14 @@ module CarrierWave
     def cache_names=(cache_names)
       cache_names = cache_names.reject(&:blank?)
       return if cache_names.blank?
+
       clear_unstaged
       cache_names.each do |cache_name|
-        begin
-          uploader = blank_uploader
-          uploader.retrieve_from_cache!(cache_name)
-          @uploaders << uploader
-        rescue CarrierWave::InvalidParameter
-          # ignore
-        end
+        uploader = blank_uploader
+        uploader.retrieve_from_cache!(cache_name)
+        @uploaders << uploader
+      rescue CarrierWave::InvalidParameter
+        # ignore
       end
     end
 
@@ -130,7 +129,7 @@ module CarrierWave
       option(:mount_on) || column
     end
 
-    def remove_previous(before=nil, after=nil)
+    def remove_previous(before = nil, after = nil)
       after ||= []
       return unless before
 
@@ -160,7 +159,7 @@ module CarrierWave
 
     attr_accessor :uploader_options
 
-  private
+    private
 
     def option(name)
       self.uploader_options ||= {}

@@ -11,7 +11,7 @@ class Capybara::Selenium::Driver < Capybara::Driver::Base
     clear_local_storage: nil,
     clear_session_storage: nil
   }.freeze
-  SPECIAL_OPTIONS = %i[browser clear_local_storage clear_session_storage timeout native_displayed].freeze
+  SPECIAL_OPTIONS = [:browser, :clear_local_storage, :clear_session_storage, :timeout, :native_displayed].freeze
   attr_reader :app, :options
 
   class << self
@@ -92,8 +92,13 @@ class Capybara::Selenium::Driver < Capybara::Driver::Base
     browser.current_url
   end
 
-  def wait?; true; end
-  def needs_server?; true; end
+  def wait?
+    true
+  end
+
+  def needs_server?
+    true
+  end
 
   def execute_script(script, *args)
     browser.execute_script(script, *native_args(args))
@@ -277,7 +282,7 @@ class Capybara::Selenium::Driver < Capybara::Driver::Base
     Selenium::WebDriver::Error::NoSuchWindowError
   end
 
-private
+  private
 
   def selenium_4?
     defined?(Selenium::WebDriver::VERSION) && (Selenium::WebDriver::VERSION.to_f >= 4)
@@ -445,7 +450,7 @@ private
     main = Process.pid
     at_exit do
       # Store the exit status of the test run since it goes away after calling the at_exit proc...
-      @exit_status = $ERROR_INFO.status if $ERROR_INFO.is_a?(SystemExit)
+      @exit_status = $!.status if $!.is_a?(SystemExit)
       quit if Process.pid == main
       exit @exit_status if @exit_status # Force exit with stored status
     end

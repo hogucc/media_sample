@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "active_support/log_subscriber"
+require 'active_support/log_subscriber'
 
 module ActiveStorage
   class LogSubscriber < ActiveSupport::LogSubscriber
@@ -14,7 +14,7 @@ module ActiveStorage
       info event, color("Downloaded file from key: #{key_in(event)}", BLUE)
     end
 
-    alias_method :service_streaming_download, :service_download
+    alias service_streaming_download service_download
 
     def service_delete(event)
       info event, color("Deleted file from key: #{key_in(event)}", RED)
@@ -25,7 +25,7 @@ module ActiveStorage
     end
 
     def service_exist(event)
-      debug event, color("Checked if file exists at key: #{key_in(event)} (#{event.payload[:exist] ? "yes" : "no"})", BLUE)
+      debug event, color("Checked if file exists at key: #{key_in(event)} (#{event.payload[:exist] ? 'yes' : 'no'})", BLUE)
     end
 
     def service_url(event)
@@ -37,21 +37,22 @@ module ActiveStorage
     end
 
     private
-      def info(event, colored_message)
-        super log_prefix_for_service(event) + colored_message
-      end
 
-      def debug(event, colored_message)
-        super log_prefix_for_service(event) + colored_message
-      end
+    def info(event, colored_message)
+      super log_prefix_for_service(event) + colored_message
+    end
 
-      def log_prefix_for_service(event)
-        color "  #{event.payload[:service]} Storage (#{event.duration.round(1)}ms) ", CYAN
-      end
+    def debug(event, colored_message)
+      super log_prefix_for_service(event) + colored_message
+    end
 
-      def key_in(event)
-        event.payload[:key]
-      end
+    def log_prefix_for_service(event)
+      color "  #{event.payload[:service]} Storage (#{event.duration.round(1)}ms) ", CYAN
+    end
+
+    def key_in(event)
+      event.payload[:key]
+    end
   end
 end
 

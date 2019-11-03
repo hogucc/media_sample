@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require "active_support/concern"
-require "active_support/core_ext/module/attribute_accessors"
-require "concurrent"
-require "fiber"
+require 'active_support/concern'
+require 'active_support/core_ext/module/attribute_accessors'
+require 'concurrent'
+require 'fiber'
 
 module ActiveSupport
   module LoggerThreadSafeLevel # :nodoc:
@@ -24,7 +24,7 @@ module ActiveSupport
     def after_initialize
       ActiveSupport::Deprecation.warn(
         "Logger don't need to call #after_initialize directly anymore. It will be deprecated without replacement in " \
-        "Rails 6.1."
+        'Rails 6.1.'
       )
     end
 
@@ -50,6 +50,7 @@ module ActiveSupport
 
     def add(severity, message = nil, progname = nil, &block) # :nodoc:
       return true if @logdev.nil? || (severity || UNKNOWN) < level
+
       super
     end
   end

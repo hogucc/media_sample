@@ -15,18 +15,16 @@ module ActiveRecord
         relation = partial if partial.is_a?(ActiveRecord::Relation)
         relation ||= collection if collection.is_a?(ActiveRecord::Relation)
 
-        if relation && !relation.loaded?
-          relation.skip_preloading!
-        end
+        relation.skip_preloading! if relation && !relation.loaded?
       end
 
       def collection_without_template(*)
-        @relation.preload_associations(@collection) if @relation
+        @relation&.preload_associations(@collection)
         super
       end
 
       def collection_with_template(*)
-        @relation.preload_associations(@collection) if @relation
+        @relation&.preload_associations(@collection)
         super
       end
     end

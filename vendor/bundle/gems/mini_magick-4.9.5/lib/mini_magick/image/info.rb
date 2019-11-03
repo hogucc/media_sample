@@ -1,10 +1,10 @@
-require "json"
+require 'json'
 
 module MiniMagick
   class Image
     # @private
     class Info
-      ASCII_ENCODED_EXIF_KEYS = %w[ExifVersion FlashPixVersion]
+      ASCII_ENCODED_EXIF_KEYS = %w[ExifVersion FlashPixVersion].freeze
 
       def initialize(path)
         @path = path
@@ -13,23 +13,23 @@ module MiniMagick
 
       def [](value, *args)
         case value
-        when "format", "width", "height", "dimensions", "size", "human_size"
+        when 'format', 'width', 'height', 'dimensions', 'size', 'human_size'
           cheap_info(value)
-        when "colorspace"
+        when 'colorspace'
           colorspace
-        when "mime_type"
+        when 'mime_type'
           mime_type
-        when "resolution"
+        when 'resolution'
           resolution(*args)
-        when "signature"
+        when 'signature'
           signature
         when /^EXIF\:/i
           raw_exif(value)
-        when "exif"
+        when 'exif'
           exif
-        when "details"
+        when 'details'
           details
-        when "data"
+        when 'data'
           data
         else
           raw(value)
@@ -42,18 +42,18 @@ module MiniMagick
 
       def cheap_info(value)
         @info.fetch(value) do
-          format, width, height, size = self["%m %w %h %b"].split(" ")
+          format, width, height, size = self['%m %w %h %b'].split(' ')
 
           path = @path
           path = path.match(/\[\d+\]$/).pre_match if path =~ /\[\d+\]$/
 
           @info.update(
-            "format"     => format,
-            "width"      => Integer(width),
-            "height"     => Integer(height),
-            "dimensions" => [Integer(width), Integer(height)],
-            "size"       => File.size(path),
-            "human_size" => size,
+            'format' => format,
+            'width' => Integer(width),
+            'height' => Integer(height),
+            'dimensions' => [Integer(width), Integer(height)],
+            'size' => File.size(path),
+            'human_size' => size
           )
 
           @info.fetch(value)
@@ -63,19 +63,19 @@ module MiniMagick
       end
 
       def colorspace
-        @info["colorspace"] ||= self["%r"]
+        @info['colorspace'] ||= self['%r']
       end
 
       def mime_type
-        "image/#{self["format"].downcase}"
+        "image/#{self['format'].downcase}"
       end
 
       def resolution(unit = nil)
         output = identify do |b|
           b.units unit if unit
-          b.format "%x %y"
+          b.format '%x %y'
         end
-        output.split(" ").map(&:to_i)
+        output.split(' ').map(&:to_i)
       end
 
       def raw_exif(value)
@@ -83,9 +83,9 @@ module MiniMagick
       end
 
       def exif
-        @info["exif"] ||= (
+        @info['exif'] ||= begin
           hash = {}
-          output = self["%[EXIF:*]"]
+          output = self['%[EXIF:*]']
 
           output.each_line do |line|
             line = line.chomp("\n")
@@ -93,22 +93,23 @@ module MiniMagick
             case MiniMagick.cli
             when :imagemagick, :imagemagick7
               if match = line.match(/^exif:/)
-                key, value = match.post_match.split("=", 2)
+                key, value = match.post_match.split('=', 2)
                 value = decode_comma_separated_ascii_characters(value) if ASCII_ENCODED_EXIF_KEYS.include?(key)
                 hash[key] = value
               else
                 hash[hash.keys.last] << "\n#{line}"
               end
             when :graphicsmagick
-              next if line == "unknown"
-              key, value = line.split("=", 2)
-              value.gsub!("\\012", "\n") # convert "\012" characters to newlines
+              next if line == 'unknown'
+
+              key, value = line.split('=', 2)
+              value.gsub!('\\012', "\n") # convert "\012" characters to newlines
               hash[key] = value
             end
           end
 
           hash
-        )
+        end
       end
 
       def raw(value)
@@ -116,13 +117,15 @@ module MiniMagick
       end
 
       def signature
-        @info["signature"] ||= self["%#"]
+        @info['signature'] ||= self['%#']
       end
 
       def details
-        warn "[MiniMagick] MiniMagick::Image#details has been deprecated, as it was causing too many parsing errors. You should use MiniMagick::Image#data instead, which differs in a way that the keys are in camelcase." if MiniMagick.imagemagick? || MiniMagick.imagemagick7?
+        if MiniMagick.imagemagick? || MiniMagick.imagemagick7?
+          warn '[MiniMagick] MiniMagick::Image#details has been deprecated, as it was causing too many parsing errors. You should use MiniMagick::Image#data instead, which differs in a way that the keys are in camelcase.'
+        end
 
-        @info["details"] ||= (
+        @info['details'] ||= begin
           details_string = identify(&:verbose)
           key_stack = []
           details_string.lines.to_a[1..-1].each_with_object({}) do |line, details_hash|
@@ -149,22 +152,22 @@ module MiniMagick
               hash[key] = value
             end
           end
-        )
+        end
       end
 
       def data
         raise Error, "MiniMagick::Image#data isn't supported on GraphicsMagick. Use MiniMagick::Image#details instead." if MiniMagick.graphicsmagick?
 
-        @info["data"] ||= (
+        @info['data'] ||= begin
           json = MiniMagick::Tool::Convert.new do |convert|
             convert << path
-            convert << "json:"
+            convert << 'json:'
           end
 
           data = JSON.parse(json)
           data = data.fetch(0) if data.is_a?(Array)
-          data.fetch("image")
-        )
+          data.fetch('image')
+        end
       end
 
       def identify
@@ -178,15 +181,15 @@ module MiniMagick
 
       def decode_comma_separated_ascii_characters(encoded_value)
         return encoded_value unless encoded_value.include?(',')
+
         encoded_value.scan(/\d+/).map(&:to_i).map(&:chr).join
       end
 
       def path
         value = @path
-        value += "[0]" unless value =~ /\[\d+\]$/
+        value += '[0]' unless value =~ /\[\d+\]$/
         value
       end
-
     end
   end
 end

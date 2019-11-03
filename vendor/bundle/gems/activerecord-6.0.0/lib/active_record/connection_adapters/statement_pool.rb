@@ -29,9 +29,7 @@ module ActiveRecord
       end
 
       def []=(sql, stmt)
-        while @statement_limit <= cache.size
-          dealloc(cache.shift.last)
-        end
+        dealloc(cache.shift.last) while @statement_limit <= cache.size
         cache[sql] = stmt
       end
 
@@ -49,13 +47,13 @@ module ActiveRecord
 
       private
 
-        def cache
-          @cache[Process.pid]
-        end
+      def cache
+        @cache[Process.pid]
+      end
 
-        def dealloc(stmt)
-          raise NotImplementedError
-        end
+      def dealloc(_stmt)
+        raise NotImplementedError
+      end
     end
   end
 end

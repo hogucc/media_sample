@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "yaml"
+require 'yaml'
 
 module Byebug
   module Printers
@@ -11,10 +11,10 @@ module Byebug
       class MissedPath < StandardError; end
       class MissedArgument < StandardError; end
 
-      SEPARATOR = "."
+      SEPARATOR = '.'
 
       def type
-        self.class.name.split("::").last.downcase
+        self.class.name.split('::').last.downcase
       end
 
       private
@@ -34,7 +34,7 @@ module Byebug
 
       def translate(string, args = {})
         # they may contain #{} string interpolation
-        string.gsub(/\|\w+$/, "").gsub(/([^#]?){([^}]*)}/) do
+        string.gsub(/\|\w+$/, '').gsub(/([^#]?){([^}]*)}/) do
           key = Regexp.last_match[2].to_s
           raise MissedArgument, "Missed argument #{key} for '#{string}'" unless args.key?(key.to_sym)
 
@@ -61,7 +61,7 @@ module Byebug
       end
 
       def contents_files
-        [File.join(__dir__, "texts", "base.yml")]
+        [File.join(__dir__, 'texts', 'base.yml')]
       end
     end
   end

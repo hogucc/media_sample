@@ -12,10 +12,21 @@ module Capybara
       end
 
       class IdentityExpressionFilter < ExpressionFilter
-        def initialize(name); super(name, nil, nil); end
-        def default?; false; end
-        def matcher?; false; end
-        def apply_filter(expr, _name, _value, _ctx); expr; end
+        def initialize(name)
+          super(name, nil, nil)
+        end
+
+        def default?
+          false
+        end
+
+        def matcher?
+          false
+        end
+
+        def apply_filter(expr, _name, _value, _ctx)
+          expr
+        end
       end
     end
   end

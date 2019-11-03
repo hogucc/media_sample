@@ -19,6 +19,6 @@ module MaterialIcons
     end
 
     # Typeless alias method
-    alias_method :mi, :material_icon
+    alias mi material_icon
   end
 end

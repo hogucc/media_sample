@@ -1,4 +1,4 @@
-require "foreman/vendor/thor/lib/thor/shell/basic"
+require 'foreman/vendor/thor/lib/thor/shell/basic'
 
 class Foreman::Thor
   module Shell
@@ -7,43 +7,43 @@ class Foreman::Thor
     #
     class Color < Basic
       # Embed in a String to clear all previous ANSI sequences.
-      CLEAR      = "\e[0m"
+      CLEAR      = "\e[0m".freeze
       # The start of an ANSI bold sequence.
-      BOLD       = "\e[1m"
+      BOLD       = "\e[1m".freeze
 
       # Set the terminal's foreground ANSI color to black.
-      BLACK      = "\e[30m"
+      BLACK      = "\e[30m".freeze
       # Set the terminal's foreground ANSI color to red.
-      RED        = "\e[31m"
+      RED        = "\e[31m".freeze
       # Set the terminal's foreground ANSI color to green.
-      GREEN      = "\e[32m"
+      GREEN      = "\e[32m".freeze
       # Set the terminal's foreground ANSI color to yellow.
-      YELLOW     = "\e[33m"
+      YELLOW     = "\e[33m".freeze
       # Set the terminal's foreground ANSI color to blue.
-      BLUE       = "\e[34m"
+      BLUE       = "\e[34m".freeze
       # Set the terminal's foreground ANSI color to magenta.
-      MAGENTA    = "\e[35m"
+      MAGENTA    = "\e[35m".freeze
       # Set the terminal's foreground ANSI color to cyan.
-      CYAN       = "\e[36m"
+      CYAN       = "\e[36m".freeze
       # Set the terminal's foreground ANSI color to white.
-      WHITE      = "\e[37m"
+      WHITE      = "\e[37m".freeze
 
       # Set the terminal's background ANSI color to black.
-      ON_BLACK   = "\e[40m"
+      ON_BLACK   = "\e[40m".freeze
       # Set the terminal's background ANSI color to red.
-      ON_RED     = "\e[41m"
+      ON_RED     = "\e[41m".freeze
       # Set the terminal's background ANSI color to green.
-      ON_GREEN   = "\e[42m"
+      ON_GREEN   = "\e[42m".freeze
       # Set the terminal's background ANSI color to yellow.
-      ON_YELLOW  = "\e[43m"
+      ON_YELLOW  = "\e[43m".freeze
       # Set the terminal's background ANSI color to blue.
-      ON_BLUE    = "\e[44m"
+      ON_BLUE    = "\e[44m".freeze
       # Set the terminal's background ANSI color to magenta.
-      ON_MAGENTA = "\e[45m"
+      ON_MAGENTA = "\e[45m".freeze
       # Set the terminal's background ANSI color to cyan.
-      ON_CYAN    = "\e[46m"
+      ON_CYAN    = "\e[46m".freeze
       # Set the terminal's background ANSI color to white.
-      ON_WHITE   = "\e[47m"
+      ON_WHITE   = "\e[47m".freeze
 
       # Set color by using a string or one of the defined constants. If a third
       # option is set to true, it also adds bold to the string. This is based
@@ -89,12 +89,12 @@ class Foreman::Thor
           foreground, bold = colors
           foreground = self.class.const_get(foreground.to_s.upcase) if foreground.is_a?(Symbol)
 
-          bold       = bold ? BOLD : ""
+          bold = bold ? BOLD : ''
           "#{bold}#{foreground}#{string}#{CLEAR}"
         end
       end
 
-    protected
+      protected
 
       def can_display_colors?
         stdout.tty?
@@ -104,7 +104,7 @@ class Foreman::Thor
       # available.
       #
       def show_diff(destination, content) #:nodoc:
-        if diff_lcs_loaded? && ENV["THOR_DIFF"].nil? && ENV["RAILS_DIFF"].nil?
+        if diff_lcs_loaded? && ENV['THOR_DIFF'].nil? && ENV['RAILS_DIFF'].nil?
           actual  = File.binread(destination).to_s.split("\n")
           content = content.to_s.split("\n")
 
@@ -118,11 +118,11 @@ class Foreman::Thor
 
       def output_diff_line(diff) #:nodoc:
         case diff.action
-        when "-"
+        when '-'
           say "- #{diff.old_element.chomp}", :red, true
-        when "+"
+        when '+'
           say "+ #{diff.new_element.chomp}", :green, true
-        when "!"
+        when '!'
           say "- #{diff.old_element.chomp}", :red, true
           say "+ #{diff.new_element.chomp}", :green, true
         else
@@ -138,10 +138,10 @@ class Foreman::Thor
         return @diff_lcs_loaded unless @diff_lcs_loaded.nil?
 
         @diff_lcs_loaded = begin
-          require "diff/lcs"
+          require 'diff/lcs'
           true
-        rescue LoadError
-          false
+                           rescue LoadError
+                             false
         end
       end
     end

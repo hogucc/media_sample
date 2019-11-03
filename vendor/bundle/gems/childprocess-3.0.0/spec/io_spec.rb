@@ -1,17 +1,15 @@
-require File.expand_path('../spec_helper', __FILE__)
+require File.expand_path('spec_helper', __dir__)
 
 describe ChildProcess do
-  it "can run even when $stdout is a StringIO" do
-    begin
-      stdout = $stdout
-      $stdout = StringIO.new
-      expect { sleeping_ruby.start }.to_not raise_error
-    ensure
-      $stdout = stdout
-    end
+  it 'can run even when $stdout is a StringIO' do
+    stdout = $stdout
+    $stdout = StringIO.new
+    expect { sleeping_ruby.start }.to_not raise_error
+  ensure
+    $stdout = stdout
   end
 
-  it "can redirect stdout, stderr" do
+  it 'can redirect stdout, stderr' do
     process = ruby(<<-CODE)
       [STDOUT, STDERR].each_with_index do |io, idx|
         io.sync = true
@@ -19,8 +17,8 @@ describe ChildProcess do
       end
     CODE
 
-    out = Tempfile.new("stdout-spec")
-    err = Tempfile.new("stderr-spec")
+    out = Tempfile.new('stdout-spec')
+    err = Tempfile.new('stderr-spec')
 
     begin
       process.io.stdout = out
@@ -38,7 +36,7 @@ describe ChildProcess do
     end
   end
 
-  it "can redirect stdout only" do
+  it 'can redirect stdout only' do
     process = ruby(<<-CODE)
       [STDOUT, STDERR].each_with_index do |io, idx|
         io.sync = true
@@ -46,7 +44,7 @@ describe ChildProcess do
       end
     CODE
 
-    out = Tempfile.new("stdout-spec")
+    out = Tempfile.new('stdout-spec')
 
     begin
       process.io.stdout = out
@@ -60,10 +58,10 @@ describe ChildProcess do
     end
   end
 
-  it "pumps all output" do
+  it 'pumps all output' do
     process = echo
 
-    out = Tempfile.new("pump")
+    out = Tempfile.new('pump')
 
     begin
       process.io.stdout = out
@@ -77,10 +75,10 @@ describe ChildProcess do
     end
   end
 
-  it "can write to stdin if duplex = true" do
+  it 'can write to stdin if duplex = true' do
     process = cat
 
-    out = Tempfile.new("duplex")
+    out = Tempfile.new('duplex')
     out.sync = true
 
     begin
@@ -89,7 +87,7 @@ describe ChildProcess do
       process.duplex = true
 
       process.start
-      process.io.stdin.puts "hello world"
+      process.io.stdin.puts 'hello world'
       process.io.stdin.close
 
       process.poll_for_exit(exit_timeout)
@@ -100,13 +98,13 @@ describe ChildProcess do
     end
   end
 
-  it "can write to stdin interactively if duplex = true" do
+  it 'can write to stdin interactively if duplex = true' do
     process = cat
 
-    out = Tempfile.new("duplex")
+    out = Tempfile.new('duplex')
     out.sync = true
 
-    out_receiver = File.open(out.path, "rb")
+    out_receiver = File.open(out.path, 'rb')
     begin
       process.io.stdout = out
       process.io.stderr = out
@@ -116,19 +114,19 @@ describe ChildProcess do
 
       stdin = process.io.stdin
 
-      stdin.puts "hello"
+      stdin.puts 'hello'
       stdin.flush
       wait_until { expect(rewind_and_read(out_receiver)).to match(/\Ahello\r?\n\z/m) }
 
-      stdin.putc "n"
+      stdin.putc 'n'
       stdin.flush
       wait_until { expect(rewind_and_read(out_receiver)).to match(/\Ahello\r?\nn\z/m) }
 
-      stdin.print "e"
+      stdin.print 'e'
       stdin.flush
       wait_until { expect(rewind_and_read(out_receiver)).to match(/\Ahello\r?\nne\z/m) }
 
-      stdin.printf "w"
+      stdin.printf 'w'
       stdin.flush
       wait_until { expect(rewind_and_read(out_receiver)).to match(/\Ahello\r?\nnew\z/m) }
 
@@ -138,7 +136,7 @@ describe ChildProcess do
 
       stdin.close
       process.poll_for_exit(exit_timeout)
-     ensure
+    ensure
       out_receiver.close
       out.close
     end
@@ -151,7 +149,7 @@ describe ChildProcess do
   # http://travis-ci.org/#!/enkessler/childprocess/jobs/487331
   #
 
-  it "works with pipes", :process_builder => false do
+  it 'works with pipes', process_builder: false do
     process = ruby(<<-CODE)
       STDOUT.print "stdout"
       STDERR.print "stderr"
@@ -181,9 +179,9 @@ describe ChildProcess do
     expect([out, err]).to eq %w[stdout stderr]
   end
 
-  it "can set close-on-exec when IO is inherited" do
+  it 'can set close-on-exec when IO is inherited' do
     port = random_free_port
-    server = TCPServer.new("127.0.0.1", port)
+    server = TCPServer.new('127.0.0.1', port)
     ChildProcess.close_on_exec server
 
     process = sleeping_ruby
@@ -192,15 +190,15 @@ describe ChildProcess do
     process.start
     server.close
 
-    wait_until { can_bind? "127.0.0.1", port }
+    wait_until { can_bind? '127.0.0.1', port }
   end
 
-  it "handles long output" do
+  it 'handles long output' do
     process = ruby <<-CODE
     print 'a'*3000
     CODE
 
-    out = Tempfile.new("long-output")
+    out = Tempfile.new('long-output')
     out.sync = true
 
     begin

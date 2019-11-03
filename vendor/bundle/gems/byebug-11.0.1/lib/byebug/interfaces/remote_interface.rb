@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "byebug/history"
+require 'byebug/history'
 
 module Byebug
   #
@@ -17,7 +17,7 @@ module Byebug
     def read_command(prompt)
       super("PROMPT #{prompt}")
     rescue Errno::EPIPE, Errno::ECONNABORTED
-      "continue"
+      'continue'
     end
 
     def confirm(prompt)
@@ -44,7 +44,7 @@ module Byebug
 
     def readline(prompt)
       puts(prompt)
-      (input.gets || "continue").chomp
+      (input.gets || 'continue').chomp
     end
   end
 end

@@ -8,17 +8,17 @@ module ActiveSupport
       # A list of all available normalization forms.
       # See https://www.unicode.org/reports/tr15/tr15-29.html for more
       # information about normalization.
-      NORMALIZATION_FORMS = [:c, :kc, :d, :kd]
+      NORMALIZATION_FORMS = [:c, :kc, :d, :kd].freeze
 
       NORMALIZATION_FORM_ALIASES = { # :nodoc:
         c: :nfc,
         d: :nfd,
         kc: :nfkc,
         kd: :nfkd
-      }
+      }.freeze
 
       # The Unicode version that is supported by the implementation
-      UNICODE_VERSION = RbConfig::CONFIG["UNICODE_VERSION"]
+      UNICODE_VERSION = RbConfig::CONFIG['UNICODE_VERSION']
 
       # The default normalization used for operations that require
       # normalization. It can be set to any of the normalizations
@@ -51,21 +51,21 @@ module ActiveSupport
           removed from Rails 6.1. Use array.flatten.pack("U*") instead.
         MSG
 
-        unpacked.flatten.pack("U*")
+        unpacked.flatten.pack('U*')
       end
 
       # Decompose composed characters to the decomposed form.
       def decompose(type, codepoints)
         if type == :compatibility
-          codepoints.pack("U*").unicode_normalize(:nfkd).codepoints
+          codepoints.pack('U*').unicode_normalize(:nfkd).codepoints
         else
-          codepoints.pack("U*").unicode_normalize(:nfd).codepoints
+          codepoints.pack('U*').unicode_normalize(:nfd).codepoints
         end
       end
 
       # Compose decomposed characters to the composed form.
       def compose(codepoints)
-        codepoints.pack("U*").unicode_normalize(:nfc).codepoints
+        codepoints.pack('U*').unicode_normalize(:nfc).codepoints
       end
 
       # Rubinius' String#scrub, however, doesn't support ASCII-incompatible chars.
@@ -78,6 +78,7 @@ module ActiveSupport
         def tidy_bytes(string, force = false)
           return string if string.empty?
           return recode_windows1252_chars(string) if force
+
           string.scrub { |bad| recode_windows1252_chars(bad) }
         end
       else
@@ -92,12 +93,13 @@ module ActiveSupport
           reader = Encoding::Converter.new(Encoding::UTF_8, Encoding::UTF_16LE)
 
           source = string.dup
-          out = "".force_encoding(Encoding::UTF_16LE)
+          out = ''.force_encoding(Encoding::UTF_16LE)
 
           loop do
             reader.primitive_convert(source, out)
-            _, _, _, error_bytes, _ = reader.primitive_errinfo
+            _, _, _, error_bytes, = reader.primitive_errinfo
             break if error_bytes.nil?
+
             out << error_bytes.encode(Encoding::UTF_16LE, Encoding::Windows_1252, invalid: :replace, undef: :replace)
           end
 
@@ -136,7 +138,7 @@ module ActiveSupport
         end
       end
 
-      %w(downcase upcase swapcase).each do |method|
+      %w[downcase upcase swapcase].each do |method|
         define_method(method) do |string|
           ActiveSupport::Deprecation.warn(<<-MSG.squish)
           ActiveSupport::Multibyte::Unicode##{method} is deprecated and
@@ -149,9 +151,9 @@ module ActiveSupport
 
       private
 
-        def recode_windows1252_chars(string)
-          string.encode(Encoding::UTF_8, Encoding::Windows_1252, invalid: :replace, undef: :replace)
-        end
+      def recode_windows1252_chars(string)
+        string.encode(Encoding::UTF_8, Encoding::Windows_1252, invalid: :replace, undef: :replace)
+      end
     end
   end
 end

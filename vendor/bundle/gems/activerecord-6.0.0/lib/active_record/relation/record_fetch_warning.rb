@@ -18,15 +18,13 @@ module ActiveRecord
 
         super.tap do
           if logger && warn_on_records_fetched_greater_than
-            if @records.length > warn_on_records_fetched_greater_than
-              logger.warn "Query fetched #{@records.size} #{@klass} records: #{QueryRegistry.queries.join(";")}"
-            end
+            logger.warn "Query fetched #{@records.size} #{@klass} records: #{QueryRegistry.queries.join(';')}" if @records.length > warn_on_records_fetched_greater_than
           end
         end
       end
 
       # :stopdoc:
-      ActiveSupport::Notifications.subscribe("sql.active_record") do |*, payload|
+      ActiveSupport::Notifications.subscribe('sql.active_record') do |*, payload|
         QueryRegistry.queries << payload[:sql]
       end
       # :startdoc:

@@ -38,59 +38,60 @@ module ActionDispatch
         end
 
         private
-          def image_name
-            name = method_name[0...225]
-            failed? ? "failures_#{name}" : name
+
+        def image_name
+          name = method_name[0...225]
+          failed? ? "failures_#{name}" : name
+        end
+
+        def image_path
+          @image_path ||= absolute_image_path.to_s
+        end
+
+        def absolute_image_path
+          Rails.root.join("tmp/screenshots/#{image_name}.png")
+        end
+
+        def save_image
+          page.save_screenshot(absolute_image_path)
+        end
+
+        def output_type
+          # Environment variables have priority
+          output_type = ENV['RAILS_SYSTEM_TESTING_SCREENSHOT'] || ENV['CAPYBARA_INLINE_SCREENSHOT']
+
+          # Default to outputting a path to the screenshot
+          output_type ||= 'simple'
+
+          output_type
+        end
+
+        def display_image
+          message = +"[Screenshot]: #{image_path}\n"
+
+          case output_type
+          when 'artifact'
+            message << "\e]1338;url=artifact://#{absolute_image_path}\a\n"
+          when 'inline'
+            name = inline_base64(File.basename(absolute_image_path))
+            image = inline_base64(File.read(absolute_image_path))
+            message << "\e]1337;File=name=#{name};height=400px;inline=1:#{image}\a\n"
           end
 
-          def image_path
-            @image_path ||= absolute_image_path.to_s
-          end
+          message
+        end
 
-          def absolute_image_path
-            Rails.root.join("tmp/screenshots/#{image_name}.png")
-          end
+        def inline_base64(path)
+          Base64.strict_encode64(path)
+        end
 
-          def save_image
-            page.save_screenshot(absolute_image_path)
-          end
+        def failed?
+          !passed? && !skipped?
+        end
 
-          def output_type
-            # Environment variables have priority
-            output_type = ENV["RAILS_SYSTEM_TESTING_SCREENSHOT"] || ENV["CAPYBARA_INLINE_SCREENSHOT"]
-
-            # Default to outputting a path to the screenshot
-            output_type ||= "simple"
-
-            output_type
-          end
-
-          def display_image
-            message = +"[Screenshot]: #{image_path}\n"
-
-            case output_type
-            when "artifact"
-              message << "\e]1338;url=artifact://#{absolute_image_path}\a\n"
-            when "inline"
-              name = inline_base64(File.basename(absolute_image_path))
-              image = inline_base64(File.read(absolute_image_path))
-              message << "\e]1337;File=name=#{name};height=400px;inline=1:#{image}\a\n"
-            end
-
-            message
-          end
-
-          def inline_base64(path)
-            Base64.strict_encode64(path)
-          end
-
-          def failed?
-            !passed? && !skipped?
-          end
-
-          def supports_screenshot?
-            Capybara.current_driver != :rack_test
-          end
+        def supports_screenshot?
+          Capybara.current_driver != :rack_test
+        end
       end
     end
   end

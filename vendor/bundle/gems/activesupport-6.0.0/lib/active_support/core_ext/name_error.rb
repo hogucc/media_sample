@@ -16,7 +16,7 @@ class NameError
     message = respond_to?(:original_message) ? original_message : self.message
 
     if /undefined local variable or method/ !~ message
-      $1 if /((::)?([A-Z]\w*)(::[A-Z]\w*)*)$/ =~ message
+      Regexp.last_match(1) if /((::)?([A-Z]\w*)(::[A-Z]\w*)*)$/ =~ message
     end
   end
 

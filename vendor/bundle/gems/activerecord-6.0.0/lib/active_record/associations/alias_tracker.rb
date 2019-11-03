@@ -1,19 +1,19 @@
 # frozen_string_literal: true
 
-require "active_support/core_ext/string/conversions"
+require 'active_support/core_ext/string/conversions'
 
 module ActiveRecord
   module Associations
     # Keeps track of table aliases for ActiveRecord::Associations::JoinDependency
     class AliasTracker # :nodoc:
       def self.create(connection, initial_table, joins)
-        if joins.empty?
-          aliases = Hash.new(0)
-        else
-          aliases = Hash.new { |h, k|
-            h[k] = initial_count_for(connection, k, joins)
-          }
-        end
+        aliases = if joins.empty?
+                    Hash.new(0)
+                  else
+                    Hash.new do |h, k|
+                      h[k] = initial_count_for(connection, k, joins)
+                    end
+                  end
         aliases[initial_table] = 1
         new(connection, aliases)
       end
@@ -35,7 +35,7 @@ module ActiveRecord
           elsif join.is_a?(Hash)
             join[name]
           else
-            raise ArgumentError, "joins list should be initialized by list of Arel::Nodes::Join"
+            raise ArgumentError, 'joins list should be initialized by list of Arel::Nodes::Join'
           end
         end
 
@@ -61,9 +61,9 @@ module ActiveRecord
           aliases[aliased_name] += 1
 
           table_alias = if aliases[aliased_name] > 1
-            "#{truncate(aliased_name)}_#{aliases[aliased_name]}"
-          else
-            aliased_name
+                          "#{truncate(aliased_name)}_#{aliases[aliased_name]}"
+                        else
+                          aliased_name
           end
           Arel::Table.new(table_name, type_caster: type_caster).alias(table_alias)
         end
@@ -73,9 +73,9 @@ module ActiveRecord
 
       private
 
-        def truncate(name)
-          name.slice(0, @connection.table_alias_length - 2)
-        end
+      def truncate(name)
+        name.slice(0, @connection.table_alias_length - 2)
+      end
     end
   end
 end

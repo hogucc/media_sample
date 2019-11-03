@@ -6,8 +6,8 @@ if Rails::VERSION::MAJOR > 4
 
   class ScaffoldApiControllerGeneratorTest < Rails::Generators::TestCase
     tests Rails::Generators::ScaffoldControllerGenerator
-    arguments %w(Post title body:text images:attachments --api)
-    destination File.expand_path('../tmp', __FILE__)
+    arguments %w[Post title body:text images:attachments --api]
+    destination File.expand_path('tmp', __dir__)
     setup :prepare_destination
 
     test 'controller content' do
@@ -15,7 +15,7 @@ if Rails::VERSION::MAJOR > 4
 
       assert_file 'app/controllers/posts_controller.rb' do |content|
         assert_instance_method :index, content do |m|
-          assert_match %r{@posts = Post\.all}, m
+          assert_match /@posts = Post\.all/, m
         end
 
         assert_instance_method :show, content do |m|
@@ -23,36 +23,36 @@ if Rails::VERSION::MAJOR > 4
         end
 
         assert_instance_method :create, content do |m|
-          assert_match %r{@post = Post\.new\(post_params\)}, m
-          assert_match %r{@post\.save}, m
-          assert_match %r{render :show, status: :created, location: @post}, m
-          assert_match %r{render json: @post\.errors, status: :unprocessable_entity}, m
+          assert_match /@post = Post\.new\(post_params\)/, m
+          assert_match /@post\.save/, m
+          assert_match /render :show, status: :created, location: @post/, m
+          assert_match /render json: @post\.errors, status: :unprocessable_entity/, m
         end
 
         assert_instance_method :update, content do |m|
-          assert_match %r{render :show, status: :ok, location: @post}, m
-          assert_match %r{render json: @post.errors, status: :unprocessable_entity}, m
+          assert_match /render :show, status: :ok, location: @post/, m
+          assert_match /render json: @post.errors, status: :unprocessable_entity/, m
         end
 
         assert_instance_method :destroy, content do |m|
-          assert_match %r{@post\.destroy}, m
+          assert_match /@post\.destroy/, m
         end
 
-        assert_match %r{def post_params}, content
+        assert_match /def post_params/, content
         if Rails::VERSION::MAJOR >= 6
-          assert_match %r{params\.require\(:post\)\.permit\(:title, :body, images: \[\]\)}, content
+          assert_match /params\.require\(:post\)\.permit\(:title, :body, images: \[\]\)/, content
         else
-          assert_match %r{params\.require\(:post\)\.permit\(:title, :body, :images\)}, content
+          assert_match /params\.require\(:post\)\.permit\(:title, :body, :images\)/, content
         end
       end
     end
 
     test 'dont use require and permit if there are no attributes' do
-      run_generator %w(Post --api)
+      run_generator %w[Post --api]
 
       assert_file 'app/controllers/posts_controller.rb' do |content|
-        assert_match %r{def post_params}, content
-        assert_match %r{params\.fetch\(:post, \{\}\)}, content
+        assert_match /def post_params/, content
+        assert_match /params\.fetch\(:post, \{\}\)/, content
       end
     end
   end

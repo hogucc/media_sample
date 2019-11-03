@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require "active_support/duration"
-require "active_support/core_ext/time/calculations"
-require "active_support/core_ext/time/acts_like"
-require "active_support/core_ext/date/calculations"
-require "active_support/core_ext/date/acts_like"
+require 'active_support/duration'
+require 'active_support/core_ext/time/calculations'
+require 'active_support/core_ext/time/acts_like'
+require 'active_support/core_ext/date/calculations'
+require 'active_support/core_ext/date/acts_like'
 
 class Numeric
   # Returns a Duration instance matching the number of seconds provided.
@@ -13,7 +13,7 @@ class Numeric
   def seconds
     ActiveSupport::Duration.seconds(self)
   end
-  alias :second :seconds
+  alias second seconds
 
   # Returns a Duration instance matching the number of minutes provided.
   #
@@ -21,7 +21,7 @@ class Numeric
   def minutes
     ActiveSupport::Duration.minutes(self)
   end
-  alias :minute :minutes
+  alias minute minutes
 
   # Returns a Duration instance matching the number of hours provided.
   #
@@ -29,7 +29,7 @@ class Numeric
   def hours
     ActiveSupport::Duration.hours(self)
   end
-  alias :hour :hours
+  alias hour hours
 
   # Returns a Duration instance matching the number of days provided.
   #
@@ -37,7 +37,7 @@ class Numeric
   def days
     ActiveSupport::Duration.days(self)
   end
-  alias :day :days
+  alias day days
 
   # Returns a Duration instance matching the number of weeks provided.
   #
@@ -45,7 +45,7 @@ class Numeric
   def weeks
     ActiveSupport::Duration.weeks(self)
   end
-  alias :week :weeks
+  alias week weeks
 
   # Returns a Duration instance matching the number of fortnights provided.
   #
@@ -53,7 +53,7 @@ class Numeric
   def fortnights
     ActiveSupport::Duration.weeks(self * 2)
   end
-  alias :fortnight :fortnights
+  alias fortnight fortnights
 
   # Returns the number of milliseconds equivalent to the seconds provided.
   # Used with the standard time durations.

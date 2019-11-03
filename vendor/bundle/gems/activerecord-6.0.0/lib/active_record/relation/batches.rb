@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "active_record/relation/batches/batch_enumerator"
+require 'active_record/relation/batches/batch_enumerator'
 
 module ActiveRecord
   module Batches
@@ -200,13 +200,9 @@ module ActiveRecord
     # other processes are modifying the database.
     def in_batches(of: 1000, start: nil, finish: nil, load: false, error_on_ignore: nil)
       relation = self
-      unless block_given?
-        return BatchEnumerator.new(of: of, start: start, finish: finish, relation: self)
-      end
+      return BatchEnumerator.new(of: of, start: start, finish: finish, relation: self) unless block_given?
 
-      if arel.orders.present?
-        act_on_ignored_order(error_on_ignore)
-      end
+      act_on_ignored_order(error_on_ignore) if arel.orders.present?
 
       batch_limit = of
       if limit_value
@@ -233,7 +229,7 @@ module ActiveRecord
         break if ids.empty?
 
         primary_key_offset = ids.last
-        raise ArgumentError.new("Primary key not included in the custom select clause") unless primary_key_offset
+        raise ArgumentError, 'Primary key not included in the custom select clause' unless primary_key_offset
 
         yield yielded_relation
 
@@ -259,32 +255,32 @@ module ActiveRecord
 
     private
 
-      def apply_limits(relation, start, finish)
-        relation = apply_start_limit(relation, start) if start
-        relation = apply_finish_limit(relation, finish) if finish
-        relation
-      end
+    def apply_limits(relation, start, finish)
+      relation = apply_start_limit(relation, start) if start
+      relation = apply_finish_limit(relation, finish) if finish
+      relation
+    end
 
-      def apply_start_limit(relation, start)
-        relation.where(bind_attribute(primary_key, start) { |attr, bind| attr.gteq(bind) })
-      end
+    def apply_start_limit(relation, start)
+      relation.where(bind_attribute(primary_key, start) { |attr, bind| attr.gteq(bind) })
+    end
 
-      def apply_finish_limit(relation, finish)
-        relation.where(bind_attribute(primary_key, finish) { |attr, bind| attr.lteq(bind) })
-      end
+    def apply_finish_limit(relation, finish)
+      relation.where(bind_attribute(primary_key, finish) { |attr, bind| attr.lteq(bind) })
+    end
 
-      def batch_order
-        arel_attribute(primary_key).asc
-      end
+    def batch_order
+      arel_attribute(primary_key).asc
+    end
 
-      def act_on_ignored_order(error_on_ignore)
-        raise_error = (error_on_ignore.nil? ? klass.error_on_ignored_order : error_on_ignore)
+    def act_on_ignored_order(error_on_ignore)
+      raise_error = (error_on_ignore.nil? ? klass.error_on_ignored_order : error_on_ignore)
 
-        if raise_error
-          raise ArgumentError.new(ORDER_IGNORE_MESSAGE)
-        elsif logger
-          logger.warn(ORDER_IGNORE_MESSAGE)
-        end
+      if raise_error
+        raise ArgumentError, ORDER_IGNORE_MESSAGE
+      elsif logger
+        logger.warn(ORDER_IGNORE_MESSAGE)
       end
+    end
   end
 end

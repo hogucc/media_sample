@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require "active_support/core_ext/module/delegation"
-require "active_support/core_ext/object/blank"
-require "logger"
-require "active_support/logger"
+require 'active_support/core_ext/module/delegation'
+require 'active_support/core_ext/object/blank'
+require 'logger'
+require 'active_support/logger'
 
 module ActiveSupport
   # Wraps any standard Logger object to provide tagging capabilities.
@@ -63,12 +63,12 @@ module ActiveSupport
     def self.new(logger)
       logger = logger.dup
 
-      if logger.formatter
-        logger.formatter = logger.formatter.dup
-      else
-        # Ensure we set a default formatter so we aren't extending nil!
-        logger.formatter = ActiveSupport::Logger::SimpleFormatter.new
-      end
+      logger.formatter = if logger.formatter
+                           logger.formatter.dup
+                         else
+                           # Ensure we set a default formatter so we aren't extending nil!
+                           ActiveSupport::Logger::SimpleFormatter.new
+                         end
 
       logger.formatter.extend Formatter
       logger.extend(self)

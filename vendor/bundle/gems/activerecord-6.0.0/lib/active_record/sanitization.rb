@@ -23,11 +23,11 @@ module ActiveRecord
         return nil if condition.blank?
 
         case condition
-        when Array; sanitize_sql_array(condition)
-        else        condition
+        when Array then sanitize_sql_array(condition)
+        else condition
         end
       end
-      alias :sanitize_sql :sanitize_sql_for_conditions
+      alias sanitize_sql sanitize_sql_for_conditions
 
       # Accepts an array, hash, or string of SQL conditions and sanitizes
       # them into a valid SQL fragment for a SET clause.
@@ -45,9 +45,9 @@ module ActiveRecord
       #   # => "name=NULL and group_id='4'"
       def sanitize_sql_for_assignment(assignments, default_table_name = table_name)
         case assignments
-        when Array; sanitize_sql_array(assignments)
-        when Hash;  sanitize_sql_hash_for_assignment(assignments, default_table_name)
-        else        assignments
+        when Array then sanitize_sql_array(assignments)
+        when Hash then  sanitize_sql_hash_for_assignment(assignments, default_table_name)
+        else assignments
         end
       end
 
@@ -60,7 +60,7 @@ module ActiveRecord
       #   sanitize_sql_for_order("id ASC")
       #   # => "id ASC"
       def sanitize_sql_for_order(condition)
-        if condition.is_a?(Array) && condition.first.to_s.include?("?")
+        if condition.is_a?(Array) && condition.first.to_s.include?('?')
           disallow_raw_sql!(
             [condition.first],
             permit: connection.column_name_with_order_matcher
@@ -68,9 +68,7 @@ module ActiveRecord
 
           # Ensure we aren't dealing with a subclass of String that might
           # override methods we use (eg. Arel::Nodes::SqlLiteral).
-          if condition.first.kind_of?(String) && !condition.first.instance_of?(String)
-            condition = [String.new(condition.first), *condition[1..-1]]
-          end
+          condition = [String.new(condition.first), *condition[1..-1]] if condition.first.is_a?(String) && !condition.first.instance_of?(String)
 
           Arel.sql(sanitize_sql_array(condition))
         else
@@ -88,7 +86,7 @@ module ActiveRecord
           type = type_for_attribute(attr)
           value = type.serialize(type.cast(value))
           "#{c.quote_table_name_for_assignment(table, attr)} = #{c.quote(value)}"
-        end.join(", ")
+        end.join(', ')
       end
 
       # Sanitizes a +string+ so that it is safe to use within an SQL
@@ -105,8 +103,8 @@ module ActiveRecord
       #
       #   sanitize_sql_like("snake_cased_string", "!")
       #   # => "snake!_cased!_string"
-      def sanitize_sql_like(string, escape_character = "\\")
-        pattern = Regexp.union(escape_character, "%", "_")
+      def sanitize_sql_like(string, escape_character = '\\')
+        pattern = Regexp.union(escape_character, '%', '_')
         string.gsub(pattern) { |x| [escape_character, x].join }
       end
 
@@ -125,7 +123,7 @@ module ActiveRecord
         statement, *values = ary
         if values.first.is_a?(Hash) && /:\w+/.match?(statement)
           replace_named_bind_variables(statement, values.first)
-        elsif statement.include?("?")
+        elsif statement.include?('?')
           replace_bind_variables(statement, values)
         elsif statement.blank?
           statement
@@ -138,6 +136,7 @@ module ActiveRecord
         unexpected = nil
         args.each do |arg|
           next if arg.is_a?(Symbol) || Arel.arel_node?(arg) || permit.match?(arg.to_s)
+
           (unexpected ||= []) << arg
         end
 
@@ -145,70 +144,68 @@ module ActiveRecord
 
         if allow_unsafe_raw_sql == :deprecated
           ActiveSupport::Deprecation.warn(
-            "Dangerous query method (method whose arguments are used as raw " \
-            "SQL) called with non-attribute argument(s): " \
-            "#{unexpected.map(&:inspect).join(", ")}. Non-attribute " \
-            "arguments will be disallowed in Rails 6.1. This method should " \
-            "not be called with user-provided values, such as request " \
-            "parameters or model attributes. Known-safe values can be passed " \
-            "by wrapping them in Arel.sql()."
+            'Dangerous query method (method whose arguments are used as raw ' \
+            'SQL) called with non-attribute argument(s): ' \
+            "#{unexpected.map(&:inspect).join(', ')}. Non-attribute " \
+            'arguments will be disallowed in Rails 6.1. This method should ' \
+            'not be called with user-provided values, such as request ' \
+            'parameters or model attributes. Known-safe values can be passed ' \
+            'by wrapping them in Arel.sql().'
           )
         else
           raise(ActiveRecord::UnknownAttributeReference,
-            "Query method called with non-attribute argument(s): " +
-            unexpected.map(&:inspect).join(", ")
-          )
+                'Query method called with non-attribute argument(s): ' +
+                unexpected.map(&:inspect).join(', '))
         end
       end
 
       private
-        def replace_bind_variables(statement, values)
-          raise_if_bind_arity_mismatch(statement, statement.count("?"), values.size)
-          bound = values.dup
-          c = connection
-          statement.gsub(/\?/) do
-            replace_bind_variable(bound.shift, c)
-          end
-        end
 
-        def replace_bind_variable(value, c = connection)
-          if ActiveRecord::Relation === value
-            value.to_sql
+      def replace_bind_variables(statement, values)
+        raise_if_bind_arity_mismatch(statement, statement.count('?'), values.size)
+        bound = values.dup
+        c = connection
+        statement.gsub(/\?/) do
+          replace_bind_variable(bound.shift, c)
+        end
+      end
+
+      def replace_bind_variable(value, c = connection)
+        if ActiveRecord::Relation === value
+          value.to_sql
+        else
+          quote_bound_value(value, c)
+        end
+      end
+
+      def replace_named_bind_variables(statement, bind_vars)
+        statement.gsub(/(:?):([a-zA-Z]\w*)/) do |match|
+          if Regexp.last_match(1) == ':' # skip postgresql casts
+            match # return the whole match
+          elsif bind_vars.include?(match = Regexp.last_match(2).to_sym)
+            replace_bind_variable(bind_vars[match])
           else
-            quote_bound_value(value, c)
+            raise PreparedStatementInvalid, "missing value for :#{match} in #{statement}"
           end
         end
+      end
 
-        def replace_named_bind_variables(statement, bind_vars)
-          statement.gsub(/(:?):([a-zA-Z]\w*)/) do |match|
-            if $1 == ":" # skip postgresql casts
-              match # return the whole match
-            elsif bind_vars.include?(match = $2.to_sym)
-              replace_bind_variable(bind_vars[match])
-            else
-              raise PreparedStatementInvalid, "missing value for :#{match} in #{statement}"
-            end
-          end
-        end
-
-        def quote_bound_value(value, c = connection)
-          if value.respond_to?(:map) && !value.acts_like?(:string)
-            quoted = value.map { |v| c.quote(v) }
-            if quoted.empty?
-              c.quote(nil)
-            else
-              quoted.join(",")
-            end
+      def quote_bound_value(value, c = connection)
+        if value.respond_to?(:map) && !value.acts_like?(:string)
+          quoted = value.map { |v| c.quote(v) }
+          if quoted.empty?
+            c.quote(nil)
           else
-            c.quote(value)
+            quoted.join(',')
           end
+        else
+          c.quote(value)
         end
+      end
 
-        def raise_if_bind_arity_mismatch(statement, expected, provided)
-          unless expected == provided
-            raise PreparedStatementInvalid, "wrong number of bind variables (#{provided} for #{expected}) in: #{statement}"
-          end
-        end
+      def raise_if_bind_arity_mismatch(statement, expected, provided)
+        raise PreparedStatementInvalid, "wrong number of bind variables (#{provided} for #{expected}) in: #{statement}" unless expected == provided
+      end
     end
   end
 end

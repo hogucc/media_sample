@@ -4,7 +4,6 @@ require 'concurrent/synchronization'
 require 'concurrent/utility/at_exit'
 
 module Concurrent
-
   # @!macro abstract_executor_service_public_api
   # @!visibility private
   class AbstractExecutorService < Synchronization::LockableObject
@@ -33,7 +32,7 @@ module Concurrent
     end
 
     # @!macro executor_service_method_wait_for_termination
-    def wait_for_termination(timeout = nil)
+    def wait_for_termination(_timeout = nil)
       raise NotImplementedError
     end
 
@@ -79,17 +78,17 @@ module Concurrent
       when :caller_runs
         begin
           yield(*args)
-        rescue => ex
+        rescue StandardError => e
           # let it fail
-          log DEBUG, ex
+          log DEBUG, e
         end
         true
       else
-        fail "Unknown fallback policy #{fallback_policy}"
+        raise "Unknown fallback policy #{fallback_policy}"
       end
     end
 
-    def ns_execute(*args, &task)
+    def ns_execute(*_args)
       raise NotImplementedError
     end
 
@@ -127,7 +126,7 @@ module Concurrent
     end
 
     def terminate_at_exit
-      kill # TODO be gentle first
+      kill # TODO: be gentle first
       wait_for_termination(10)
     end
   end

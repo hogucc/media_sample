@@ -36,9 +36,7 @@ module Listen
         end
         opts = Hash[opts]
 
-        if opts.key?(:ignore) && opts[:ignore].empty?
-          opts.delete(:ignore)
-        end
+        opts.delete(:ignore) if opts.key?(:ignore) && opts[:ignore].empty?
 
         @prev_silencer_options = opts
         @silencer.configure(@prev_silencer_options.dup.freeze)

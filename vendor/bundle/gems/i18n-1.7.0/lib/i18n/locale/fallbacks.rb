@@ -65,15 +65,17 @@ module I18n
       attr_reader :defaults
 
       def [](locale)
-        raise InvalidLocale.new(locale) if locale.nil?
-        raise Disabled.new('fallback#[]') if locale == false
+        raise InvalidLocale, locale if locale.nil?
+        raise Disabled, 'fallback#[]' if locale == false
+
         locale = locale.to_sym
         super || store(locale, compute(locale))
       end
 
       def map(mappings)
         mappings.each do |from, to|
-          from, to = from.to_sym, Array(to)
+          from = from.to_sym
+          to = Array(to)
           to.each do |_to|
             @map[from] ||= []
             @map[from] << _to.to_sym
@@ -85,7 +87,7 @@ module I18n
 
       def compute(tags, include_defaults = true, exclude = [])
         result = Array(tags).collect do |tag|
-          tags = I18n::Locale::Tag.tag(tag).self_and_parents.map! { |t| t.to_sym } - exclude
+          tags = I18n::Locale::Tag.tag(tag).self_and_parents.map!(&:to_sym) - exclude
           tags.each { |_tag| tags += compute(@map[_tag], false, exclude + tags) if @map[_tag] }
           tags
         end.flatten

@@ -38,9 +38,7 @@ module ActiveRecord
           end
           raise ArgumentError, "'#{name}' has no association called '#{counter_association}'" unless has_many_association
 
-          if has_many_association.is_a? ActiveRecord::Reflection::ThroughReflection
-            has_many_association = has_many_association.through_reflection
-          end
+          has_many_association = has_many_association.through_reflection if has_many_association.is_a? ActiveRecord::Reflection::ThroughReflection
 
           foreign_key  = has_many_association.foreign_key.to_s
           child_class  = has_many_association.klass
@@ -159,35 +157,32 @@ module ActiveRecord
     end
 
     private
-      def _create_record(attribute_names = self.attribute_names)
-        id = super
 
+    def _create_record(attribute_names = self.attribute_names)
+      id = super
+
+      each_counter_cached_associations(&:increment_counters)
+
+      id
+    end
+
+    def destroy_row
+      affected_rows = super
+
+      if affected_rows > 0
         each_counter_cached_associations do |association|
-          association.increment_counters
-        end
-
-        id
-      end
-
-      def destroy_row
-        affected_rows = super
-
-        if affected_rows > 0
-          each_counter_cached_associations do |association|
-            foreign_key = association.reflection.foreign_key.to_sym
-            unless destroyed_by_association && destroyed_by_association.foreign_key.to_sym == foreign_key
-              association.decrement_counters
-            end
-          end
-        end
-
-        affected_rows
-      end
-
-      def each_counter_cached_associations
-        _reflections.each do |name, reflection|
-          yield association(name.to_sym) if reflection.belongs_to? && reflection.counter_cache_column
+          foreign_key = association.reflection.foreign_key.to_sym
+          association.decrement_counters unless destroyed_by_association && destroyed_by_association.foreign_key.to_sym == foreign_key
         end
       end
+
+      affected_rows
+    end
+
+    def each_counter_cached_associations
+      _reflections.each do |name, reflection|
+        yield association(name.to_sym) if reflection.belongs_to? && reflection.counter_cache_column
+      end
+    end
   end
 end

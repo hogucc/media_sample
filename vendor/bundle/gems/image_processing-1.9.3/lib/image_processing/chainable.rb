@@ -28,7 +28,7 @@ module ImageProcessing
     #   .apply([[:resize_to_limit, [400, 400]], [:strip, true])
     def apply(operations)
       operations.inject(self) do |builder, (name, argument)|
-        if argument == true || argument == nil
+        if argument == true || argument.nil?
           builder.send(name)
         elsif argument.is_a?(Array)
           builder.send(name, *argument)
@@ -41,8 +41,8 @@ module ImageProcessing
     # Assume that any unknown method names an operation supported by the
     # processor. Add a bang ("!") if you want processing to be performed.
     def method_missing(name, *args, &block)
-      return super if name.to_s.end_with?("?")
-      return send(name.to_s.chomp("!"), *args, &block).call if name.to_s.end_with?("!")
+      return super if name.to_s.end_with?('?')
+      return send(name.to_s.chomp('!'), *args, &block).call if name.to_s.end_with?('!')
 
       operation(name, *args, &block)
     end
@@ -69,7 +69,7 @@ module ImageProcessing
       options = options.merge(loader: options[:loader].merge(loader)) if loader
       options = options.merge(saver: options[:saver].merge(saver)) if saver
       options = options.merge(operations: options[:operations] + operations) if operations
-      options = options.merge(processor: self::Processor) unless self.is_a?(Builder)
+      options = options.merge(processor: self::Processor) unless is_a?(Builder)
       options = options.merge(other_options)
 
       options.freeze
@@ -79,12 +79,12 @@ module ImageProcessing
 
     # Empty options which the builder starts with.
     DEFAULT_OPTIONS = {
-      source:     nil,
-      loader:     {},
-      saver:      {},
-      format:     nil,
+      source: nil,
+      loader: {},
+      saver: {},
+      format: nil,
       operations: [],
-      processor:  nil,
+      processor: nil
     }.freeze
   end
 end

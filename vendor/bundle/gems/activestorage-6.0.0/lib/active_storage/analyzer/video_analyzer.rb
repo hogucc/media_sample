@@ -27,92 +27,89 @@ module ActiveStorage
     end
 
     private
-      def width
-        if rotated?
-          computed_height || encoded_height
-        else
-          encoded_width
+
+    def width
+      if rotated?
+        computed_height || encoded_height
+      else
+        encoded_width
+      end
+    end
+
+    def height
+      if rotated?
+        encoded_width
+      else
+        computed_height || encoded_height
+      end
+    end
+
+    def duration
+      Float(video_stream['duration']) if video_stream['duration']
+    end
+
+    def angle
+      Integer(tags['rotate']) if tags['rotate']
+    end
+
+    def display_aspect_ratio
+      if descriptor = video_stream['display_aspect_ratio']
+        if terms = descriptor.split(':', 2)
+          numerator   = Integer(terms[0])
+          denominator = Integer(terms[1])
+
+          [numerator, denominator] unless numerator == 0
         end
       end
+    end
 
-      def height
-        if rotated?
-          encoded_width
-        else
-          computed_height || encoded_height
-        end
+    def rotated?
+      angle == 90 || angle == 270
+    end
+
+    def computed_height
+      encoded_width * display_height_scale if encoded_width && display_height_scale
+    end
+
+    def encoded_width
+      @encoded_width ||= Float(video_stream['width']) if video_stream['width']
+    end
+
+    def encoded_height
+      @encoded_height ||= Float(video_stream['height']) if video_stream['height']
+    end
+
+    def display_height_scale
+      @display_height_scale ||= Float(display_aspect_ratio.last) / display_aspect_ratio.first if display_aspect_ratio
+    end
+
+    def tags
+      @tags ||= video_stream['tags'] || {}
+    end
+
+    def video_stream
+      @video_stream ||= streams.detect { |stream| stream['codec_type'] == 'video' } || {}
+    end
+
+    def streams
+      probe['streams'] || []
+    end
+
+    def probe
+      download_blob_to_tempfile { |file| probe_from(file) }
+    end
+
+    def probe_from(file)
+      IO.popen([ffprobe_path, '-print_format', 'json', '-show_streams', '-v', 'error', file.path]) do |output|
+        JSON.parse(output.read)
       end
+    rescue Errno::ENOENT
+      logger.info "Skipping video analysis because FFmpeg isn't installed"
+      {}
+    end
 
-      def duration
-        Float(video_stream["duration"]) if video_stream["duration"]
-      end
-
-      def angle
-        Integer(tags["rotate"]) if tags["rotate"]
-      end
-
-      def display_aspect_ratio
-        if descriptor = video_stream["display_aspect_ratio"]
-          if terms = descriptor.split(":", 2)
-            numerator   = Integer(terms[0])
-            denominator = Integer(terms[1])
-
-            [numerator, denominator] unless numerator == 0
-          end
-        end
-      end
-
-
-      def rotated?
-        angle == 90 || angle == 270
-      end
-
-      def computed_height
-        if encoded_width && display_height_scale
-          encoded_width * display_height_scale
-        end
-      end
-
-      def encoded_width
-        @encoded_width ||= Float(video_stream["width"]) if video_stream["width"]
-      end
-
-      def encoded_height
-        @encoded_height ||= Float(video_stream["height"]) if video_stream["height"]
-      end
-
-      def display_height_scale
-        @display_height_scale ||= Float(display_aspect_ratio.last) / display_aspect_ratio.first if display_aspect_ratio
-      end
-
-
-      def tags
-        @tags ||= video_stream["tags"] || {}
-      end
-
-      def video_stream
-        @video_stream ||= streams.detect { |stream| stream["codec_type"] == "video" } || {}
-      end
-
-      def streams
-        probe["streams"] || []
-      end
-
-      def probe
-        download_blob_to_tempfile { |file| probe_from(file) }
-      end
-
-      def probe_from(file)
-        IO.popen([ ffprobe_path, "-print_format", "json", "-show_streams", "-v", "error", file.path ]) do |output|
-          JSON.parse(output.read)
-        end
-      rescue Errno::ENOENT
-        logger.info "Skipping video analysis because FFmpeg isn't installed"
-        {}
-      end
-
-      def ffprobe_path
-        ActiveStorage.paths[:ffprobe] || "ffprobe"
-      end
+    def ffprobe_path
+      ActiveStorage.paths[:ffprobe] || 'ffprobe'
+    end
   end
 end

@@ -1,7 +1,6 @@
 module CarrierWave
   module Uploader
     module Proxy
-
       ##
       # === Returns
       #
@@ -20,7 +19,7 @@ module CarrierWave
         file.try(:path)
       end
 
-      alias_method :path, :current_path
+      alias path current_path
 
       ##
       # Returns a string that uniquely identifies the retrieved or last stored file
@@ -80,7 +79,6 @@ module CarrierWave
       def content_type
         file.try(:content_type)
       end
-
     end # Proxy
   end # Uploader
 end # CarrierWave

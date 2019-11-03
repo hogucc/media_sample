@@ -56,11 +56,10 @@ module Loofah
       end
     end
 
-    def ScrubBehavior.resolve_scrubber(scrubber) # :nodoc:
+    def self.resolve_scrubber(scrubber) # :nodoc:
       scrubber = Scrubbers::MAP[scrubber].new if Scrubbers::MAP[scrubber]
-      unless scrubber.is_a?(Loofah::Scrubber)
-        raise Loofah::ScrubberNotFound, "not a Scrubber or a scrubber name: #{scrubber.inspect}"
-      end
+      raise Loofah::ScrubberNotFound, "not a Scrubber or a scrubber name: #{scrubber.inspect}" unless scrubber.is_a?(Loofah::Scrubber)
+
       scrubber
     end
   end
@@ -91,16 +90,20 @@ module Loofah
     #    # decidedly not ok for browser:
     #    frag.text(:encode_special_chars => false) # => "<script>alert('EVIL');</script>"
     #
-    def text(options={})
-      result = serialize_root.children.inner_text rescue ""
+    def text(options = {})
+      result = begin
+                 serialize_root.children.inner_text
+               rescue StandardError
+                 ''
+               end
       if options[:encode_special_chars] == false
         result # possibly dangerous if rendered in a browser
       else
         encode_special_chars result
       end
     end
-    alias :inner_text :text
-    alias :to_str     :text
+    alias inner_text text
+    alias to_str     text
 
     #
     #  Returns a plain-text version of the markup contained by the
@@ -112,16 +115,16 @@ module Loofah
     #    Loofah.document("<h1>Title</h1><div>Content</div>").to_text
     #    # => "\nTitle\n\nContent\n"
     #
-    def to_text(options={})
-      Loofah.remove_extraneous_whitespace self.dup.scrub!(:newline_block_elements).text(options)
+    def to_text(options = {})
+      Loofah.remove_extraneous_whitespace dup.scrub!(:newline_block_elements).text(options)
     end
   end
 
   module DocumentDecorator # :nodoc:
     def initialize(*args, &block)
       super
-      self.decorators(Nokogiri::XML::Node) << ScrubBehavior::Node
-      self.decorators(Nokogiri::XML::NodeSet) << ScrubBehavior::NodeSet
+      decorators(Nokogiri::XML::Node) << ScrubBehavior::Node
+      decorators(Nokogiri::XML::NodeSet) << ScrubBehavior::NodeSet
     end
   end
 end

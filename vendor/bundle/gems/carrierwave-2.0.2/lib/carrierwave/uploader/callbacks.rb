@@ -5,7 +5,7 @@ module CarrierWave
 
       included do
         class_attribute :_before_callbacks, :_after_callbacks,
-          :instance_writer => false
+                        instance_writer: false
         self._before_callbacks = Hash.new []
         self._after_callbacks = Hash.new []
       end
@@ -18,16 +18,15 @@ module CarrierWave
 
       module ClassMethods
         def before(kind, callback)
-          self._before_callbacks = self._before_callbacks.
-            merge kind => _before_callbacks[kind] + [callback]
+          self._before_callbacks = _before_callbacks
+                                   .merge kind => _before_callbacks[kind] + [callback]
         end
 
         def after(kind, callback)
-          self._after_callbacks = self._after_callbacks.
-            merge kind => _after_callbacks[kind] + [callback]
+          self._after_callbacks = _after_callbacks
+                                  .merge kind => _after_callbacks[kind] + [callback]
         end
       end # ClassMethods
-
     end # Callbacks
   end # Uploader
 end # CarrierWave

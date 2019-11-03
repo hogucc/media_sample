@@ -3,7 +3,6 @@ require 'concurrent/atomic/java_count_down_latch'
 require 'concurrent/utility/engine'
 
 module Concurrent
-
   ###################################################################
 
   # @!macro count_down_latch_method_initialize
@@ -53,8 +52,7 @@ module Concurrent
 
   # @!visibility private
   # @!macro internal_implementation_note
-  CountDownLatchImplementation = case
-                                 when Concurrent.on_jruby?
+  CountDownLatchImplementation = if Concurrent.on_jruby?
                                    JavaCountDownLatch
                                  else
                                    MutexCountDownLatch

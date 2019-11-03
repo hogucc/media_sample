@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require "date"
-require "active_support/inflector/methods"
-require "active_support/core_ext/time/conversions"
-require "active_support/core_ext/date_time/calculations"
-require "active_support/values/time_zone"
+require 'date'
+require 'active_support/inflector/methods'
+require 'active_support/core_ext/time/conversions'
+require 'active_support/core_ext/date_time/calculations'
+require 'active_support/values/time_zone'
 
 class DateTime
   # Convert to a formatted string. See Time::DATE_FORMATS for predefined formats.
@@ -39,8 +39,8 @@ class DateTime
       to_default_s
     end
   end
-  alias_method :to_default_s, :to_s if instance_methods(false).include?(:to_s)
-  alias_method :to_s, :to_formatted_s
+  alias to_default_s to_s if instance_methods(false).include?(:to_s)
+  alias to_s to_formatted_s
 
   # Returns a formatted string of the offset from UTC, or an alternative
   # string if the time zone is already UTC.
@@ -56,8 +56,8 @@ class DateTime
   def readable_inspect
     to_s(:rfc822)
   end
-  alias_method :default_inspect, :inspect
-  alias_method :inspect, :readable_inspect
+  alias default_inspect inspect
+  alias inspect readable_inspect
 
   # Returns DateTime with local offset for given year if format is local else
   # offset is zero.
@@ -67,11 +67,11 @@ class DateTime
   #   DateTime.civil_from_format :local, 2012, 12, 17
   #   # => Mon, 17 Dec 2012 00:00:00 +0000
   def self.civil_from_format(utc_or_local, year, month = 1, day = 1, hour = 0, min = 0, sec = 0)
-    if utc_or_local.to_sym == :local
-      offset = ::Time.local(year, month, day).utc_offset.to_r / 86400
-    else
-      offset = 0
-    end
+    offset = if utc_or_local.to_sym == :local
+               ::Time.local(year, month, day).utc_offset.to_r / 86_400
+             else
+               0
+             end
     civil(year, month, day, hour, min, sec, offset)
   end
 
@@ -97,11 +97,11 @@ class DateTime
 
   private
 
-    def offset_in_seconds
-      (offset * 86400).to_i
-    end
+  def offset_in_seconds
+    (offset * 86_400).to_i
+  end
 
-    def seconds_since_unix_epoch
-      (jd - 2440588) * 86400 - offset_in_seconds + seconds_since_midnight
-    end
+  def seconds_since_unix_epoch
+    (jd - 2_440_588) * 86_400 - offset_in_seconds + seconds_since_midnight
+  end
 end

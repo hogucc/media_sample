@@ -15,7 +15,7 @@ class Capybara::Selenium::Node
       end
     end
 
-  private
+    private
 
     def perform_legacy_drag(element)
       element.scroll_if_needed { browser_action.move_to(element.native).release.perform }

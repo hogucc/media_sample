@@ -1,12 +1,10 @@
 module CarrierWave
   module Test
-
     ##
     # These are some matchers that can be used in RSpec specs, to simplify the testing
     # of uploaders.
     #
     module Matchers
-
       class BeIdenticalTo # :nodoc:
         def initialize(expected)
           @expected = expected
@@ -30,7 +28,7 @@ module CarrierWave
         end
 
         # RSpec 2 compatibility:
-        alias_method :negative_failure_message, :failure_message_when_negated
+        alias negative_failure_message failure_message_when_negated
       end
 
       def be_identical_to(expected)
@@ -45,11 +43,11 @@ module CarrierWave
         def matches?(actual)
           @actual = actual
           # Satisfy expectation here. Return false or raise an error if it's not met.
-          (File.stat(@actual.path).mode & 0777) == @expected
+          (File.stat(@actual.path).mode & 0o777) == @expected
         end
 
         def failure_message
-          "expected #{@actual.current_path.inspect} to have permissions #{@expected.to_s(8)}, but they were #{(File.stat(@actual.path).mode & 0777).to_s(8)}"
+          "expected #{@actual.current_path.inspect} to have permissions #{@expected.to_s(8)}, but they were #{(File.stat(@actual.path).mode & 0o777).to_s(8)}"
         end
 
         def failure_message_when_negated
@@ -61,7 +59,7 @@ module CarrierWave
         end
 
         # RSpec 2 compatibility:
-        alias_method :negative_failure_message, :failure_message_when_negated
+        alias negative_failure_message failure_message_when_negated
       end
 
       def have_permissions(expected)
@@ -76,11 +74,11 @@ module CarrierWave
         def matches?(actual)
           @actual = actual
           # Satisfy expectation here. Return false or raise an error if it's not met.
-          (File.stat(File.dirname @actual.path).mode & 0777) == @expected
+          (File.stat(File.dirname(@actual.path)).mode & 0o777) == @expected
         end
 
         def failure_message
-          "expected #{File.dirname @actual.current_path.inspect} to have permissions #{@expected.to_s(8)}, but they were #{(File.stat(@actual.path).mode & 0777).to_s(8)}"
+          "expected #{File.dirname @actual.current_path.inspect} to have permissions #{@expected.to_s(8)}, but they were #{(File.stat(@actual.path).mode & 0o777).to_s(8)}"
         end
 
         def failure_message_when_negated
@@ -92,7 +90,7 @@ module CarrierWave
         end
 
         # RSpec 2 compatibility:
-        alias_method :negative_failure_message, :failure_message_when_negated
+        alias negative_failure_message failure_message_when_negated
       end
 
       def have_directory_permissions(expected)
@@ -101,7 +99,8 @@ module CarrierWave
 
       class BeNoLargerThan # :nodoc:
         def initialize(width, height)
-          @width, @height = width, height
+          @width = width
+          @height = height
         end
 
         def matches?(actual)
@@ -126,7 +125,7 @@ module CarrierWave
         end
 
         # RSpec 2 compatibility:
-        alias_method :negative_failure_message, :failure_message_when_negated
+        alias negative_failure_message failure_message_when_negated
       end
 
       def be_no_larger_than(width, height)
@@ -135,7 +134,8 @@ module CarrierWave
 
       class HaveDimensions # :nodoc:
         def initialize(width, height)
-          @width, @height = width, height
+          @width = width
+          @height = height
         end
 
         def matches?(actual)
@@ -160,7 +160,7 @@ module CarrierWave
         end
 
         # RSpec 2 compatibility:
-        alias_method :negative_failure_message, :failure_message_when_negated
+        alias negative_failure_message failure_message_when_negated
       end
 
       def have_dimensions(width, height)
@@ -193,7 +193,7 @@ module CarrierWave
         end
 
         # RSpec 2 compatibility:
-        alias_method :negative_failure_message, :failure_message_when_negated
+        alias negative_failure_message failure_message_when_negated
       end
 
       def have_height(height)
@@ -226,7 +226,7 @@ module CarrierWave
         end
 
         # RSpec 2 compatibility:
-        alias_method :negative_failure_message, :failure_message_when_negated
+        alias negative_failure_message failure_message_when_negated
       end
 
       def have_width(width)
@@ -259,7 +259,7 @@ module CarrierWave
         end
 
         # RSpec 2 compatibility:
-        alias_method :negative_failure_message, :failure_message_when_negated
+        alias negative_failure_message failure_message_when_negated
       end
 
       def be_no_wider_than(width)
@@ -292,7 +292,7 @@ module CarrierWave
         end
 
         # RSpec 2 compatibility:
-        alias_method :negative_failure_message, :failure_message_when_negated
+        alias negative_failure_message failure_message_when_negated
       end
 
       def be_no_taller_than(height)
@@ -325,7 +325,7 @@ module CarrierWave
         end
 
         # RSpec 2 compatibility:
-        alias_method :negative_failure_message, :failure_message_when_negated
+        alias negative_failure_message failure_message_when_negated
       end
 
       def be_format(expected)
@@ -343,7 +343,7 @@ module CarrierWave
               rescue LoadError
                 require 'RMagick'
               rescue LoadError
-                puts "WARNING: Failed to require rmagick, image processing may fail!"
+                puts 'WARNING: Failed to require rmagick, image processing may fail!'
               end
             end
             MagickWrapper.new(filename)
@@ -388,7 +388,6 @@ module CarrierWave
           @image = ::MiniMagick::Image.open(filename)
         end
       end
-
     end # Matchers
   end # Test
 end # CarrierWave

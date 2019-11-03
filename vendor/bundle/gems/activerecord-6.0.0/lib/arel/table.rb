@@ -11,7 +11,7 @@ module Arel # :nodoc: all
     attr_accessor :name, :table_alias
 
     # TableAlias and Table both have a #table_name which is the name of the underlying table
-    alias :table_name :name
+    alias table_name name
 
     def initialize(name, as: nil, type_caster: nil)
       @name = name.to_s
@@ -20,9 +20,7 @@ module Arel # :nodoc: all
       # Sometime AR sends an :as parameter to table, to let the table know
       # that it is an Alias.  We may want to override new, and return a
       # TableAlias node?
-      if as.to_s == @name
-        as = nil
-      end
+      as = nil if as.to_s == @name
       @table_alias = as
     end
 
@@ -40,6 +38,7 @@ module Arel # :nodoc: all
       case relation
       when String, Nodes::SqlLiteral
         raise EmptyJoinError if relation.empty?
+
         klass = Nodes::StringJoin
       end
 
@@ -91,10 +90,10 @@ module Arel # :nodoc: all
 
     def eql?(other)
       self.class == other.class &&
-        self.name == other.name &&
-        self.table_alias == other.table_alias
+        name == other.name &&
+        table_alias == other.table_alias
     end
-    alias :== :eql?
+    alias == eql?
 
     def type_cast_for_database(attribute_name, value)
       type_caster.type_cast_for_database(attribute_name, value)
@@ -105,6 +104,7 @@ module Arel # :nodoc: all
     end
 
     private
-      attr_reader :type_caster
+
+    attr_reader :type_caster
   end
 end

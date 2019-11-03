@@ -1,22 +1,22 @@
 # frozen_string_literal: true
 
-require "active_support/deprecation"
+require 'active_support/deprecation'
 
 module ActionView #:nodoc:
   # = Action View Template Handlers
   class Template #:nodoc:
     module Handlers #:nodoc:
-      autoload :Raw, "action_view/template/handlers/raw"
-      autoload :ERB, "action_view/template/handlers/erb"
-      autoload :Html, "action_view/template/handlers/html"
-      autoload :Builder, "action_view/template/handlers/builder"
+      autoload :Raw, 'action_view/template/handlers/raw'
+      autoload :ERB, 'action_view/template/handlers/erb'
+      autoload :Html, 'action_view/template/handlers/html'
+      autoload :Builder, 'action_view/template/handlers/builder'
 
       def self.extended(base)
         base.register_default_template_handler :raw, Raw.new
         base.register_template_handler :erb, ERB.new
         base.register_template_handler :html, Html.new
         base.register_template_handler :builder, Builder.new
-        base.register_template_handler :ruby, lambda { |_, source| source }
+        base.register_template_handler :ruby, ->(_, source) { source }
       end
 
       @@template_handlers = {}
@@ -38,24 +38,25 @@ module ActionView #:nodoc:
       # and should return the rendered template as a String.
       def register_template_handler(*extensions, handler)
         params = if handler.is_a?(Proc)
-          handler.parameters
-        else
-          handler.method(:call).parameters
+                   handler.parameters
+                 else
+                   handler.method(:call).parameters
         end
 
         unless params.find_all { |type, _| type == :req || type == :opt }.length >= 2
           ActiveSupport::Deprecation.warn <<~eowarn
-          Single arity template handlers are deprecated. Template handlers must
-          now accept two parameters, the view object and the source for the view object.
-          Change:
-            >> #{handler}.call(#{params.map(&:last).join(", ")})
-          To:
-            >> #{handler}.call(#{params.map(&:last).join(", ")}, source)
+            Single arity template handlers are deprecated. Template handlers must
+            now accept two parameters, the view object and the source for the view object.
+            Change:
+              >> #{handler}.call(#{params.map(&:last).join(', ')})
+            To:
+              >> #{handler}.call(#{params.map(&:last).join(', ')}, source)
           eowarn
           handler = LegacyHandlerWrapper.new(handler)
         end
 
-        raise(ArgumentError, "Extension is required") if extensions.empty?
+        raise(ArgumentError, 'Extension is required') if extensions.empty?
+
         extensions.each do |extension|
           @@template_handlers[extension.to_sym] = handler
         end

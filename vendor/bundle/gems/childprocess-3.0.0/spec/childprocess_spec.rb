@@ -1,14 +1,10 @@
-# encoding: utf-8
-
-require File.expand_path('../spec_helper', __FILE__)
+require File.expand_path('spec_helper', __dir__)
 require 'rubygems/mock_gem_ui'
 
-
 describe ChildProcess do
-
   here = File.dirname(__FILE__)
 
-  let(:gemspec) { eval(File.read "#{here}/../childprocess.gemspec") }
+  let(:gemspec) { eval(File.read("#{here}/../childprocess.gemspec")) }
 
   it 'validates cleanly' do
     mock_ui = Gem::MockGemUi.new
@@ -17,8 +13,7 @@ describe ChildProcess do
     expect(mock_ui.error).to_not match(/warn/i)
   end
 
-
-  it "returns self when started" do
+  it 'returns self when started' do
     process = sleeping_ruby
 
     expect(process.start).to eq process
@@ -32,16 +27,16 @@ describe ChildProcess do
   #
   # We could work around this by doing the PATH search ourselves, but not sure
   # it's worth it.
-  it "raises ChildProcess::LaunchError if the process can't be started", :posix_spawn_on_linux => false do
+  it "raises ChildProcess::LaunchError if the process can't be started", posix_spawn_on_linux: false do
     expect { invalid_process.start }.to raise_error(ChildProcess::LaunchError)
   end
 
   it 'raises ArgumentError if given a non-string argument' do
-    expect { ChildProcess.build(nil, "unlikelytoexist") }.to raise_error(ArgumentError)
-    expect { ChildProcess.build("foo", 1) }.to raise_error(ArgumentError)
+    expect { ChildProcess.build(nil, 'unlikelytoexist') }.to raise_error(ArgumentError)
+    expect { ChildProcess.build('foo', 1) }.to raise_error(ArgumentError)
   end
 
-  it "knows if the process crashed" do
+  it 'knows if the process crashed' do
     process = exit_with(1).start
     process.wait
 
@@ -55,7 +50,7 @@ describe ChildProcess do
     expect(process).to_not be_crashed
   end
 
-  it "can wait for a process to finish" do
+  it 'can wait for a process to finish' do
     process = exit_with(0).start
     return_value = process.wait
 
@@ -70,19 +65,19 @@ describe ChildProcess do
     expect(process.wait).to eql 0
   end
 
-  it "escalates if TERM is ignored" do
+  it 'escalates if TERM is ignored' do
     process = ignored('TERM').start
     process.stop
     expect(process).to be_exited
   end
 
-  it "accepts a timeout argument to #stop" do
+  it 'accepts a timeout argument to #stop' do
     process = sleeping_ruby.start
     process.stop(exit_timeout)
   end
 
-  it "lets child process inherit the environment of the current process" do
-    Tempfile.open("env-spec") do |file|
+  it 'lets child process inherit the environment of the current process' do
+    Tempfile.open('env-spec') do |file|
       file.close
       with_env('INHERITED' => 'yes') do
         process = write_env(file.path).start
@@ -95,8 +90,8 @@ describe ChildProcess do
     end
   end
 
-  it "can override env vars only for the current process" do
-    Tempfile.open("env-spec") do |file|
+  it 'can override env vars only for the current process' do
+    Tempfile.open('env-spec') do |file|
       file.close
       process = write_env(file.path)
       process.environment['CHILD_ONLY'] = '1'
@@ -113,7 +108,7 @@ describe ChildProcess do
   end
 
   it 'allows unicode characters in the environment' do
-    Tempfile.open("env-spec") do |file|
+    Tempfile.open('env-spec') do |file|
       file.close
       process = write_env(file.path)
       process.environment['FOö'] = 'baör'
@@ -128,7 +123,7 @@ describe ChildProcess do
   end
 
   it "inherits the parent's env vars also when some are overridden" do
-    Tempfile.open("env-spec") do |file|
+    Tempfile.open('env-spec') do |file|
       file.close
       with_env('INHERITED' => 'yes', 'CHILD_ONLY' => 'no') do
         process = write_env(file.path)
@@ -146,8 +141,8 @@ describe ChildProcess do
     end
   end
 
-  it "can unset env vars" do
-    Tempfile.open("env-spec") do |file|
+  it 'can unset env vars' do
+    Tempfile.open('env-spec') do |file|
       file.close
       ENV['CHILDPROCESS_UNSET'] = '1'
       process = write_env(file.path)
@@ -177,11 +172,10 @@ describe ChildProcess do
     end
   end
 
+  it 'passes arguments to the child' do
+    args = %w[foo bar]
 
-  it "passes arguments to the child" do
-    args = ["foo", "bar"]
-
-    Tempfile.open("argv-spec") do |file|
+    Tempfile.open('argv-spec') do |file|
       process = write_argv(file.path, *args).start
       process.wait
 
@@ -189,7 +183,7 @@ describe ChildProcess do
     end
   end
 
-  it "lets a detached child live on" do
+  it 'lets a detached child live on' do
     p_pid = nil
     c_pid = nil
 
@@ -202,7 +196,6 @@ describe ChildProcess do
       p_process.start
       p_process.wait
 
-
       # Gather parent and child PIDs
       pids = rewind_and_read(gp_file).split("\n")
       pids.collect! { |pid| pid[/\d+/].to_i }
@@ -214,9 +207,9 @@ describe ChildProcess do
     expect(alive?(c_pid)).to be true
   end
 
-  it "preserves Dir.pwd in the child" do
-    Tempfile.open("dir-spec-out") do |file|
-      process = ruby("print Dir.pwd")
+  it 'preserves Dir.pwd in the child' do
+    Tempfile.open('dir-spec-out') do |file|
+      process = ruby('print Dir.pwd')
       process.io.stdout = process.io.stderr = file
 
       expected_dir = nil
@@ -231,10 +224,10 @@ describe ChildProcess do
     end
   end
 
-  it "can handle whitespace, special characters and quotes in arguments" do
-    args = ["foo bar", 'foo\bar', "'i-am-quoted'", '"i am double quoted"']
+  it 'can handle whitespace, special characters and quotes in arguments' do
+    args = ['foo bar', 'foo\bar', "'i-am-quoted'", '"i am double quoted"']
 
-    Tempfile.open("argv-spec") do |file|
+    Tempfile.open('argv-spec') do |file|
       process = write_argv(file.path, *args).start
       process.wait
 
@@ -251,15 +244,15 @@ describe ChildProcess do
     end
   end
 
-  it "times out when polling for exit" do
+  it 'times out when polling for exit' do
     process = sleeping_ruby.start
     expect { process.poll_for_exit(0.1) }.to raise_error(ChildProcess::TimeoutError)
   end
 
-  it "can change working directory" do
-    process = ruby "print Dir.pwd"
+  it 'can change working directory' do
+    process = ruby 'print Dir.pwd'
 
-    with_tmpdir { |dir|
+    with_tmpdir do |dir|
       process.cwd = dir
 
       orig_pwd = Dir.pwd
@@ -274,17 +267,19 @@ describe ChildProcess do
       end
 
       expect(Dir.pwd).to eq orig_pwd
-    }
+    end
   end
 
-  it 'kills the full process tree', :process_builder => false do
+  it 'kills the full process tree', process_builder: false do
     Tempfile.open('kill-process-tree') do |file|
       process = write_pid_in_sleepy_grand_child(file.path)
       process.leader = true
       process.start
 
       pid = wait_until(30) do
-        Integer(rewind_and_read(file)) rescue nil
+        Integer(rewind_and_read(file))
+      rescue StandardError
+        nil
       end
 
       process.stop
@@ -299,11 +294,11 @@ describe ChildProcess do
     threads << Thread.new { sleeping_ruby(1).start.wait }
     threads << Thread.new(time) { expect(Time.now - time).to be < 0.5 }
 
-    threads.each { |t| t.join }
+    threads.each(&:join)
   end
 
   it 'can check if a detached child is alive' do
-    proc = ruby_process("-e", "sleep")
+    proc = ruby_process('-e', 'sleep')
     proc.detach = true
 
     proc.start
@@ -315,7 +310,6 @@ describe ChildProcess do
   end
 
   describe 'OS detection' do
-
     before(:all) do
       # Save off original OS so that it can be restored later
       @original_host_os = RbConfig::CONFIG['host_os']
@@ -327,11 +321,9 @@ describe ChildProcess do
       ChildProcess.instance_variable_set(:@os, nil)
     end
 
-
     # TODO: add tests for other OSs
     context 'on a BSD system' do
-
-      let(:bsd_patterns) { ['bsd', 'dragonfly'] }
+      let(:bsd_patterns) { %w[bsd dragonfly] }
 
       it 'correctly identifies BSD systems' do
         bsd_patterns.each do |pattern|
@@ -341,9 +333,7 @@ describe ChildProcess do
           expect(ChildProcess.os).to eq(:bsd)
         end
       end
-
     end
-
   end
 
   it 'has a logger' do
@@ -362,9 +352,7 @@ describe ChildProcess do
     end
   end
 
-
   describe 'logger' do
-
     before(:each) do
       ChildProcess.logger = logger
     end
@@ -373,11 +361,8 @@ describe ChildProcess do
       ChildProcess.logger = nil
     end
 
-
     context 'with the default logger' do
-
       let(:logger) { nil }
-
 
       it 'logs at INFO level by default' do
         expect(ChildProcess.logger.level).to eq(Logger::INFO)
@@ -395,28 +380,24 @@ describe ChildProcess do
         end
       end
 
-      it "logs to stderr by default" do
+      it 'logs to stderr by default' do
         cap = capture_std { generate_log_messages }
 
         expect(cap.stdout).to be_empty
         expect(cap.stderr).to_not be_empty
       end
-
     end
 
     context 'with a custom logger' do
-
       let(:logger) { Logger.new($stdout) }
 
-      it "logs to configured logger" do
+      it 'logs to configured logger' do
         cap = capture_std { generate_log_messages }
 
         expect(cap.stdout).to_not be_empty
         expect(cap.stderr).to be_empty
       end
-
     end
-
   end
 
   describe '#started?' do
@@ -441,7 +422,5 @@ describe ChildProcess do
 
       it { is_expected.to be true }
     end
-
   end
-
 end

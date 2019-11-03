@@ -4,13 +4,9 @@ module ActiveRecord
   class PredicateBuilder
     class RelationHandler # :nodoc:
       def call(attribute, value)
-        if value.eager_loading?
-          value = value.send(:apply_join_dependency)
-        end
+        value = value.send(:apply_join_dependency) if value.eager_loading?
 
-        if value.select_values.empty?
-          value = value.select(value.arel_attribute(value.klass.primary_key))
-        end
+        value = value.select(value.arel_attribute(value.klass.primary_key)) if value.select_values.empty?
 
         attribute.in(value.arel)
       end

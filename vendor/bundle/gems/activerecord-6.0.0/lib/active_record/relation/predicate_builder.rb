@@ -27,7 +27,7 @@ module ActiveRecord
           key
         else
           key = key.to_s
-          key.split(".").first if key.include?(".")
+          key.split('.').first if key.include?('.')
         end
       end.compact
     end
@@ -62,89 +62,91 @@ module ActiveRecord
     end
 
     protected
-      def expand_from_hash(attributes)
-        return ["1=0"] if attributes.empty?
 
-        attributes.flat_map do |key, value|
-          if value.is_a?(Hash) && !table.has_column?(key)
-            associated_predicate_builder(key).expand_from_hash(value)
-          elsif table.associated_with?(key)
-            # Find the foreign key when using queries such as:
-            # Post.where(author: author)
-            #
-            # For polymorphic relationships, find the foreign key and type:
-            # PriceEstimate.where(estimate_of: treasure)
-            associated_table = table.associated_table(key)
-            if associated_table.polymorphic_association?
-              case value.is_a?(Array) ? value.first : value
-              when Base, Relation
-                value = [value] unless value.is_a?(Array)
-                klass = PolymorphicArrayValue
-              end
+    def expand_from_hash(attributes)
+      return ['1=0'] if attributes.empty?
+
+      attributes.flat_map do |key, value|
+        if value.is_a?(Hash) && !table.has_column?(key)
+          associated_predicate_builder(key).expand_from_hash(value)
+        elsif table.associated_with?(key)
+          # Find the foreign key when using queries such as:
+          # Post.where(author: author)
+          #
+          # For polymorphic relationships, find the foreign key and type:
+          # PriceEstimate.where(estimate_of: treasure)
+          associated_table = table.associated_table(key)
+          if associated_table.polymorphic_association?
+            case value.is_a?(Array) ? value.first : value
+            when Base, Relation
+              value = [value] unless value.is_a?(Array)
+              klass = PolymorphicArrayValue
             end
+          end
 
-            klass ||= AssociationQueryValue
-            queries = klass.new(associated_table, value).queries.map do |query|
-              expand_from_hash(query).reduce(&:and)
+          klass ||= AssociationQueryValue
+          queries = klass.new(associated_table, value).queries.map do |query|
+            expand_from_hash(query).reduce(&:and)
+          end
+          queries.reduce(&:or)
+        elsif table.aggregated_with?(key)
+          mapping = table.reflect_on_aggregation(key).mapping
+          values = value.nil? ? [nil] : Array.wrap(value)
+          if mapping.length == 1 || values.empty?
+            column_name, aggr_attr = mapping.first
+            values = values.map do |object|
+              object.respond_to?(aggr_attr) ? object.public_send(aggr_attr) : object
+            end
+            build(table.arel_attribute(column_name), values)
+          else
+            queries = values.map do |object|
+              mapping.map do |field_attr, aggregate_attr|
+                build(table.arel_attribute(field_attr), object.try!(aggregate_attr))
+              end.reduce(&:and)
             end
             queries.reduce(&:or)
-          elsif table.aggregated_with?(key)
-            mapping = table.reflect_on_aggregation(key).mapping
-            values = value.nil? ? [nil] : Array.wrap(value)
-            if mapping.length == 1 || values.empty?
-              column_name, aggr_attr = mapping.first
-              values = values.map do |object|
-                object.respond_to?(aggr_attr) ? object.public_send(aggr_attr) : object
-              end
-              build(table.arel_attribute(column_name), values)
-            else
-              queries = values.map do |object|
-                mapping.map do |field_attr, aggregate_attr|
-                  build(table.arel_attribute(field_attr), object.try!(aggregate_attr))
-                end.reduce(&:and)
-              end
-              queries.reduce(&:or)
-            end
-          else
-            build(table.arel_attribute(key), value)
           end
+        else
+          build(table.arel_attribute(key), value)
         end
       end
+    end
 
     private
-      attr_reader :table
 
-      def associated_predicate_builder(association_name)
-        self.class.new(table.associated_table(association_name))
+    attr_reader :table
+
+    def associated_predicate_builder(association_name)
+      self.class.new(table.associated_table(association_name))
+    end
+
+    def convert_dot_notation_to_hash(attributes)
+      dot_notation = attributes.select do |k, v|
+        k.include?('.') && !v.is_a?(Hash)
       end
 
-      def convert_dot_notation_to_hash(attributes)
-        dot_notation = attributes.select do |k, v|
-          k.include?(".") && !v.is_a?(Hash)
-        end
+      dot_notation.each_key do |key|
+        table_name, column_name = key.split('.')
+        value = attributes.delete(key)
+        attributes[table_name] ||= {}
 
-        dot_notation.each_key do |key|
-          table_name, column_name = key.split(".")
-          value = attributes.delete(key)
-          attributes[table_name] ||= {}
-
-          attributes[table_name] = attributes[table_name].merge(column_name => value)
-        end
-
-        attributes
+        attributes[table_name] = attributes[table_name].merge(column_name => value)
       end
 
-      def handler_for(object)
-        @handlers.detect { |klass, _| klass === object }.last
-      end
+      attributes
+    end
+
+    def handler_for(object)
+      @handlers.detect { |klass, _| klass === object }.last
+    end
   end
 end
 
-require "active_record/relation/predicate_builder/array_handler"
-require "active_record/relation/predicate_builder/base_handler"
-require "active_record/relation/predicate_builder/basic_object_handler"
-require "active_record/relation/predicate_builder/range_handler"
-require "active_record/relation/predicate_builder/relation_handler"
+require 'active_record/relation/predicate_builder/array_handler'
+require 'active_record/relation/predicate_builder/base_handler'
+require 'active_record/relation/predicate_builder/basic_object_handler'
+require 'active_record/relation/predicate_builder/range_handler'
+require 'active_record/relation/predicate_builder/relation_handler'
 
-require "active_record/relation/predicate_builder/association_query_value"
-require "active_record/relation/predicate_builder/polymorphic_array_value"
+require 'active_record/relation/predicate_builder/association_query_value'
+require 'active_record/relation/predicate_builder/polymorphic_array_value'

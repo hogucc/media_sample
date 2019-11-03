@@ -55,6 +55,6 @@ Capybara.add_selector(:label, locator_type: [String, Symbol]) do
   end
 
   def labelable_elements
-    %i[button input keygen meter output progress select textarea]
+    [:button, :input, :keygen, :meter, :output, :progress, :select, :textarea]
   end
 end

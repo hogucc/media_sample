@@ -30,11 +30,11 @@ module ActiveRecord
 
     private
 
-      def exec_queries
-        super do |record|
-          @association.set_inverse_instance_from_queries(record)
-          yield record if block_given?
-        end
+    def exec_queries
+      super do |record|
+        @association.set_inverse_instance_from_queries(record)
+        yield record if block_given?
       end
+    end
   end
 end

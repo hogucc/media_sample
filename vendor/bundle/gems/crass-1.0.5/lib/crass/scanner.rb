@@ -1,8 +1,6 @@
-# encoding: utf-8
 require 'strscan'
 
 module Crass
-
   # Similar to a StringScanner, but with extra functionality needed to tokenize
   # CSS while preserving the original text.
   class Scanner
@@ -121,5 +119,4 @@ module Crass
       match
     end
   end
-
 end

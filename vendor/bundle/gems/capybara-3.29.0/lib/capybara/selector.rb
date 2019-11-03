@@ -191,7 +191,8 @@ Capybara::Selector::FilterSet.add(:_field) do
   end
 
   describe(:node_filters) do |checked: nil, unchecked: nil, disabled: nil, valid: nil, **|
-    desc, states = +'', []
+    desc = +''
+    states = []
     states << 'checked' if checked || (unchecked == false)
     states << 'not checked' if unchecked || (checked == false)
     states << 'disabled' if disabled == true

@@ -11,15 +11,29 @@ class Capybara::RackTest::Form < Capybara::RackTest::Node
       @empty_file.close
     end
 
-    def original_filename; ''; end
-    def content_type; 'application/octet-stream'; end
-    def path; @empty_file.path; end
-    def size; 0; end
-    def read; ''; end
+    def original_filename
+      ''
+    end
+
+    def content_type
+      'application/octet-stream'
+    end
+
+    def path
+      @empty_file.path
+    end
+
+    def size
+      0
+    end
+
+    def read
+      ''
+    end
   end
 
   def params(button)
-    form_element_types = %i[input select textarea button]
+    form_element_types = [:input, :select, :textarea, :button]
     form_elements_xpath = XPath.generate do |xp|
       xpath = xp.descendant(*form_element_types).where(!xp.attr(:form))
       xpath += xp.anywhere(*form_element_types).where(xp.attr(:form) == native[:id]) if native[:id]
@@ -47,7 +61,7 @@ class Capybara::RackTest::Form < Capybara::RackTest::Node
     self[:enctype] == 'multipart/form-data'
   end
 
-private
+  private
 
   class ParamsHash < Hash
     def to_params_hash
@@ -77,22 +91,23 @@ private
   end
 
   def add_input_param(field, params)
-    name, value = field['name'].to_s, field['value'].to_s
+    name = field['name'].to_s
+    value = field['value'].to_s
     return if name.empty?
 
     value = case field['type']
-    when 'radio', 'checkbox'
-      return unless field['checked']
+            when 'radio', 'checkbox'
+              return unless field['checked']
 
-      Capybara::RackTest::Node.new(driver, field).value.to_s
-    when 'file'
-      if multipart?
-        file_to_upload(value)
-      else
-        File.basename(value)
-      end
-    else
-      value
+              Capybara::RackTest::Node.new(driver, field).value.to_s
+            when 'file'
+              if multipart?
+                file_to_upload(value)
+              else
+                File.basename(value)
+              end
+            else
+              value
     end
     merge_param!(params, name, value)
   end

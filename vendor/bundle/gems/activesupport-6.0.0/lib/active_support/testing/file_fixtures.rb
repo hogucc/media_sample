@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "active_support/concern"
+require 'active_support/concern'
 
 module ActiveSupport
   module Testing
@@ -30,7 +30,7 @@ module ActiveSupport
           path
         else
           msg = "the directory '%s' does not contain a file named '%s'"
-          raise ArgumentError, msg % [file_fixture_path, fixture_name]
+          raise ArgumentError, format(msg, file_fixture_path, fixture_name)
         end
       end
     end

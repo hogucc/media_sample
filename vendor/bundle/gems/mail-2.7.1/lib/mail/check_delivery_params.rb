@@ -1,25 +1,22 @@
 # frozen_string_literal: true
+
 module Mail
   module CheckDeliveryParams #:nodoc:
     class << self
       def check(mail)
-        [ check_from(mail.smtp_envelope_from),
-          check_to(mail.smtp_envelope_to),
-          check_message(mail) ]
+        [check_from(mail.smtp_envelope_from),
+         check_to(mail.smtp_envelope_to),
+         check_message(mail)]
       end
 
       def check_from(addr)
-        if Utilities.blank?(addr)
-          raise ArgumentError, "SMTP From address may not be blank: #{addr.inspect}"
-        end
+        raise ArgumentError, "SMTP From address may not be blank: #{addr.inspect}" if Utilities.blank?(addr)
 
         check_addr 'From', addr
       end
 
       def check_to(addrs)
-        if Utilities.blank?(addrs)
-          raise ArgumentError, "SMTP To address may not be blank: #{addrs.inspect}"
-        end
+        raise ArgumentError, "SMTP To address may not be blank: #{addrs.inspect}" if Utilities.blank?(addrs)
 
         Array(addrs).map do |addr|
           check_addr 'To', addr
@@ -34,9 +31,7 @@ module Mail
 
       def validate_smtp_addr(addr)
         if addr
-          if addr.bytesize > 2048
-            yield 'may not exceed 2kB'
-          end
+          yield 'may not exceed 2kB' if addr.bytesize > 2048
 
           if /[\r\n]/ =~ addr
             yield 'may not contain CR or LF line breaks'
@@ -49,9 +44,7 @@ module Mail
       def check_message(message)
         message = message.encoded if message.respond_to?(:encoded)
 
-        if Utilities.blank?(message)
-          raise ArgumentError, 'An encoded message is required to send an email'
-        end
+        raise ArgumentError, 'An encoded message is required to send an email' if Utilities.blank?(message)
 
         message
       end

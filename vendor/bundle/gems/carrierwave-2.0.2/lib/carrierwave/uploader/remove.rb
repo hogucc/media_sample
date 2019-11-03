@@ -10,12 +10,11 @@ module CarrierWave
       #
       def remove!
         with_callbacks(:remove) do
-          @file.delete if @file
+          @file&.delete
           @file = nil
           @cache_id = nil
         end
       end
-
     end # Remove
   end # Uploader
 end # CarrierWave

@@ -1,13 +1,12 @@
 require 'carrierwave/downloader/base'
 
 module CarrierWave
-
   module Uploader
     module Configuration
       extend ActiveSupport::Concern
 
       included do
-        class_attribute :_storage, :_cache_storage, :instance_writer => false
+        class_attribute :_storage, :_cache_storage, instance_writer: false
 
         add_config :root
         add_config :base_path
@@ -50,7 +49,6 @@ module CarrierWave
       end
 
       module ClassMethods
-
         ##
         # Sets the storage engine to be used when storing files with this uploader.
         # Can be any class that implements a #store!(CarrierWave::SanitizedFile) and a #retrieve!
@@ -89,7 +87,7 @@ module CarrierWave
           end
           _storage
         end
-        alias_method :storage=, :storage
+        alias storage= storage
 
         ##
         # Sets the cache storage engine to be used when storing cache files with this uploader.
@@ -116,7 +114,7 @@ module CarrierWave
           end
           _cache_storage
         end
-        alias_method :cache_storage=, :cache_storage
+        alias cache_storage= cache_storage
 
         def add_config(name)
           class_eval <<-RUBY, __FILE__, __LINE__ + 1
@@ -124,7 +122,7 @@ module CarrierWave
 
             def self.#{name}(value=nil)
               @#{name} = value if value
-              return @#{name} if self.object_id == #{self.object_id} || defined?(@#{name})
+              return @#{name} if self.object_id == #{object_id} || defined?(@#{name})
               name = superclass.#{name}
               return nil if name.nil? && !instance_variable_defined?(:@#{name})
               @#{name} = name && !name.is_a?(Module) && !name.is_a?(Symbol) && !name.is_a?(Numeric) && !name.is_a?(TrueClass) && !name.is_a?(FalseClass) ? name.dup : name
@@ -179,11 +177,11 @@ module CarrierWave
         #
         def reset_config
           configure do |config|
-            config.permissions = 0644
-            config.directory_permissions = 0755
+            config.permissions = 0o644
+            config.directory_permissions = 0o755
             config.storage_engines = {
-              :file => "CarrierWave::Storage::File",
-              :fog  => "CarrierWave::Storage::Fog"
+              file: 'CarrierWave::Storage::File',
+              fog: 'CarrierWave::Storage::Fog'
             }
             config.storage = :file
             config.cache_storage = nil
@@ -206,14 +204,13 @@ module CarrierWave
             config.validate_integrity = true
             config.validate_processing = true
             config.validate_download = true
-            config.root = lambda { CarrierWave.root }
+            config.root = -> { CarrierWave.root }
             config.base_path = CarrierWave.base_path
             config.enable_processing = true
             config.ensure_multipart_form = true
           end
         end
       end
-
     end
   end
 end

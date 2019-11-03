@@ -10,7 +10,7 @@ module Arel # :nodoc: all
       def eql?(other)
         self.class == other.class
       end
-      alias :== :eql?
+      alias == eql?
     end
   end
 end

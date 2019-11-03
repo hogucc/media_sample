@@ -2,7 +2,6 @@ require 'concurrent/synchronization/abstract_struct'
 require 'concurrent/synchronization'
 
 module Concurrent
-
   # A thread-safe, immutable variation of Ruby's standard `Struct`.
   #
   # @see http://ruby-doc.org/core-2.2.0/Struct.html Ruby standard library `Struct`
@@ -18,7 +17,7 @@ module Concurrent
       ns_values
     end
 
-    alias_method :to_a, :values
+    alias to_a values
 
     # @!macro struct_values_at
     def values_at(*indexes)
@@ -30,7 +29,7 @@ module Concurrent
       ns_inspect
     end
 
-    alias_method :to_s, :inspect
+    alias to_s inspect
 
     # @!macro struct_merge
     def merge(other, &block)
@@ -55,29 +54,33 @@ module Concurrent
     # @!macro struct_each
     def each(&block)
       return enum_for(:each) unless block_given?
+
       ns_each(&block)
     end
 
     # @!macro struct_each_pair
     def each_pair(&block)
       return enum_for(:each_pair) unless block_given?
+
       ns_each_pair(&block)
     end
 
     # @!macro struct_select
     def select(&block)
       return enum_for(:select) unless block_given?
+
       ns_select(&block)
     end
 
     # @!macro struct_new
     def self.new(*args, &block)
       clazz_name = nil
-      if args.length == 0
-        raise ArgumentError.new('wrong number of arguments (0 for 1+)')
-      elsif args.length > 0 && args.first.is_a?(String)
+      if args.empty?
+        raise ArgumentError, 'wrong number of arguments (0 for 1+)'
+      elsif !args.empty? && args.first.is_a?(String)
         clazz_name = args.shift
       end
+
       FACTORY.define_struct(clazz_name, args, &block)
     end
 

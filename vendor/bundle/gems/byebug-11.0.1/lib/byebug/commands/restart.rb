@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-require "byebug/command"
-require "byebug/helpers/bin"
-require "byebug/helpers/path"
-require "shellwords"
-require "English"
-require "rbconfig"
+require 'byebug/command'
+require 'byebug/helpers/bin'
+require 'byebug/helpers/path'
+require 'shellwords'
+require 'English'
+require 'rbconfig'
 
 module Byebug
   #
@@ -34,18 +34,18 @@ module Byebug
     end
 
     def self.short_description
-      "Restarts the debugged program"
+      'Restarts the debugged program'
     end
 
     def execute
-      cmd = [$PROGRAM_NAME]
+      cmd = [$0]
 
       cmd = prepend_byebug_bin(cmd)
       cmd = prepend_ruby_bin(cmd)
 
-      cmd += (@match[:args] ? @match[:args].shellsplit : $ARGV)
+      cmd += (@match[:args] ? @match[:args].shellsplit : $*)
 
-      puts pr("restart.success", cmd: cmd.shelljoin)
+      puts pr('restart.success', cmd: cmd.shelljoin)
       Kernel.exec(*cmd)
     end
 
@@ -57,7 +57,7 @@ module Byebug
     end
 
     def prepend_ruby_bin(cmd)
-      cmd.unshift(RbConfig.ruby) if which("ruby") != which(cmd.first)
+      cmd.unshift(RbConfig.ruby) if which('ruby') != which(cmd.first)
       cmd
     end
   end

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "active_support/core_ext/big_decimal/conversions"
-require "active_support/multibyte/chars"
+require 'active_support/core_ext/big_decimal/conversions'
+require 'active_support/multibyte/chars'
 
 module ActiveRecord
   module ConnectionAdapters # :nodoc:
@@ -11,9 +11,7 @@ module ActiveRecord
       def quote(value)
         value = id_value_for_database(value) if value.is_a?(Base)
 
-        if value.respond_to?(:value_for_database)
-          value = value.value_for_database
-        end
+        value = value.value_for_database if value.respond_to?(:value_for_database)
 
         _quote(value)
       end
@@ -24,13 +22,11 @@ module ActiveRecord
       def type_cast(value, column = nil)
         value = id_value_for_database(value) if value.is_a?(Base)
 
-        if column
-          value = type_cast_from_column(column, value)
-        end
+        value = type_cast_from_column(column, value) if column
 
         _type_cast(value)
       rescue TypeError
-        to_type = column ? " to #{column.type}" : ""
+        to_type = column ? " to #{column.type}" : ''
         raise TypeError, "can't cast #{value.class}#{to_type}"
       end
 
@@ -95,7 +91,7 @@ module ActiveRecord
       end
 
       def quoted_true
-        "TRUE"
+        'TRUE'
       end
 
       def unquoted_true
@@ -103,7 +99,7 @@ module ActiveRecord
       end
 
       def quoted_false
-        "FALSE"
+        'FALSE'
       end
 
       def unquoted_false
@@ -116,14 +112,12 @@ module ActiveRecord
         if value.acts_like?(:time)
           zone_conversion_method = ActiveRecord::Base.default_timezone == :utc ? :getutc : :getlocal
 
-          if value.respond_to?(zone_conversion_method)
-            value = value.send(zone_conversion_method)
-          end
+          value = value.send(zone_conversion_method) if value.respond_to?(zone_conversion_method)
         end
 
         result = value.to_s(:db)
         if value.respond_to?(:usec) && value.usec > 0
-          "#{result}.#{sprintf("%06d", value.usec)}"
+          "#{result}.#{format('%06d', value.usec)}"
         else
           result
         end
@@ -131,7 +125,7 @@ module ActiveRecord
 
       def quoted_time(value) # :nodoc:
         value = value.change(year: 2000, month: 1, day: 1)
-        quoted_date(value).sub(/\A\d\d\d\d-\d\d-\d\d /, "")
+        quoted_date(value).sub(/\A\d\d\d\d-\d\d-\d\d /, '')
       end
 
       def quoted_binary(value) # :nodoc:
@@ -139,7 +133,7 @@ module ActiveRecord
       end
 
       def sanitize_as_sql_comment(value) # :nodoc:
-        value.to_s.gsub(%r{ (/ (?: | \g<1>) \*) \+? \s* | \s* (\* (?: | \g<2>) /) }x, "")
+        value.to_s.gsub(%r{ (/ (?: | \g<1>) \*) \+? \s* | \s* (\* (?: | \g<2>) /) }x, '')
       end
 
       def column_name_matcher # :nodoc:
@@ -166,7 +160,7 @@ module ActiveRecord
         )
         (?:\s*,\s*\g<1>)*
         \z
-      /ix
+      /ix.freeze
 
       # Regexp for column names with order (with or without a table name prefix,
       # with or without various order modifiers). Matches the following:
@@ -191,61 +185,62 @@ module ActiveRecord
         )
         (?:\s*,\s*\g<1>)*
         \z
-      /ix
+      /ix.freeze
 
       private_constant :COLUMN_NAME, :COLUMN_NAME_WITH_ORDER
 
       private
-        def type_casted_binds(binds)
-          if binds.first.is_a?(Array)
-            binds.map { |column, value| type_cast(value, column) }
-          else
-            binds.map { |attr| type_cast(attr.value_for_database) }
-          end
-        end
 
-        def lookup_cast_type(sql_type)
-          type_map.lookup(sql_type)
+      def type_casted_binds(binds)
+        if binds.first.is_a?(Array)
+          binds.map { |column, value| type_cast(value, column) }
+        else
+          binds.map { |attr| type_cast(attr.value_for_database) }
         end
+      end
 
-        def id_value_for_database(value)
-          if primary_key = value.class.primary_key
-            value.instance_variable_get(:@attributes)[primary_key].value_for_database
-          end
-        end
+      def lookup_cast_type(sql_type)
+        type_map.lookup(sql_type)
+      end
 
-        def _quote(value)
-          case value
-          when String, Symbol, ActiveSupport::Multibyte::Chars
-            "'#{quote_string(value.to_s)}'"
-          when true       then quoted_true
-          when false      then quoted_false
-          when nil        then "NULL"
-          # BigDecimals need to be put in a non-normalized form and quoted.
-          when BigDecimal then value.to_s("F")
-          when Numeric, ActiveSupport::Duration then value.to_s
-          when Type::Binary::Data then quoted_binary(value)
-          when Type::Time::Value then "'#{quoted_time(value)}'"
-          when Date, Time then "'#{quoted_date(value)}'"
-          when Class      then "'#{value}'"
-          else raise TypeError, "can't quote #{value.class.name}"
-          end
+      def id_value_for_database(value)
+        if primary_key = value.class.primary_key
+          value.instance_variable_get(:@attributes)[primary_key].value_for_database
         end
+      end
 
-        def _type_cast(value)
-          case value
-          when Symbol, ActiveSupport::Multibyte::Chars, Type::Binary::Data
-            value.to_s
-          when true       then unquoted_true
-          when false      then unquoted_false
-          # BigDecimals need to be put in a non-normalized form and quoted.
-          when BigDecimal then value.to_s("F")
-          when nil, Numeric, String then value
-          when Type::Time::Value then quoted_time(value)
-          when Date, Time then quoted_date(value)
-          else raise TypeError
-          end
+      def _quote(value)
+        case value
+        when String, Symbol, ActiveSupport::Multibyte::Chars
+          "'#{quote_string(value.to_s)}'"
+        when true       then quoted_true
+        when false      then quoted_false
+        when nil        then 'NULL'
+        # BigDecimals need to be put in a non-normalized form and quoted.
+        when BigDecimal then value.to_s('F')
+        when Numeric, ActiveSupport::Duration then value.to_s
+        when Type::Binary::Data then quoted_binary(value)
+        when Type::Time::Value then "'#{quoted_time(value)}'"
+        when Date, Time then "'#{quoted_date(value)}'"
+        when Class      then "'#{value}'"
+        else raise TypeError, "can't quote #{value.class.name}"
         end
+      end
+
+      def _type_cast(value)
+        case value
+        when Symbol, ActiveSupport::Multibyte::Chars, Type::Binary::Data
+          value.to_s
+        when true       then unquoted_true
+        when false      then unquoted_false
+        # BigDecimals need to be put in a non-normalized form and quoted.
+        when BigDecimal then value.to_s('F')
+        when nil, Numeric, String then value
+        when Type::Time::Value then quoted_time(value)
+        when Date, Time then quoted_date(value)
+        else raise TypeError
+        end
+      end
     end
   end
 end

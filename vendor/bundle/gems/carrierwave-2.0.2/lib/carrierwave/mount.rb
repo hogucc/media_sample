@@ -1,5 +1,4 @@
 module CarrierWave
-
   ##
   # If a Class is extended with this module, it gains the mount_uploader
   # method, which is used for mapping attributes to uploaders and allowing
@@ -11,7 +10,6 @@ module CarrierWave
   # needs to implement a `read_uploader` and a `write_uploader` method.
   #
   module Mount
-
     ##
     # === Returns
     #
@@ -38,7 +36,7 @@ module CarrierWave
     # [Object] The option value
     #
     def uploader_option(column, option)
-      if uploader_options[column].has_key?(option)
+      if uploader_options[column].key?(option)
         uploader_options[column][option]
       else
         uploaders[column].send(option)
@@ -131,12 +129,12 @@ module CarrierWave
     #       end
     #     end
     #
-    def mount_uploader(column, uploader=nil, options={}, &block)
+    def mount_uploader(column, uploader = nil, options = {}, &block)
       mount_base(column, uploader, options, &block)
 
       mod = Module.new
       include mod
-      mod.class_eval <<-RUBY, __FILE__, __LINE__+1
+      mod.class_eval <<-RUBY, __FILE__, __LINE__ + 1
 
         def #{column}
           _mounter(:#{column}).uploaders[0] ||= _mounter(:#{column}).blank_uploader
@@ -294,12 +292,12 @@ module CarrierWave
     #       end
     #     end
     #
-    def mount_uploaders(column, uploader=nil, options={}, &block)
+    def mount_uploaders(column, uploader = nil, options = {}, &block)
       mount_base(column, uploader, options, &block)
 
       mod = Module.new
       include mod
-      mod.class_eval <<-RUBY, __FILE__, __LINE__+1
+      mod.class_eval <<-RUBY, __FILE__, __LINE__ + 1
 
         def #{column}
           _mounter(:#{column}).uploaders
@@ -359,7 +357,7 @@ module CarrierWave
 
     private
 
-    def mount_base(column, uploader=nil, options={}, &block)
+    def mount_base(column, uploader = nil, options = {}, &block)
       include CarrierWave::Mount::Extension
 
       uploader = build_uploader(uploader, &block)
@@ -368,14 +366,14 @@ module CarrierWave
 
       # Make sure to write over accessors directly defined on the class.
       # Simply super to the included module below.
-      class_eval <<-RUBY, __FILE__, __LINE__+1
+      class_eval <<-RUBY, __FILE__, __LINE__ + 1
         def #{column}; super; end
         def #{column}=(new_file); super; end
       RUBY
 
       mod = Module.new
       include mod
-      mod.class_eval <<-RUBY, __FILE__, __LINE__+1
+      mod.class_eval <<-RUBY, __FILE__, __LINE__ + 1
 
         def #{column}?
           _mounter(:#{column}).present?
@@ -434,7 +432,6 @@ module CarrierWave
     end
 
     module Extension
-
       ##
       # overwrite this to read from a serialized attribute
       #
@@ -445,16 +442,15 @@ module CarrierWave
       #
       def write_uploader(column, identifier); end
 
-    private
+      private
 
       def _mounter(column)
         # We cannot memoize in frozen objects :(
         return Mounter.new(self, column) if frozen?
+
         @_mounters ||= {}
         @_mounters[column] ||= Mounter.new(self, column)
       end
-
     end # Extension
-
   end # Mount
 end # CarrierWave

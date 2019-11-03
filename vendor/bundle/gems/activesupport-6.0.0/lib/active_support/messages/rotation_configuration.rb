@@ -6,7 +6,8 @@ module ActiveSupport
       attr_reader :signed, :encrypted
 
       def initialize
-        @signed, @encrypted = [], []
+        @signed = []
+        @encrypted = []
       end
 
       def rotate(kind, *args)

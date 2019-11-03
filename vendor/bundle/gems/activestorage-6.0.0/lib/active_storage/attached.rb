@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "active_support/core_ext/module/delegation"
+require 'active_support/core_ext/module/delegation'
 
 module ActiveStorage
   # Abstract base class for the concrete ActiveStorage::Attached::One and ActiveStorage::Attached::Many
@@ -9,17 +9,19 @@ module ActiveStorage
     attr_reader :name, :record
 
     def initialize(name, record)
-      @name, @record = name, record
+      @name = name
+      @record = record
     end
 
     private
-      def change
-        record.attachment_changes[name]
-      end
+
+    def change
+      record.attachment_changes[name]
+    end
   end
 end
 
-require "active_storage/attached/model"
-require "active_storage/attached/one"
-require "active_storage/attached/many"
-require "active_storage/attached/changes"
+require 'active_storage/attached/model'
+require 'active_storage/attached/one'
+require 'active_storage/attached/many'
+require 'active_storage/attached/changes'

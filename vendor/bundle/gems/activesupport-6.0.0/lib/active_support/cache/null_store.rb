@@ -17,32 +17,27 @@ module ActiveSupport
         true
       end
 
-      def clear(options = nil)
-      end
+      def clear(options = nil); end
 
-      def cleanup(options = nil)
-      end
+      def cleanup(options = nil); end
 
-      def increment(name, amount = 1, options = nil)
-      end
+      def increment(name, amount = 1, options = nil); end
 
-      def decrement(name, amount = 1, options = nil)
-      end
+      def decrement(name, amount = 1, options = nil); end
 
-      def delete_matched(matcher, options = nil)
-      end
+      def delete_matched(matcher, options = nil); end
 
       private
-        def read_entry(key, options)
-        end
 
-        def write_entry(key, entry, options)
-          true
-        end
+      def read_entry(key, options); end
 
-        def delete_entry(key, options)
-          false
-        end
+      def write_entry(_key, _entry, _options)
+        true
+      end
+
+      def delete_entry(_key, _options)
+        false
+      end
     end
   end
 end

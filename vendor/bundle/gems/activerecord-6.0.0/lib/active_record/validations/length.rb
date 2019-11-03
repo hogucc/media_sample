@@ -4,9 +4,7 @@ module ActiveRecord
   module Validations
     class LengthValidator < ActiveModel::Validations::LengthValidator # :nodoc:
       def validate_each(record, attribute, association_or_value)
-        if association_or_value.respond_to?(:loaded?) && association_or_value.loaded?
-          association_or_value = association_or_value.target.reject(&:marked_for_destruction?)
-        end
+        association_or_value = association_or_value.target.reject(&:marked_for_destruction?) if association_or_value.respond_to?(:loaded?) && association_or_value.loaded?
         super
       end
     end
@@ -20,7 +18,7 @@ module ActiveRecord
         validates_with LengthValidator, _merge_attributes(attr_names)
       end
 
-      alias_method :validates_size_of, :validates_length_of
+      alias validates_size_of validates_length_of
     end
   end
 end

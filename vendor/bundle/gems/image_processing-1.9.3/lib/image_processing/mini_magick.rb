@@ -1,5 +1,5 @@
-require "mini_magick"
-require "image_processing"
+require 'mini_magick'
+require 'image_processing'
 
 module ImageProcessing
   module MiniMagick
@@ -9,7 +9,7 @@ module ImageProcessing
     def self.valid_image?(file)
       ::MiniMagick::Tool::Convert.new do |convert|
         convert << file.path
-        convert << "null:"
+        convert << 'null:'
       end
       true
     rescue ::MiniMagick::Error
@@ -20,7 +20,7 @@ module ImageProcessing
       accumulator :magick, ::MiniMagick::Tool
 
       # Default sharpening parameters used on generated thumbnails.
-      SHARPEN_PARAMETERS = { radius: 0, sigma: 1 }
+      SHARPEN_PARAMETERS = { radius: 0, sigma: 1 }.freeze
 
       # Initializes the image on disk into a MiniMagick::Tool object. Accepts
       # additional options related to loading the image (e.g. geometry).
@@ -69,7 +69,7 @@ module ImageProcessing
 
       # Resizes the image to fill the specified dimensions, applying any
       # necessary cropping.
-      def resize_to_fill(width, height, gravity: "Center", **options)
+      def resize_to_fill(width, height, gravity: 'Center', **options)
         thumbnail("#{width}x#{height}^", **options)
         magick.gravity gravity
         magick.background color(:transparent)
@@ -78,7 +78,7 @@ module ImageProcessing
 
       # Resizes the image to fit within the specified dimensions and fills
       # the remaining area with the specified background color.
-      def resize_and_pad(width, height, background: :transparent, gravity: "Center", **options)
+      def resize_and_pad(width, height, background: :transparent, gravity: 'Center', **options)
         thumbnail("#{width}x#{height}", **options)
         magick.background color(background)
         magick.gravity gravity
@@ -96,22 +96,22 @@ module ImageProcessing
       # Overlays the specified image over the current one. Supports specifying
       # an additional mask, composite mode, direction or offset of the overlay
       # image.
-      def composite(overlay = :none, mask: nil, mode: nil, gravity: nil, offset: nil, args: nil, **options, &block)
+      def composite(overlay = :none, mask: nil, mode: nil, gravity: nil, offset: nil, args: nil, **options)
         return magick.composite if overlay == :none
 
         if options.key?(:compose)
-          warn "[IMAGE_PROCESSING] The :compose parameter in #composite has been renamed to :mode, the :compose alias will be removed in ImageProcessing 2."
+          warn '[IMAGE_PROCESSING] The :compose parameter in #composite has been renamed to :mode, the :compose alias will be removed in ImageProcessing 2.'
           mode = options[:compose]
         end
 
         if options.key?(:geometry)
-          warn "[IMAGE_PROCESSING] The :geometry parameter in #composite has been deprecated and will be removed in ImageProcessing 2. Use :offset instead, e.g. `geometry: \"+10+15\"` should be replaced with `offset: [10, 15]`."
+          warn '[IMAGE_PROCESSING] The :geometry parameter in #composite has been deprecated and will be removed in ImageProcessing 2. Use :offset instead, e.g. `geometry: "+10+15"` should be replaced with `offset: [10, 15]`.'
           geometry = options[:geometry]
         end
-        geometry = "%+d%+d" % offset if offset
+        geometry = '%+d%+d' % offset if offset
 
-        overlay_path = convert_to_path(overlay, "overlay")
-        mask_path    = convert_to_path(mask, "mask") if mask
+        overlay_path = convert_to_path(overlay, 'overlay')
+        mask_path    = convert_to_path(mask, 'mask') if mask
 
         magick << overlay_path
         magick << mask_path if mask_path
@@ -130,12 +130,13 @@ module ImageProcessing
       # Defines settings from the provided hash.
       def define(options)
         return magick.define(options) if options.is_a?(String)
+
         Utils.apply_define(magick, options)
       end
 
       # Specifies resource limits from the provided hash.
       def limits(options)
-        options.each { |type, value| magick.args.unshift("-limit", type.to_s, value.to_s) }
+        options.each { |type, value| magick.args.unshift('-limit', type.to_s, value.to_s) }
         magick
       end
 
@@ -150,9 +151,9 @@ module ImageProcessing
       # This supports specifying RGB(A) values with arrays, which mainly exists
       # for compatibility with the libvips implementation.
       def color(value)
-        return "rgba(255,255,255,0.0)" if value.to_s == "transparent"
-        return "rgb(#{value.join(",")})" if value.is_a?(Array) && value.count == 3
-        return "rgba(#{value.join(",")})" if value.is_a?(Array) && value.count == 4
+        return 'rgba(255,255,255,0.0)' if value.to_s == 'transparent'
+        return "rgb(#{value.join(',')})" if value.is_a?(Array) && value.count == 3
+        return "rgba(#{value.join(',')})" if value.is_a?(Array) && value.count == 4
         return value if value.is_a?(String)
 
         raise ArgumentError, "unrecognized color format: #{value.inspect} (must be one of: string, 3-element RGB array, 4-element RGBA array)"
@@ -195,7 +196,7 @@ module ImageProcessing
 
           if layers.any?
             layers.each { |path| File.delete(path) }
-            raise Error, "Source format is multi-layer, but destination format is single-layer. If you care only about the first layer, add `.loader(page: 0)` to your pipeline. If you want to process each layer, see https://github.com/janko/image_processing/wiki/Splitting-a-PDF-into-multiple-images or use `.saver(allow_splitting: true)`."
+            raise Error, 'Source format is multi-layer, but destination format is single-layer. If you care only about the first layer, add `.loader(page: 0)` to your pipeline. If you want to process each layer, see https://github.com/janko/image_processing/wiki/Splitting-a-PDF-into-multiple-images or use `.saver(allow_splitting: true)`.'
           end
         end
 
@@ -215,10 +216,10 @@ module ImageProcessing
         # Applies settings from the provided (nested) hash.
         def apply_define(magick, options)
           options.each do |namespace, settings|
-            namespace = namespace.to_s.tr("_", "-")
+            namespace = namespace.to_s.tr('_', '-')
 
             settings.each do |key, value|
-              key = key.to_s.tr("_", "-")
+              key = key.to_s.tr('_', '-')
 
               magick.define "#{namespace}:#{key}=#{value}"
             end

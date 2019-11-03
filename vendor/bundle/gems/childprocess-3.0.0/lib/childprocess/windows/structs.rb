@@ -143,7 +143,5 @@ module ChildProcess
              :PeakProcessMemoryUsed, :size_t,
              :PeakJobMemoryUsed,     :size_t
     end
-
-
   end # Windows
 end # ChildProcess

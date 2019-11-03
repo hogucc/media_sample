@@ -31,12 +31,13 @@ module ActionMailbox
     end
 
     private
-      attr_reader :routes
 
-      def match_to_mailbox(inbound_email)
-        routes.detect { |route| route.match?(inbound_email) }.try(:mailbox_class)
-      end
+    attr_reader :routes
+
+    def match_to_mailbox(inbound_email)
+      routes.detect { |route| route.match?(inbound_email) }.try(:mailbox_class)
+    end
   end
 end
 
-require "action_mailbox/router/route"
+require 'action_mailbox/router/route'

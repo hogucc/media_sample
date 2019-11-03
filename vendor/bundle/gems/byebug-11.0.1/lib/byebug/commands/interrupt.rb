@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "byebug/command"
+require 'byebug/command'
 
 module Byebug
   #
@@ -22,7 +22,7 @@ module Byebug
     end
 
     def self.short_description
-      "Interrupts the program"
+      'Interrupts the program'
     end
 
     def execute

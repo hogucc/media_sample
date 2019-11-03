@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "active_support/core_ext/module/attribute_accessors"
+require 'active_support/core_ext/module/attribute_accessors'
 
 module ActiveRecord
   module AttributeMethods
@@ -10,20 +10,18 @@ module ActiveRecord
       include ActiveModel::Dirty
 
       included do
-        if self < ::ActiveRecord::Timestamp
-          raise "You cannot include Dirty after Timestamp"
-        end
+        raise 'You cannot include Dirty after Timestamp' if self < ::ActiveRecord::Timestamp
 
         class_attribute :partial_writes, instance_writer: false, default: true
 
         # Attribute methods for "changed in last call to save?"
-        attribute_method_affix(prefix: "saved_change_to_", suffix: "?")
-        attribute_method_prefix("saved_change_to_")
-        attribute_method_suffix("_before_last_save")
+        attribute_method_affix(prefix: 'saved_change_to_', suffix: '?')
+        attribute_method_prefix('saved_change_to_')
+        attribute_method_suffix('_before_last_save')
 
         # Attribute methods for "will change if I call save?"
-        attribute_method_affix(prefix: "will_save_change_to_", suffix: "?")
-        attribute_method_suffix("_change_to_be_saved", "_in_database")
+        attribute_method_affix(prefix: 'will_save_change_to_', suffix: '?')
+        attribute_method_suffix('_change_to_be_saved', '_in_database')
       end
 
       # <tt>reload</tt> the record and clears changed attributes.
@@ -156,66 +154,68 @@ module ActiveRecord
       end
 
       private
-        def mutations_from_database
-          sync_with_transaction_state if @transaction_state&.finalized?
-          super
+
+      def mutations_from_database
+        sync_with_transaction_state if @transaction_state&.finalized?
+        super
+      end
+
+      def mutations_before_last_save
+        sync_with_transaction_state if @transaction_state&.finalized?
+        super
+      end
+
+      def write_attribute_without_type_cast(attr_name, value)
+        result = super
+        clear_attribute_change(attr_name)
+        result
+      end
+
+      def _touch_row(attribute_names, time)
+        @_touch_attr_names = Set.new(attribute_names)
+
+        affected_rows = super
+
+        if @_skip_dirty_tracking ||= false
+          clear_attribute_changes(@_touch_attr_names)
+          return affected_rows
         end
 
-        def mutations_before_last_save
-          sync_with_transaction_state if @transaction_state&.finalized?
-          super
-        end
+        changes = {}
+        @attributes.keys.each do |attr_name|
+          next if @_touch_attr_names.include?(attr_name)
 
-        def write_attribute_without_type_cast(attr_name, value)
-          result = super
+          next unless attribute_changed?(attr_name)
+
+          changes[attr_name] = _read_attribute(attr_name)
+          _write_attribute(attr_name, attribute_was(attr_name))
           clear_attribute_change(attr_name)
-          result
         end
 
-        def _touch_row(attribute_names, time)
-          @_touch_attr_names = Set.new(attribute_names)
+        changes_applied
+        changes.each { |attr_name, value| _write_attribute(attr_name, value) }
 
-          affected_rows = super
+        affected_rows
+      ensure
+        @_touch_attr_names = nil
+        @_skip_dirty_tracking = nil
+      end
 
-          if @_skip_dirty_tracking ||= false
-            clear_attribute_changes(@_touch_attr_names)
-            return affected_rows
-          end
+      def _update_record(attribute_names = attribute_names_for_partial_writes)
+        affected_rows = super
+        changes_applied
+        affected_rows
+      end
 
-          changes = {}
-          @attributes.keys.each do |attr_name|
-            next if @_touch_attr_names.include?(attr_name)
+      def _create_record(attribute_names = attribute_names_for_partial_writes)
+        id = super
+        changes_applied
+        id
+      end
 
-            if attribute_changed?(attr_name)
-              changes[attr_name] = _read_attribute(attr_name)
-              _write_attribute(attr_name, attribute_was(attr_name))
-              clear_attribute_change(attr_name)
-            end
-          end
-
-          changes_applied
-          changes.each { |attr_name, value| _write_attribute(attr_name, value) }
-
-          affected_rows
-        ensure
-          @_touch_attr_names, @_skip_dirty_tracking = nil, nil
-        end
-
-        def _update_record(attribute_names = attribute_names_for_partial_writes)
-          affected_rows = super
-          changes_applied
-          affected_rows
-        end
-
-        def _create_record(attribute_names = attribute_names_for_partial_writes)
-          id = super
-          changes_applied
-          id
-        end
-
-        def attribute_names_for_partial_writes
-          partial_writes? ? changed_attribute_names_to_save : attribute_names
-        end
+      def attribute_names_for_partial_writes
+        partial_writes? ? changed_attribute_names_to_save : attribute_names
+      end
     end
   end
 end

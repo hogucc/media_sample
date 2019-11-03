@@ -15,9 +15,9 @@ module Arel # :nodoc: all
       end
 
       def eql?(other)
-        super && self.name == other.name
+        super && name == other.name
       end
-      alias :== :eql?
+      alias == eql?
     end
   end
 end

@@ -4,25 +4,25 @@ module ActionView
   class Template
     module Handlers
       class ERB
-        autoload :Erubi, "action_view/template/handlers/erb/erubi"
+        autoload :Erubi, 'action_view/template/handlers/erb/erubi'
 
         # Specify trim mode for the ERB compiler. Defaults to '-'.
         # See ERB documentation for suitable values.
-        class_attribute :erb_trim_mode, default: "-"
+        class_attribute :erb_trim_mode, default: '-'
 
         # Default implementation used.
         class_attribute :erb_implementation, default: Erubi
 
         # Do not escape templates of these mime types.
-        class_attribute :escape_ignore_list, default: ["text/plain"]
+        class_attribute :escape_ignore_list, default: ['text/plain']
 
         [self, singleton_class].each do |base|
           base.alias_method :escape_whitelist, :escape_ignore_list
           base.alias_method :escape_whitelist=, :escape_ignore_list=
 
           base.deprecate(
-            escape_whitelist: "use #escape_ignore_list instead",
-            :escape_whitelist= => "use #escape_ignore_list= instead"
+            escape_whitelist: 'use #escape_ignore_list instead',
+            :escape_whitelist= => 'use #escape_ignore_list= instead'
           )
         end
 
@@ -47,8 +47,8 @@ module ActionView
           # expression
           template_source = source.dup.force_encoding(Encoding::ASCII_8BIT)
 
-          erb = template_source.gsub(ENCODING_TAG, "")
-          encoding = $2
+          erb = template_source.gsub(ENCODING_TAG, '')
+          encoding = Regexp.last_match(2)
 
           erb.force_encoding valid_encoding(source.dup, encoding)
 
@@ -58,11 +58,11 @@ module ActionView
           self.class.erb_implementation.new(
             erb,
             escape: (self.class.escape_ignore_list.include? template.type),
-            trim: (self.class.erb_trim_mode == "-")
+            trim: (self.class.erb_trim_mode == '-')
           ).src
         end
 
-      private
+        private
 
         def valid_encoding(string, encoding)
           # If a magic encoding comment was found, tag the

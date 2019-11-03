@@ -9,7 +9,7 @@ module ActiveRecord
         end
 
         def quote_table_name(name)
-          self.class.quoted_table_names[name] ||= super.gsub(".", "`.`").freeze
+          self.class.quoted_table_names[name] ||= super.gsub('.', '`.`').freeze
         end
 
         def unquoted_true
@@ -24,7 +24,7 @@ module ActiveRecord
           if supports_datetime_with_precision?
             super
           else
-            super.sub(/\.\d{6}\z/, "")
+            super.sub(/\.\d{6}\z/, '')
           end
         end
 
@@ -51,7 +51,7 @@ module ActiveRecord
           )
           (?:\s*,\s*\g<1>)*
           \z
-        /ix
+        /ix.freeze
 
         COLUMN_NAME_WITH_ORDER = /
           \A
@@ -64,17 +64,18 @@ module ActiveRecord
           )
           (?:\s*,\s*\g<1>)*
           \z
-        /ix
+        /ix.freeze
 
         private_constant :COLUMN_NAME, :COLUMN_NAME_WITH_ORDER
 
         private
-          def _type_cast(value)
-            case value
-            when Date, Time then value
-            else super
-            end
+
+        def _type_cast(value)
+          case value
+          when Date, Time then value
+          else super
           end
+        end
       end
     end
   end

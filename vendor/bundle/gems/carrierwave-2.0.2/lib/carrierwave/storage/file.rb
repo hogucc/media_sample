@@ -1,6 +1,5 @@
 module CarrierWave
   module Storage
-
     ##
     # File storage stores file to the Filesystem (surprising, no?). There's really not much
     # to it, it uses the store_dir defined on the uploader as the storage location. That's
@@ -68,6 +67,7 @@ module CarrierWave
         new_file.move_to(::File.expand_path(uploader.cache_path, uploader.root), uploader.permissions, uploader.directory_permissions, true)
       rescue Errno::EMLINK, Errno::ENOSPC => e
         raise(e) if @cache_called
+
         @cache_called = true
 
         # NOTE: Remove cached files older than 10 minutes
@@ -113,9 +113,7 @@ module CarrierWave
           # generate_cache_id returns key formated TIMEINT-PID(-COUNTER)-RND
           time = dir.scan(/(\d+)-\d+-\d+(?:-\d+)?/).first.map(&:to_i)
           time = Time.at(*time)
-          if time < (Time.now.utc - seconds)
-            FileUtils.rm_rf(dir)
-          end
+          FileUtils.rm_rf(dir) if time < (Time.now.utc - seconds)
         end
       end
     end # File

@@ -1,13 +1,9 @@
 require 'concurrent/executor/ruby_single_thread_executor'
 
 module Concurrent
+  require 'concurrent/executor/java_single_thread_executor' if Concurrent.on_jruby?
 
-  if Concurrent.on_jruby?
-    require 'concurrent/executor/java_single_thread_executor'
-  end
-
-  SingleThreadExecutorImplementation = case
-                                       when Concurrent.on_jruby?
+  SingleThreadExecutorImplementation = if Concurrent.on_jruby?
                                          JavaSingleThreadExecutor
                                        else
                                          RubySingleThreadExecutor
@@ -34,7 +30,6 @@ module Concurrent
   #
   # @!macro abstract_executor_service_public_api
   class SingleThreadExecutor < SingleThreadExecutorImplementation
-
     # @!macro single_thread_executor_method_initialize
     #
     #   Create a new thread pool.

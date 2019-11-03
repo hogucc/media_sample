@@ -1,4 +1,4 @@
-require "foreman/vendor/thor/lib/thor/actions/empty_directory"
+require 'foreman/vendor/thor/lib/thor/actions/empty_directory'
 
 class Foreman::Thor
   module Actions
@@ -58,7 +58,7 @@ class Foreman::Thor
       def initialize(base, source, destination = nil, config = {}, &block)
         @source = File.expand_path(base.find_in_source_paths(source.to_s))
         @block  = block
-        super(base, destination, {:recursive => true}.merge(config))
+        super(base, destination, { recursive: true }.merge(config))
       end
 
       def invoke!
@@ -70,23 +70,25 @@ class Foreman::Thor
         execute!
       end
 
-    protected
+      protected
 
       def execute!
         lookup = Util.escape_globs(source)
-        lookup = config[:recursive] ? File.join(lookup, "**") : lookup
+        lookup = config[:recursive] ? File.join(lookup, '**') : lookup
         lookup = file_level_lookup(lookup)
 
         files(lookup).sort.each do |file_source|
           next if File.directory?(file_source)
           next if config[:exclude_pattern] && file_source.match(config[:exclude_pattern])
-          file_destination = File.join(given_destination, file_source.gsub(source, "."))
-          file_destination.gsub!("/./", "/")
+
+          file_destination = File.join(given_destination, file_source.gsub(source, '.'))
+          file_destination.gsub!('/./', '/')
 
           case file_source
           when /\.empty_directory$/
-            dirname = File.dirname(file_destination).gsub(%r{/\.$}, "")
+            dirname = File.dirname(file_destination).gsub(%r{/\.$}, '')
             next if dirname == given_destination
+
             base.empty_directory(dirname, config)
           when /#{TEMPLATE_EXTNAME}$/
             base.template(file_source, file_destination[0..-4], config, &@block)
@@ -96,9 +98,9 @@ class Foreman::Thor
         end
       end
 
-      if RUBY_VERSION < "2.0"
+      if RUBY_VERSION < '2.0'
         def file_level_lookup(previous_lookup)
-          File.join(previous_lookup, "{*,.[a-z]*}")
+          File.join(previous_lookup, '{*,.[a-z]*}')
         end
 
         def files(lookup)
@@ -106,7 +108,7 @@ class Foreman::Thor
         end
       else
         def file_level_lookup(previous_lookup)
-          File.join(previous_lookup, "*")
+          File.join(previous_lookup, '*')
         end
 
         def files(lookup)

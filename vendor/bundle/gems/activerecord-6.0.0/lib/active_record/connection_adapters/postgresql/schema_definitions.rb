@@ -46,9 +46,7 @@ module ActiveRecord
         # a record (as primary keys cannot be +nil+). This might be done via the
         # +SecureRandom.uuid+ method and a +before_save+ callback, for instance.
         def primary_key(name, type = :primary_key, **options)
-          if type == :uuid
-            options[:default] = options.fetch(:default, "gen_random_uuid()")
-          end
+          options[:default] = options.fetch(:default, 'gen_random_uuid()') if type == :uuid
 
           super
         end
@@ -175,9 +173,9 @@ module ActiveRecord
 
         included do
           define_column_methods :bigserial, :bit, :bit_varying, :cidr, :citext, :daterange,
-            :hstore, :inet, :interval, :int4range, :int8range, :jsonb, :ltree, :macaddr,
-            :money, :numrange, :oid, :point, :line, :lseg, :box, :path, :polygon, :circle,
-            :serial, :tsrange, :tstzrange, :tsvector, :uuid, :xml
+                                :hstore, :inet, :interval, :int4range, :int8range, :jsonb, :ltree, :macaddr,
+                                :money, :numrange, :oid, :point, :line, :lseg, :box, :path, :polygon, :circle,
+                                :serial, :tsrange, :tstzrange, :tsvector, :uuid, :xml
         end
       end
 
@@ -192,13 +190,14 @@ module ActiveRecord
         end
 
         private
-          def integer_like_primary_key_type(type, options)
-            if type == :bigint || options[:limit] == 8
-              :bigserial
-            else
-              :serial
-            end
+
+        def integer_like_primary_key_type(type, options)
+          if type == :bigint || options[:limit] == 8
+            :bigserial
+          else
+            :serial
           end
+        end
       end
 
       class Table < ActiveRecord::ConnectionAdapters::Table

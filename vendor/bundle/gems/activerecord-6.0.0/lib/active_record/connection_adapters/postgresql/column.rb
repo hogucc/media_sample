@@ -16,12 +16,12 @@ module ActiveRecord
         end
 
         def array
-          sql_type_metadata.sql_type.end_with?("[]")
+          sql_type_metadata.sql_type.end_with?('[]')
         end
-        alias :array? :array
+        alias array? array
 
         def sql_type
-          super.sub(/\[\]\z/, "")
+          super.sub(/\[\]\z/, '')
         end
       end
     end

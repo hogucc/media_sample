@@ -30,7 +30,7 @@ module CarrierWave
       #
       def content_type_blacklist; end
 
-    private
+      private
 
       def check_content_type_blacklist!(new_file)
         content_type = new_file.content_type
@@ -42,7 +42,6 @@ module CarrierWave
       def blacklisted_content_type?(content_type)
         Array(content_type_blacklist).any? { |item| content_type =~ /#{item}/ }
       end
-
     end # ContentTypeBlacklist
   end # Uploader
 end # CarrierWave

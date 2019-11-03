@@ -31,8 +31,8 @@ module Listen
       private
 
       def _fail(symlinked, real_path)
-        STDERR.puts format(SYMLINK_LOOP_ERROR, symlinked, real_path)
-        fail Error, 'Failed due to looped symlinks'
+        warn format(SYMLINK_LOOP_ERROR, symlinked, real_path)
+        raise Error, 'Failed due to looped symlinks'
       end
     end
   end

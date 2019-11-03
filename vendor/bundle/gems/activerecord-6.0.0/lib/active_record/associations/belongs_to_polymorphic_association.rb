@@ -14,23 +14,24 @@ module ActiveRecord
       end
 
       private
-        def replace_keys(record)
-          super
-          owner[reflection.foreign_type] = record ? record.class.polymorphic_name : nil
-        end
 
-        def inverse_reflection_for(record)
-          reflection.polymorphic_inverse_of(record.class)
-        end
+      def replace_keys(record)
+        super
+        owner[reflection.foreign_type] = record ? record.class.polymorphic_name : nil
+      end
 
-        def raise_on_type_mismatch!(record)
-          # A polymorphic association cannot have a type mismatch, by definition
-        end
+      def inverse_reflection_for(record)
+        reflection.polymorphic_inverse_of(record.class)
+      end
 
-        def stale_state
-          foreign_key = super
-          foreign_key && [foreign_key.to_s, owner[reflection.foreign_type].to_s]
-        end
+      def raise_on_type_mismatch!(record)
+        # A polymorphic association cannot have a type mismatch, by definition
+      end
+
+      def stale_state
+        foreign_key = super
+        foreign_key && [foreign_key.to_s, owner[reflection.foreign_type].to_s]
+      end
     end
   end
 end

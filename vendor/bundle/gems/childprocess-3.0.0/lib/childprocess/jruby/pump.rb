@@ -11,7 +11,7 @@ module ChildProcess
 
       def stop
         @stop = true
-        @thread && @thread.join
+        @thread&.join
       end
 
       def run
@@ -26,7 +26,8 @@ module ChildProcess
         buffer = Java.byte[BUFFER_SIZE].new
 
         until @stop && (@input.available == 0)
-          read, avail = 0, 0
+          read = 0
+          avail = 0
 
           while read != -1
             avail = [@input.available, 1].max
@@ -43,11 +44,10 @@ module ChildProcess
         end
 
         @output.flush
-      rescue java.io.IOException => ex
-        ChildProcess.logger.debug ex.message
-        ChildProcess.logger.debug ex.backtrace
+      rescue java.io.IOException => e
+        ChildProcess.logger.debug e.message
+        ChildProcess.logger.debug e.backtrace
       end
-
     end # Pump
   end # JRuby
 end # ChildProcess

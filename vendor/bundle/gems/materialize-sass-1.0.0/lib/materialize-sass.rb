@@ -1,4 +1,4 @@
-require "materialize-sass/version"
+require 'materialize-sass/version'
 
 module Materialize
   module Sass

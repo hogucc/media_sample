@@ -27,7 +27,7 @@ module CarrierWave
               "#{host}#{path}"
             end
           else
-            (base_path || "") + path
+            (base_path || '') + path
           end
         end
       end
@@ -35,7 +35,6 @@ module CarrierWave
       def to_s
         url || ''
       end
-
     end # Url
   end # Uploader
 end # CarrierWave

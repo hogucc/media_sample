@@ -1,31 +1,30 @@
 # frozen_string_literal: true
 
 begin
-  require "nokogiri"
+  require 'nokogiri'
 rescue LoadError => e
-  $stderr.puts "You don't have nokogiri installed in your application. Please add it to your Gemfile and run bundle install"
+  warn "You don't have nokogiri installed in your application. Please add it to your Gemfile and run bundle install"
   raise e
 end
-require "active_support/core_ext/object/blank"
-require "stringio"
+require 'active_support/core_ext/object/blank'
+require 'stringio'
 
 module ActiveSupport
   module XmlMini_Nokogiri #:nodoc:
-    extend self
+    module_function
 
     # Parse an XML Document string or IO into a simple hash using libxml / nokogiri.
     # data::
     #   XML Document string or IO to parse
     def parse(data)
-      if !data.respond_to?(:read)
-        data = StringIO.new(data || "")
-      end
+      data = StringIO.new(data || '') unless data.respond_to?(:read)
 
       if data.eof?
         {}
       else
         doc = Nokogiri::XML(data)
-        raise doc.errors.first if doc.errors.length > 0
+        raise doc.errors.first unless doc.errors.empty?
+
         doc.to_hash
       end
     end
@@ -38,7 +37,7 @@ module ActiveSupport
       end
 
       module Node #:nodoc:
-        CONTENT_ROOT = "__content__"
+        CONTENT_ROOT = '__content__'
 
         # Convert XML document to hash.
         #
@@ -59,15 +58,13 @@ module ActiveSupport
             if c.element?
               c.to_hash(node_hash)
             elsif c.text? || c.cdata?
-              node_hash[CONTENT_ROOT] ||= +""
+              node_hash[CONTENT_ROOT] ||= +''
               node_hash[CONTENT_ROOT] << c.content
             end
           end
 
           # Remove content node if it is blank and there are child tags
-          if node_hash.length > 1 && node_hash[CONTENT_ROOT].blank?
-            node_hash.delete(CONTENT_ROOT)
-          end
+          node_hash.delete(CONTENT_ROOT) if node_hash.length > 1 && node_hash[CONTENT_ROOT].blank?
 
           # Handle attributes
           attribute_nodes.each { |a| node_hash[a.node_name] = a.value }

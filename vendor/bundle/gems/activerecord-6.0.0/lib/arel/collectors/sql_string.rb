@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "arel/collectors/plain_string"
+require 'arel/collectors/plain_string'
 
 module Arel # :nodoc: all
   module Collectors
@@ -10,7 +10,7 @@ module Arel # :nodoc: all
         @bind_index = 1
       end
 
-      def add_bind(bind)
+      def add_bind(_bind)
         self << yield(@bind_index)
         @bind_index += 1
         self

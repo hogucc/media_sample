@@ -22,7 +22,7 @@ class MaterialIcon
   #
   # Define rotate methods
   #
-  %w(r90 r180 r270 flip_horizontal flip_vertical).each do |rotation|
+  %w[r90 r180 r270 flip_horizontal flip_vertical].each do |rotation|
     define_method(rotation) do
       @rotation = " #{rotation.gsub('_', '-')}"
       self
@@ -32,7 +32,7 @@ class MaterialIcon
   #
   # Define size methods
   #
-  %w(md_18 md_24 md_36 md_48).each do |size|
+  %w[md_18 md_24 md_36 md_48].each do |size|
     define_method(size) do
       @size = " #{size.gsub('_', '-')} "
       self
@@ -65,7 +65,7 @@ class MaterialIcon
   # MaterialIcon instance
   #
   def style(css_style = '')
-    if css_style && css_style.empty?
+    if css_style&.empty?
       # It references style icon
       @icon = clear_icon('style')
     else
@@ -76,7 +76,7 @@ class MaterialIcon
   end
 
   # Create an alias to use the original method
-  alias_method :super_send, :send
+  alias super_send send
 
   #
   # Override send functionality to set the name of the icon to "send" when
@@ -92,7 +92,7 @@ class MaterialIcon
   # MaterialIcon instance or the result of the method call
   #
   def send(name = '', *args)
-    if name && name.empty?
+    if name&.empty?
       @icon = clear_icon('send')
       # Return self
       self
@@ -140,12 +140,14 @@ class MaterialIcon
       content_tag(:i, '',
                   @html.merge(
                     style: @style,
-                    class: "material-icons #{@icon}#{@size}#{@rotation}#{@css_class}"))
+                    class: "material-icons #{@icon}#{@size}#{@rotation}#{@css_class}"
+                  ))
     else
-      content_tag(:i, "#{@icon}",
+      content_tag(:i, @icon.to_s,
                   @html.merge(
                     style: @style,
-                    class: "material-icons#{@size}#{@rotation}#{@css_class}"))
+                    class: "material-icons#{@size}#{@rotation}#{@css_class}"
+                  ))
     end
   end
 
@@ -165,6 +167,7 @@ class MaterialIcon
   #
   def clear_icon(icon)
     return icon if unicode? || icon != :three_d_rotation
+
     '3d_rotation'
   end
 end

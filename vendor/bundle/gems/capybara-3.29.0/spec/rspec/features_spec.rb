@@ -2,8 +2,6 @@
 
 require 'spec_helper'
 require 'capybara/rspec'
-
-# rubocop:disable RSpec/InstanceVariable
 RSpec.configuration.before(:each, file_path: './spec/rspec/features_spec.rb') do
   @in_filtered_hook = true
 end
@@ -54,7 +52,6 @@ feature "Capybara's feature DSL" do
     end
   end
 end
-# rubocop:enable RSpec/InstanceVariable
 
 feature 'given and given! aliases to let and let!' do
   given(:value) { :available }
@@ -75,8 +72,6 @@ feature "Capybara's feature DSL with driver", driver: :culerity do
     expect(Capybara.current_driver).to eq(:culerity)
   end
 end
-
-# rubocop:disable RSpec/RepeatedExample
 xfeature 'if xfeature aliases to pending then' do
   scenario "this should be 'temporarily disabled with xfeature'" do
     # dummy
@@ -86,7 +81,7 @@ xfeature 'if xfeature aliases to pending then' do
   end
 end
 
-ffeature 'if ffeature aliases focused tag then' do # rubocop:disable RSpec/Focus
+ffeature 'if ffeature aliases focused tag then' do
   scenario 'scenario inside this feature has metatag focus tag' do |example|
     expect(example.metadata[:focus]).to eq true
   end
@@ -95,4 +90,3 @@ ffeature 'if ffeature aliases focused tag then' do # rubocop:disable RSpec/Focus
     expect(example.metadata[:focus]).to eq true
   end
 end
-# rubocop:enable RSpec/RepeatedExample

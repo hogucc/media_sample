@@ -1,4 +1,4 @@
-require "foreman/vendor/thor/lib/thor/base"
+require 'foreman/vendor/thor/lib/thor/base'
 
 # Foreman::Thor has a special class called Foreman::Thor::Group. The main difference to Foreman::Thor class
 # is that it invokes all commands at once. It also include some methods that allows
@@ -27,7 +27,7 @@ class Foreman::Thor::Group
     # short:: When true, shows only usage.
     #
     def help(shell)
-      shell.say "Usage:"
+      shell.say 'Usage:'
       shell.say "  #{banner}\n"
       shell.say
       class_options_help(shell)
@@ -114,7 +114,7 @@ class Foreman::Thor::Group
       names.each do |name|
         unless class_options.key?(name)
           raise ArgumentError, "You have to define the option #{name.inspect} " \
-                              "before setting invoke_from_option."
+                              'before setting invoke_from_option.'
         end
 
         invocations[name] = true
@@ -172,15 +172,15 @@ class Foreman::Thor::Group
     def get_options_from_invocations(group_options, base_options) #:nodoc: # rubocop:disable MethodLength
       invocations.each do |name, from_option|
         value = if from_option
-          option = class_options[name]
-          option.type == :boolean ? name : option.default
-        else
-          name
+                  option = class_options[name]
+                  option.type == :boolean ? name : option.default
+                else
+                  name
         end
         next unless value
 
-        klass, _ = prepare_for_invocation(name, value)
-        next unless klass && klass.respond_to?(:class_options)
+        klass, = prepare_for_invocation(name, value)
+        next unless klass&.respond_to?(:class_options)
 
         value = value.to_s
         human_name = value.respond_to?(:classify) ? value.classify : value
@@ -188,7 +188,7 @@ class Foreman::Thor::Group
         group_options[human_name] ||= []
         group_options[human_name] += klass.class_options.values.select do |class_option|
           base_options[class_option.name.to_sym].nil? && class_option.group.nil? &&
-            !group_options.values.flatten.any? { |i| i.name == class_option.name }
+            group_options.values.flatten.none? { |i| i.name == class_option.name }
         end
 
         yield klass if block_given?
@@ -199,19 +199,19 @@ class Foreman::Thor::Group
     def printable_commands(*)
       item = []
       item << banner
-      item << (desc ? "# #{desc.gsub(/\s+/m, ' ')}" : "")
+      item << (desc ? "# #{desc.gsub(/\s+/m, ' ')}" : '')
       [item]
     end
-    alias_method :printable_tasks, :printable_commands
+    alias printable_tasks printable_commands
 
     def handle_argument_error(command, error, _args, arity) #:nodoc:
       msg = "#{basename} #{command.name} takes #{arity} argument"
-      msg << "s" if arity > 1
-      msg << ", but it should not."
+      msg << 's' if arity > 1
+      msg << ', but it should not.'
       raise error, msg
     end
 
-  protected
+    protected
 
     # The method responsible for dispatching given the args.
     def dispatch(command, given_args, given_opts, config) #:nodoc:
@@ -243,7 +243,7 @@ class Foreman::Thor::Group
     def self_command #:nodoc:
       Foreman::Thor::DynamicCommand.new(namespace, class_options)
     end
-    alias_method :self_task, :self_command
+    alias self_task self_command
 
     def baseclass #:nodoc:
       Foreman::Thor::Group
@@ -253,12 +253,12 @@ class Foreman::Thor::Group
       commands[meth.to_s] = Foreman::Thor::Command.new(meth, nil, nil, nil, nil)
       true
     end
-    alias_method :create_task, :create_command
+    alias create_task create_command
   end
 
   include Foreman::Thor::Base
 
-protected
+  protected
 
   # Shortcut to invoke with padding and block handling. Use internally by
   # invoke and invoke_from_option class methods.

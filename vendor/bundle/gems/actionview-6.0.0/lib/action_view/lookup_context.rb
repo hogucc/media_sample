@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require "concurrent/map"
-require "active_support/core_ext/module/remove_method"
-require "active_support/core_ext/module/attribute_accessors"
-require "active_support/deprecation"
-require "action_view/template/resolver"
+require 'concurrent/map'
+require 'active_support/core_ext/module/remove_method'
+require 'active_support/core_ext/module/attribute_accessors'
+require 'active_support/deprecation'
+require 'action_view/template/resolver'
 
 module ActionView
   # = Action View Lookup Context
@@ -42,7 +42,7 @@ module ActionView
 
     # Holds accessors for the registered details.
     module Accessors #:nodoc:
-      DEFAULT_PROCS = {}
+      DEFAULT_PROCS = {}.freeze
     end
 
     register_detail(:locale) do
@@ -52,12 +52,12 @@ module ActionView
       locales.uniq!
       locales
     end
-    register_detail(:formats) { ActionView::Base.default_formats || [:html, :text, :js, :css,  :xml, :json] }
+    register_detail(:formats) { ActionView::Base.default_formats || [:html, :text, :js, :css, :xml, :json] }
     register_detail(:variants) { [] }
     register_detail(:handlers) { Template::Handlers.extensions }
 
     class DetailsKey #:nodoc:
-      alias :eql? :equal?
+      alias eql? equal?
 
       @details_keys = Concurrent::Map.new
       @digest_cache = Concurrent::Map.new
@@ -105,13 +105,14 @@ module ActionView
 
       # Temporary skip passing the details_key forward.
       def disable_cache
-        old_value, @cache = @cache, false
+        old_value = @cache
+        @cache = false
         yield
       ensure
         @cache = old_value
       end
 
-    private
+      private
 
       def _set_detail(key, value) # :doc:
         @details = @details.dup if @digest_cache || @details_key
@@ -128,9 +129,9 @@ module ActionView
       def find(name, prefixes = [], partial = false, keys = [], options = {})
         @view_paths.find(*args_for_lookup(name, prefixes, partial, keys, options))
       end
-      alias :find_template :find
+      alias find_template find
 
-      alias :find_file :find
+      alias find_file find
       deprecate :find_file
 
       def find_all(name, prefixes = [], partial = false, keys = [], options = {})
@@ -140,12 +141,12 @@ module ActionView
       def exists?(name, prefixes = [], partial = false, keys = [], **options)
         @view_paths.exists?(*args_for_lookup(name, prefixes, partial, keys, options))
       end
-      alias :template_exists? :exists?
+      alias template_exists? exists?
 
       def any?(name, prefixes = [], partial = false)
         @view_paths.exists?(*args_for_any(name, prefixes, partial))
       end
-      alias :any_templates? :any?
+      alias any_templates? any?
 
       # Adds fallbacks to the view paths. Useful in cases when you are rendering
       # a :file.
@@ -154,8 +155,8 @@ module ActionView
 
         if block_given?
           ActiveSupport::Deprecation.warn <<~eowarn.squish
-          Calling `with_fallbacks` with a block is deprecated.  Call methods on
-          the lookup context returned by `with_fallbacks` instead.
+            Calling `with_fallbacks` with a block is deprecated.  Call methods on
+            the lookup context returned by `with_fallbacks` instead.
           eowarn
 
           begin
@@ -170,7 +171,7 @@ module ActionView
         end
       end
 
-    private
+      private
 
       # Whenever setting view paths, makes a copy so that we can manipulate them in
       # instance objects as we wish.
@@ -187,13 +188,10 @@ module ActionView
       # Compute details hash and key according to user options (e.g. passed from #render).
       def detail_args_for(options) # :doc:
         return @details, details_key if options.empty? # most common path.
+
         user_details = @details.merge(options)
 
-        if @cache
-          details_key = DetailsKey.details_cache_key(user_details)
-        else
-          details_key = nil
-        end
+        details_key = (DetailsKey.details_cache_key(user_details) if @cache)
 
         [user_details, details_key]
       end
@@ -209,11 +207,11 @@ module ActionView
           details = {}
 
           registered_details.each do |k|
-            if k == :variants
-              details[k] = :any
-            else
-              details[k] = Accessors::DEFAULT_PROCS[k].call
-            end
+            details[k] = if k == :variants
+                           :any
+                         else
+                           Accessors::DEFAULT_PROCS[k].call
+                         end
           end
 
           if @cache
@@ -229,16 +227,16 @@ module ActionView
       # name instead of the prefix.
       def normalize_name(name, prefixes)
         prefixes = prefixes.presence
-        parts    = name.to_s.split("/")
+        parts    = name.to_s.split('/')
         parts.shift if parts.first.empty?
         name = parts.pop
 
-        return name, prefixes || [""] if parts.empty?
+        return name, prefixes || [''] if parts.empty?
 
-        parts    = parts.join("/")
+        parts    = parts.join('/')
         prefixes = prefixes ? prefixes.map { |p| "#{p}/#{parts}" } : [parts]
 
-        return name, prefixes
+        [name, prefixes]
       end
     end
 
@@ -280,13 +278,11 @@ module ActionView
     def formats=(values)
       if values
         values = values.dup
-        values.concat(default_formats) if values.delete "*/*"
+        values.concat(default_formats) if values.delete '*/*'
         values.uniq!
 
         invalid_values = (values - Template::Types.symbols)
-        unless invalid_values.empty?
-          raise ArgumentError, "Invalid formats: #{invalid_values.map(&:inspect).join(", ")}"
-        end
+        raise ArgumentError, "Invalid formats: #{invalid_values.map(&:inspect).join(', ')}" unless invalid_values.empty?
 
         if values == [:js]
           values << :html

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "active_support/core_ext/string/filters"
-require "active_support/core_ext/array/extract_options"
+require 'active_support/core_ext/string/filters'
+require 'active_support/core_ext/array/extract_options'
 
 module ActionView
   # = Action View Text Helpers
@@ -93,7 +93,7 @@ module ActionView
       #   # => "Once upon a time in a wo...<a href="#">Continue</a>"
       def truncate(text, options = {}, &block)
         if text
-          length  = options.fetch(:length, 30)
+          length = options.fetch(:length, 30)
 
           content = text.truncate(length, options)
           content = options[:escape] == false ? content.html_safe : ERB::Util.html_escape(content)
@@ -133,11 +133,11 @@ module ActionView
         text = sanitize(text) if options.fetch(:sanitize, true)
 
         if text.blank? || phrases.blank?
-          text || ""
+          text || ''
         else
           match = Array(phrases).map do |p|
             Regexp === p ? p.to_s : Regexp.escape(p)
-          end.join("|")
+          end.join('|')
 
           if block_given?
             text.gsub(/(#{match})(?![^<]*?>)/i) { |found| yield found }
@@ -175,15 +175,16 @@ module ActionView
       def excerpt(text, phrase, options = {})
         return unless text && phrase
 
-        separator = options.fetch(:separator, nil) || ""
-        case phrase
-        when Regexp
-          regex = phrase
-        else
-          regex = /#{Regexp.escape(phrase)}/i
-        end
+        separator = options.fetch(:separator, nil) || ''
+        regex = case phrase
+                when Regexp
+                  phrase
+                else
+                  /#{Regexp.escape(phrase)}/i
+                end
 
         return unless matches = text.match(regex)
+
         phrase = matches[0]
 
         unless separator.empty?
@@ -229,9 +230,9 @@ module ActionView
       #   # => 2 Personen
       def pluralize(count, singular, plural_arg = nil, plural: plural_arg, locale: I18n.locale)
         word = if count == 1 || count.to_s =~ /^1(\.0+)?$/
-          singular
-        else
-          plural || singular.pluralize(locale)
+                 singular
+               else
+                 plural || singular.pluralize(locale)
         end
 
         "#{count || 0} #{word}"
@@ -308,9 +309,9 @@ module ActionView
         if paragraphs.empty?
           content_tag(wrapper_tag, nil, html_options)
         else
-          paragraphs.map! { |paragraph|
+          paragraphs.map! do |paragraph|
             content_tag(wrapper_tag, raw(paragraph), html_options)
-          }.join("\n\n").html_safe
+          end.join("\n\n").html_safe
         end
       end
 
@@ -353,14 +354,12 @@ module ActionView
       #  <% end %>
       def cycle(first_value, *values)
         options = values.extract_options!
-        name = options.fetch(:name, "default")
+        name = options.fetch(:name, 'default')
 
         values.unshift(*first_value)
 
         cycle = get_cycle(name)
-        unless cycle && cycle.values == values
-          cycle = set_cycle(name, Cycle.new(*values))
-        end
+        cycle = set_cycle(name, Cycle.new(*values)) unless cycle && cycle.values == values
         cycle.to_s
       end
 
@@ -375,9 +374,9 @@ module ActionView
       #       <span style="background-color:<%= current_cycle %>"><%= item %></span>
       #     </div>
       #   <% end %>
-      def current_cycle(name = "default")
+      def current_cycle(name = 'default')
         cycle = get_cycle(name)
-        cycle.current_value if cycle
+        cycle&.current_value
       end
 
       # Resets a cycle so that it starts from the first element the next time
@@ -398,9 +397,9 @@ module ActionView
       #     </tr>
       #   <% end %>
       #   </table>
-      def reset_cycle(name = "default")
+      def reset_cycle(name = 'default')
         cycle = get_cycle(name)
-        cycle.reset if cycle
+        cycle&.reset
       end
 
       class Cycle #:nodoc:
@@ -427,60 +426,61 @@ module ActionView
 
         private
 
-          def next_index
-            step_index(1)
-          end
+        def next_index
+          step_index(1)
+        end
 
-          def previous_index
-            step_index(-1)
-          end
+        def previous_index
+          step_index(-1)
+        end
 
-          def step_index(n)
-            (@index + n) % @values.size
-          end
+        def step_index(n)
+          (@index + n) % @values.size
+        end
       end
 
       private
-        # The cycle helpers need to store the cycles in a place that is
-        # guaranteed to be reset every time a page is rendered, so it
-        # uses an instance variable of ActionView::Base.
-        def get_cycle(name)
-          @_cycles = Hash.new unless defined?(@_cycles)
-          @_cycles[name]
+
+      # The cycle helpers need to store the cycles in a place that is
+      # guaranteed to be reset every time a page is rendered, so it
+      # uses an instance variable of ActionView::Base.
+      def get_cycle(name)
+        @_cycles = {} unless defined?(@_cycles)
+        @_cycles[name]
+      end
+
+      def set_cycle(name, cycle_object)
+        @_cycles = {} unless defined?(@_cycles)
+        @_cycles[name] = cycle_object
+      end
+
+      def split_paragraphs(text)
+        return [] if text.blank?
+
+        text.to_str.gsub(/\r\n?/, "\n").split(/\n\n+/).map! do |t|
+          t.gsub!(/([^\n]\n)(?=[^\n])/, '\1<br />') || t
+        end
+      end
+
+      def cut_excerpt_part(part_position, part, separator, options)
+        return '', '' unless part
+
+        radius   = options.fetch(:radius, 100)
+        omission = options.fetch(:omission, '...')
+
+        part = part.split(separator)
+        part.delete('')
+        affix = part.size > radius ? omission : ''
+
+        part = if part_position == :first
+                 drop_index = [part.length - radius, 0].max
+                 part.drop(drop_index)
+               else
+                 part.first(radius)
         end
 
-        def set_cycle(name, cycle_object)
-          @_cycles = Hash.new unless defined?(@_cycles)
-          @_cycles[name] = cycle_object
-        end
-
-        def split_paragraphs(text)
-          return [] if text.blank?
-
-          text.to_str.gsub(/\r\n?/, "\n").split(/\n\n+/).map! do |t|
-            t.gsub!(/([^\n]\n)(?=[^\n])/, '\1<br />') || t
-          end
-        end
-
-        def cut_excerpt_part(part_position, part, separator, options)
-          return "", "" unless part
-
-          radius   = options.fetch(:radius, 100)
-          omission = options.fetch(:omission, "...")
-
-          part = part.split(separator)
-          part.delete("")
-          affix = part.size > radius ? omission : ""
-
-          part = if part_position == :first
-            drop_index = [part.length - radius, 0].max
-            part.drop(drop_index)
-          else
-            part.first(radius)
-          end
-
-          return affix, part.join(separator)
-        end
+        [affix, part.join(separator)]
+      end
     end
   end
 end

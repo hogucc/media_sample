@@ -1,14 +1,14 @@
 # frozen_string_literal: true
 
 begin
-  require "dalli"
+  require 'dalli'
 rescue LoadError => e
-  $stderr.puts "You don't have dalli installed in your application. Please add it to your Gemfile and run bundle install"
+  warn "You don't have dalli installed in your application. Please add it to your Gemfile and run bundle install"
   raise e
 end
 
-require "active_support/core_ext/marshal"
-require "active_support/core_ext/array/extract_options"
+require 'active_support/core_ext/marshal'
+require 'active_support/core_ext/array/extract_options'
 
 module ActiveSupport
   module Cache
@@ -28,23 +28,22 @@ module ActiveSupport
       # Provide support for raw values in the local cache strategy.
       module LocalCacheWithRaw # :nodoc:
         private
-          def read_entry(key, options)
-            entry = super
-            if options[:raw] && local_cache && entry
-              entry = deserialize_entry(entry.value)
-            end
-            entry
-          end
 
-          def write_entry(key, entry, options)
-            if options[:raw] && local_cache
-              raw_entry = Entry.new(entry.value.to_s)
-              raw_entry.expires_at = entry.expires_at
-              super(key, raw_entry, options)
-            else
-              super
-            end
+        def read_entry(key, options)
+          entry = super
+          entry = deserialize_entry(entry.value) if options[:raw] && local_cache && entry
+          entry
+        end
+
+        def write_entry(key, entry, options)
+          if options[:raw] && local_cache
+            raw_entry = Entry.new(entry.value.to_s)
+            raw_entry.expires_at = entry.expires_at
+            super(key, raw_entry, options)
+          else
+            super
           end
+        end
       end
 
       # Advertise cache versioning support.
@@ -55,7 +54,7 @@ module ActiveSupport
       prepend Strategy::LocalCache
       prepend LocalCacheWithRaw
 
-      ESCAPE_KEY_CHARS = /[\x00-\x20%\x7F-\xFF]/n
+      ESCAPE_KEY_CHARS = /[\x00-\x20%\x7F-\xFF]/n.freeze
 
       # Creates a new Dalli::Client instance with specified addresses and options.
       # By default address is equal localhost:11211.
@@ -67,7 +66,7 @@ module ActiveSupport
       def self.build_mem_cache(*addresses) # :nodoc:
         addresses = addresses.flatten
         options = addresses.extract_options!
-        addresses = ["localhost:11211"] if addresses.empty?
+        addresses = ['localhost:11211'] if addresses.empty?
         pool_options = retrieve_pool_options(options)
 
         if pool_options.empty?
@@ -91,9 +90,8 @@ module ActiveSupport
         options = addresses.extract_options!
         super(options)
 
-        unless [String, Dalli::Client, NilClass].include?(addresses.first.class)
-          raise ArgumentError, "First argument must be an empty array, an array of hosts or a Dalli::Client instance."
-        end
+        raise ArgumentError, 'First argument must be an empty array, an array of hosts or a Dalli::Client instance.' unless [String, Dalli::Client, NilClass].include?(addresses.first.class)
+
         if addresses.first.is_a?(Dalli::Client)
           @data = addresses.first
         else
@@ -131,82 +129,85 @@ module ActiveSupport
 
       # Clear the entire cache on all memcached servers. This method should
       # be used with care when shared cache is being used.
-      def clear(options = nil)
-        rescue_error_with(nil) { @data.with { |c| c.flush_all } }
+      def clear(_options = nil)
+        rescue_error_with(nil) { @data.with(&:flush_all) }
       end
 
       # Get the statistics from the memcached servers.
       def stats
-        @data.with { |c| c.stats }
+        @data.with(&:stats)
       end
 
       private
-        # Read an entry from the cache.
-        def read_entry(key, options)
-          rescue_error_with(nil) { deserialize_entry(@data.with { |c| c.get(key, options) }) }
+
+      # Read an entry from the cache.
+      def read_entry(key, options)
+        rescue_error_with(nil) { deserialize_entry(@data.with { |c| c.get(key, options) }) }
+      end
+
+      # Write an entry to the cache.
+      def write_entry(key, entry, options)
+        method = options && options[:unless_exist] ? :add : :set
+        value = options[:raw] ? entry.value.to_s : entry
+        expires_in = options[:expires_in].to_i
+        if expires_in > 0 && !options[:raw]
+          # Set the memcache expire a few minutes in the future to support race condition ttls on read
+          expires_in += 5.minutes
+        end
+        rescue_error_with false do
+          @data.with { |c| c.send(method, key, value, expires_in, options) }
+        end
+      end
+
+      # Reads multiple entries from the cache implementation.
+      def read_multi_entries(names, options)
+        keys_to_names = Hash[names.map { |name| [normalize_key(name, options), name] }]
+
+        raw_values = @data.with { |c| c.get_multi(keys_to_names.keys) }
+        values = {}
+
+        raw_values.each do |key, value|
+          entry = deserialize_entry(value)
+
+          values[keys_to_names[key]] = entry.value unless entry.expired? || entry.mismatched?(normalize_version(keys_to_names[key], options))
         end
 
-        # Write an entry to the cache.
-        def write_entry(key, entry, options)
-          method = options && options[:unless_exist] ? :add : :set
-          value = options[:raw] ? entry.value.to_s : entry
-          expires_in = options[:expires_in].to_i
-          if expires_in > 0 && !options[:raw]
-            # Set the memcache expire a few minutes in the future to support race condition ttls on read
-            expires_in += 5.minutes
-          end
-          rescue_error_with false do
-            @data.with { |c| c.send(method, key, value, expires_in, options) }
-          end
+        values
+      end
+
+      # Delete an entry from the cache.
+      def delete_entry(key, _options)
+        rescue_error_with(false) { @data.with { |c| c.delete(key) } }
+      end
+
+      # Memcache keys are binaries. So we need to force their encoding to binary
+      # before applying the regular expression to ensure we are escaping all
+      # characters properly.
+      def normalize_key(key, options)
+        key = super.dup
+        key = key.force_encoding(Encoding::ASCII_8BIT)
+        key = key.gsub(ESCAPE_KEY_CHARS) { |match| "%#{match.getbyte(0).to_s(16).upcase}" }
+        key = "#{key[0, 213]}:md5:#{ActiveSupport::Digest.hexdigest(key)}" if key.size > 250
+        key
+      end
+
+      def deserialize_entry(raw_value)
+        if raw_value
+          entry = begin
+                      Marshal.load(raw_value)
+                  rescue StandardError
+                    raw_value
+                    end
+          entry.is_a?(Entry) ? entry : Entry.new(entry)
         end
+      end
 
-        # Reads multiple entries from the cache implementation.
-        def read_multi_entries(names, options)
-          keys_to_names = Hash[names.map { |name| [normalize_key(name, options), name] }]
-
-          raw_values = @data.with { |c| c.get_multi(keys_to_names.keys) }
-          values = {}
-
-          raw_values.each do |key, value|
-            entry = deserialize_entry(value)
-
-            unless entry.expired? || entry.mismatched?(normalize_version(keys_to_names[key], options))
-              values[keys_to_names[key]] = entry.value
-            end
-          end
-
-          values
-        end
-
-        # Delete an entry from the cache.
-        def delete_entry(key, options)
-          rescue_error_with(false) { @data.with { |c| c.delete(key) } }
-        end
-
-        # Memcache keys are binaries. So we need to force their encoding to binary
-        # before applying the regular expression to ensure we are escaping all
-        # characters properly.
-        def normalize_key(key, options)
-          key = super.dup
-          key = key.force_encoding(Encoding::ASCII_8BIT)
-          key = key.gsub(ESCAPE_KEY_CHARS) { |match| "%#{match.getbyte(0).to_s(16).upcase}" }
-          key = "#{key[0, 213]}:md5:#{ActiveSupport::Digest.hexdigest(key)}" if key.size > 250
-          key
-        end
-
-        def deserialize_entry(raw_value)
-          if raw_value
-            entry = Marshal.load(raw_value) rescue raw_value
-            entry.is_a?(Entry) ? entry : Entry.new(entry)
-          end
-        end
-
-        def rescue_error_with(fallback)
-          yield
-        rescue Dalli::DalliError => e
-          logger.error("DalliError (#{e}): #{e.message}") if logger
-          fallback
-        end
+      def rescue_error_with(fallback)
+        yield
+      rescue Dalli::DalliError => e
+        logger&.error("DalliError (#{e}): #{e.message}")
+        fallback
+      end
     end
   end
 end

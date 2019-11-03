@@ -40,9 +40,7 @@ class Capybara::Selenium::EdgeNode < Capybara::Selenium::Node
     super
   rescue Selenium::WebDriver::Error::InvalidArgumentError => e
     tag_name, type = attrs(:tagName, :type).map { |val| val&.downcase }
-    if tag_name == 'input' && type == 'file'
-      raise Selenium::WebDriver::Error::InvalidArgumentError, "EdgeChrome can't click on file inputs.\n#{e.message}"
-    end
+    raise Selenium::WebDriver::Error::InvalidArgumentError, "EdgeChrome can't click on file inputs.\n#{e.message}" if tag_name == 'input' && type == 'file'
 
     raise
   end
@@ -75,7 +73,7 @@ class Capybara::Selenium::EdgeNode < Capybara::Selenium::Node
     end
   end
 
-private
+  private
 
   def file_errors
     @file_errors = ::Selenium::WebDriver.logger.suppress_deprecations do

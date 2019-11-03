@@ -1,8 +1,8 @@
-require "execjs/version"
-require "rbconfig"
+require 'execjs/version'
+require 'rbconfig'
 
 module ExecJS
-  class Error           < ::StandardError; end
+  class Error < ::StandardError; end
   class RuntimeError              < Error; end
   class ProgramError              < Error; end
   class RuntimeUnavailable < RuntimeError; end
@@ -12,6 +12,7 @@ module ExecJS
 
     def runtime=(runtime)
       raise RuntimeUnavailable, "#{runtime.name} is unavailable on this system" unless runtime.available?
+
       @runtime = runtime
     end
 
@@ -28,15 +29,15 @@ module ExecJS
     end
 
     def root
-      @root ||= File.expand_path("..", __FILE__)
+      @root ||= File.expand_path(__dir__)
     end
 
     def windows?
-      @windows ||= RbConfig::CONFIG["host_os"] =~ /mswin|mingw/
+      @windows ||= RbConfig::CONFIG['host_os'] =~ /mswin|mingw/
     end
 
     def cygwin?
-      @cygwin ||= RbConfig::CONFIG["host_os"] =~ /cygwin/
+      @cygwin ||= RbConfig::CONFIG['host_os'] =~ /cygwin/
     end
   end
 end

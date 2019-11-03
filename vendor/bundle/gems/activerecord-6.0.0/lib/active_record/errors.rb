@@ -150,9 +150,7 @@ module ActiveRecord
           Verify that the foreign key column type and the primary key of the associated table match types.
         EOM
       end
-      if message
-        msg << "\nOriginal message: #{message}"
-      end
+      msg << "\nOriginal message: #{message}" if message
       super(msg, sql: sql, binds: binds)
     end
   end
@@ -203,7 +201,7 @@ module ActiveRecord
         @attempted_action = attempted_action
         super("Attempted to #{attempted_action} a stale object: #{record.class.name}.")
       else
-        super("Stale object error.")
+        super('Stale object error.')
       end
     end
   end
@@ -295,7 +293,7 @@ module ActiveRecord
         @model = model
         super(message)
       else
-        super("Unknown primary key.")
+        super('Unknown primary key.')
       end
     end
   end

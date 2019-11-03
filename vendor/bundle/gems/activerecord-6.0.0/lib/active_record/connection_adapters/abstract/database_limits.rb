@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "active_support/deprecation"
+require 'active_support/deprecation'
 
 module ActiveRecord
   module ConnectionAdapters # :nodoc:
@@ -66,7 +66,7 @@ module ActiveRecord
 
       # Returns the maximum length of an SQL query.
       def sql_query_length
-        1048575
+        1_048_575
       end
       deprecate :sql_query_length
 
@@ -77,9 +77,10 @@ module ActiveRecord
       deprecate :joins_per_query
 
       private
-        def bind_params_length
-          65535
-        end
+
+      def bind_params_length
+        65_535
+      end
     end
   end
 end

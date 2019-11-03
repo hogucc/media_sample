@@ -1,6 +1,6 @@
 class Foreman::Thor
   class Command < Struct.new(:name, :description, :long_description, :usage, :options, :disable_class_options)
-    FILE_REGEXP = /^#{Regexp.escape(File.dirname(__FILE__))}/
+    FILE_REGEXP = /^#{Regexp.escape(File.dirname(__FILE__))}/.freeze
 
     def initialize(name, description, long_description, usage, options = nil, disable_class_options = false)
       super(name.to_s, description, long_description, usage, options || {}, disable_class_options)
@@ -45,12 +45,12 @@ class Foreman::Thor
       end
       formatted = "#{klass.namespace.split(':').last} " if subcommand
 
-      formatted ||= ""
+      formatted ||= ''
 
       # Add usage with required arguments
       formatted << if klass && !klass.arguments.empty?
                      usage.to_s.gsub(/^#{name}/) do |match|
-                       match << " " << klass.arguments.map(&:usage).compact.join(" ")
+                       match << ' ' << klass.arguments.map(&:usage).compact.join(' ')
                      end
                    else
                      usage.to_s
@@ -63,14 +63,14 @@ class Foreman::Thor
       formatted.strip
     end
 
-  protected
+    protected
 
     def not_debugging?(instance)
       !(instance.class.respond_to?(:debugging) && instance.class.debugging)
     end
 
     def required_options
-      @required_options ||= options.map { |_, o| o.usage if o.required? }.compact.sort.join(" ")
+      @required_options ||= options.map { |_, o| o.usage if o.required? }.compact.sort.join(' ')
     end
 
     # Given a target, checks if this class name is a public method.
@@ -96,11 +96,11 @@ class Foreman::Thor
       not_debugging?(instance) && (error.message =~ /wrong number of arguments/ || error.message =~ /given \d*, expected \d*/) && begin
         saned = sans_backtrace(error.backtrace, caller)
         # Ruby 1.9 always include the called method in the backtrace
-        saned.empty? || (saned.size == 1 && RUBY_VERSION >= "1.9")
+        saned.empty? || (saned.size == 1 && RUBY_VERSION >= '1.9')
       end
     end
 
-    def handle_no_method_error?(instance, error, caller)
+    def handle_no_method_error?(instance, error, _caller)
       not_debugging?(instance) &&
         error.message =~ /^undefined method `#{name}' for #{Regexp.escape(instance.to_s)}$/
     end
@@ -118,7 +118,7 @@ class Foreman::Thor
   # A dynamic command that handles method missing scenarios.
   class DynamicCommand < Command
     def initialize(name, options = nil)
-      super(name.to_s, "A dynamically-generated command", name.to_s, name.to_s, options)
+      super(name.to_s, 'A dynamically-generated command', name.to_s, name.to_s, options)
     end
 
     def run(instance, args = [])

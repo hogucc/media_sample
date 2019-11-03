@@ -11,8 +11,7 @@ module ActiveModel
         @limit = limit
       end
 
-      def type # :nodoc:
-      end
+      def type; end
 
       # Converts a value from database input to the appropriate ruby type. The
       # return value of this method will be returned from
@@ -82,7 +81,7 @@ module ActiveModel
       # +deserialize+.
       #
       # +new_value+ The current value, after type casting.
-      def changed_in_place?(raw_old_value, new_value)
+      def changed_in_place?(_raw_old_value, _new_value)
         false
       end
 
@@ -110,17 +109,16 @@ module ActiveModel
         [self.class, precision, scale, limit].hash
       end
 
-      def assert_valid_value(*)
-      end
+      def assert_valid_value(*); end
 
       private
 
-        # Convenience method for types which do not need separate type casting
-        # behavior for user and database inputs. Called by Value#cast for
-        # values except +nil+.
-        def cast_value(value) # :doc:
-          value
-        end
+      # Convenience method for types which do not need separate type casting
+      # behavior for user and database inputs. Called by Value#cast for
+      # values except +nil+.
+      def cast_value(value) # :doc:
+        value
+      end
     end
   end
 end

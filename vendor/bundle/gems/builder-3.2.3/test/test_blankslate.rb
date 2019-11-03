@@ -20,7 +20,8 @@ module LateObject
   def late_object
     33
   end
-  def LateObject.included(mod)
+
+  def self.included(mod)
     # Modules defining an included method should not prevent blank
     # slate erasure!
   end
@@ -31,7 +32,8 @@ module LateKernel
   def late_kernel
     44
   end
-  def LateKernel.included(mod)
+
+  def self.included(mod)
     # Modules defining an included method should not prevent blank
     # slate erasure!
   end
@@ -51,7 +53,6 @@ module Kernel
   end
 end
 
-
 # Introduce some late methods (both module and direct) into the Object
 # class.
 class Object
@@ -63,9 +64,9 @@ end
 
 # Introduce some late methods by inclusion.
 module GlobalModule
- def global_inclusion
-   42
- end
+  def global_inclusion
+    42
+  end
 end
 include GlobalModule
 
@@ -86,27 +87,26 @@ class TestBlankSlate < Builder::Test
     assert_raise(NoMethodError) { @bs.nil? }
   end
 
-
   # NOTE: NameError is acceptable because the lack of a '.' means that
   # Ruby can't tell if it is a method or a local variable.
   def test_undefined_methods_remain_undefined_during_instance_eval
     assert_raise(NoMethodError, NameError)  do
-      @bs.instance_eval do nil? end
+      @bs.instance_eval { nil? }
     end
-    assert_raise(NoMethodError, NameError)  do
-      @bs.instance_eval do no_such_method end
+    assert_raise(NoMethodError, NameError) do
+      @bs.instance_eval { no_such_method }
     end
   end
 
   def test_private_methods_are_undefined
     assert_raise(NoMethodError) do
-      @bs.puts "HI"
+      @bs.puts 'HI'
     end
   end
 
   def test_targetted_private_methods_are_undefined_during_instance_eval
     assert_raise(NoMethodError, NameError) do
-      @bs.instance_eval do self.puts "HI" end
+      @bs.instance_eval { self.puts 'HI' }
     end
   end
 
@@ -114,7 +114,7 @@ class TestBlankSlate < Builder::Test
     oldstdout = $stdout
     $stdout = StringIO.new
     @bs.instance_eval do
-      puts "HI"
+      puts 'HI'
     end
   ensure
     $stdout = oldstdout
@@ -194,7 +194,7 @@ class TestBlankSlate < Builder::Test
     assert_nothing_raised do
       assert_equal 42, global_inclusion
       assert_equal 42, Object.new.global_inclusion
-      assert_equal 42, "magic number".global_inclusion
+      assert_equal 42, 'magic number'.global_inclusion
       assert_equal 43, direct_global
     end
   end
@@ -208,6 +208,6 @@ class TestBlankSlate < Builder::Test
     obj2 = with_object_id.new
 
     assert obj1.object_id != obj2.object_id,
-       "Revealed methods should not be bound to a particular instance"
+           'Revealed methods should not be bound to a particular instance'
   end
 end

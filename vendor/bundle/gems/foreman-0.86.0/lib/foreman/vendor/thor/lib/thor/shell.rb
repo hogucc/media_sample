@@ -1,4 +1,4 @@
-require "rbconfig"
+require 'rbconfig'
 
 class Foreman::Thor
   module Base
@@ -9,24 +9,24 @@ class Foreman::Thor
       # it will use a colored log, otherwise it will use a basic one without color.
       #
       def shell
-        @shell ||= if ENV["THOR_SHELL"] && !ENV["THOR_SHELL"].empty?
-          Foreman::Thor::Shell.const_get(ENV["THOR_SHELL"])
-        elsif RbConfig::CONFIG["host_os"] =~ /mswin|mingw/ && !ENV["ANSICON"]
-          Foreman::Thor::Shell::Basic
-        else
-          Foreman::Thor::Shell::Color
+        @shell ||= if ENV['THOR_SHELL'] && !ENV['THOR_SHELL'].empty?
+                     Foreman::Thor::Shell.const_get(ENV['THOR_SHELL'])
+                   elsif RbConfig::CONFIG['host_os'] =~ /mswin|mingw/ && !ENV['ANSICON']
+                     Foreman::Thor::Shell::Basic
+                   else
+                     Foreman::Thor::Shell::Color
         end
       end
     end
   end
 
   module Shell
-    SHELL_DELEGATED_METHODS = [:ask, :error, :set_color, :yes?, :no?, :say, :say_status, :print_in_columns, :print_table, :print_wrapped, :file_collision, :terminal_width]
+    SHELL_DELEGATED_METHODS = [:ask, :error, :set_color, :yes?, :no?, :say, :say_status, :print_in_columns, :print_table, :print_wrapped, :file_collision, :terminal_width].freeze
     attr_writer :shell
 
-    autoload :Basic, "foreman/vendor/thor/lib/thor/shell/basic"
-    autoload :Color, "foreman/vendor/thor/lib/thor/shell/color"
-    autoload :HTML,  "foreman/vendor/thor/lib/thor/shell/html"
+    autoload :Basic, 'foreman/vendor/thor/lib/thor/shell/basic'
+    autoload :Color, 'foreman/vendor/thor/lib/thor/shell/color'
+    autoload :HTML,  'foreman/vendor/thor/lib/thor/shell/html'
 
     # Add shell to initialize config values.
     #
@@ -70,12 +70,12 @@ class Foreman::Thor
       shell.padding -= 1
     end
 
-  protected
+    protected
 
     # Allow shell to be shared between invocations.
     #
     def _shared_configuration #:nodoc:
-      super.merge!(:shell => shell)
+      super.merge!(shell: shell)
     end
   end
 end

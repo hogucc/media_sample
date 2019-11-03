@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require "active_support/json"
-require "active_support/core_ext/string/access"
-require "active_support/core_ext/string/behavior"
-require "active_support/core_ext/module/delegation"
+require 'active_support/json'
+require 'active_support/core_ext/string/access'
+require 'active_support/core_ext/string/behavior'
+require 'active_support/core_ext/module/delegation'
 
 module ActiveSupport #:nodoc:
   module Multibyte #:nodoc:
@@ -62,7 +62,7 @@ module ActiveSupport #:nodoc:
         if /!$/.match?(method)
           self if result
         else
-          result.kind_of?(String) ? chars(result) : result
+          result.is_a?(String) ? chars(result) : result
         end
       end
 
@@ -104,9 +104,7 @@ module ActiveSupport #:nodoc:
       #   string # => 'me'
       def slice!(*args)
         string_sliced = @wrapped_string.slice!(*args)
-        if string_sliced
-          chars(string_sliced)
-        end
+        chars(string_sliced) if string_sliced
       end
 
       # Reverses all characters in the string.
@@ -130,9 +128,9 @@ module ActiveSupport #:nodoc:
       #   "ÉL QUE SE ENTERÓ".mb_chars.titleize.to_s    # => "Él Que Se Enteró"
       #   "日本語".mb_chars.titleize.to_s               # => "日本語"
       def titleize
-        chars(downcase.to_s.gsub(/\b('?\S)/u) { $1.upcase })
+        chars(downcase.to_s.gsub(/\b('?\S)/u) { Regexp.last_match(1).upcase })
       end
-      alias_method :titlecase, :titleize
+      alias titlecase titleize
 
       # Returns the KC normalization of the string by default. NFKC is
       # considered the best normalization form for passing strings to databases
@@ -167,7 +165,7 @@ module ActiveSupport #:nodoc:
       #   'é'.length                         # => 2
       #   'é'.mb_chars.decompose.to_s.length # => 3
       def decompose
-        chars(Unicode.decompose(:canonical, @wrapped_string.codepoints.to_a).pack("U*"))
+        chars(Unicode.decompose(:canonical, @wrapped_string.codepoints.to_a).pack('U*'))
       end
 
       # Performs composition on all the characters.
@@ -175,7 +173,7 @@ module ActiveSupport #:nodoc:
       #   'é'.length                       # => 3
       #   'é'.mb_chars.compose.to_s.length # => 2
       def compose
-        chars(Unicode.compose(@wrapped_string.codepoints.to_a).pack("U*"))
+        chars(Unicode.compose(@wrapped_string.codepoints.to_a).pack('U*'))
       end
 
       # Returns the number of grapheme clusters in the string.
@@ -199,7 +197,7 @@ module ActiveSupport #:nodoc:
         to_s.as_json(options)
       end
 
-      %w(reverse tidy_bytes).each do |method|
+      %w[reverse tidy_bytes].each do |method|
         define_method("#{method}!") do |*args|
           @wrapped_string = send(method, *args).to_s
           self
@@ -208,9 +206,9 @@ module ActiveSupport #:nodoc:
 
       private
 
-        def chars(string)
-          self.class.new(string)
-        end
+      def chars(string)
+        self.class.new(string)
+      end
     end
   end
 end

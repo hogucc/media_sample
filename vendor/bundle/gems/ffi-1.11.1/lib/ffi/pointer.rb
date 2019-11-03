@@ -33,7 +33,6 @@
 require 'ffi/platform'
 module FFI
   class Pointer
-
     # Pointer size
     SIZE = Platform::ADDRESS_SIZE / 8
 
@@ -45,11 +44,12 @@ module FFI
 
     # @param [nil,Numeric] len length of string to return
     # @return [String]
-    # Read pointer's contents as a string, or the first +len+ bytes of the 
+    # Read pointer's contents as a string, or the first +len+ bytes of the
     # equivalent string if +len+ is not +nil+.
-    def read_string(len=nil)
+    def read_string(len = nil)
       if len
         return ''.b if len == 0
+
         get_bytes(0, len)
       else
         get_string(0)
@@ -89,10 +89,10 @@ module FFI
     # @param [String] str string to write
     # @param [Numeric] len length of string to return
     # @return [self]
-    # Write +str+ in pointer's contents, or first +len+ bytes if 
+    # Write +str+ in pointer's contents, or first +len+ bytes if
     # +len+ is not +nil+.
-    def write_string(str, len=nil)
-      len = str.bytesize unless len
+    def write_string(str, len = nil)
+      len ||= str.bytesize
       # Write the string data without NUL termination
       put_bytes(0, str, 0, len)
     end
@@ -108,10 +108,10 @@ module FFI
       ary = []
       size = FFI.type_size(type)
       tmp = self
-      length.times { |j|
+      length.times do |j|
         ary << tmp.send(reader)
-        tmp += size unless j == length-1 # avoid OOB
-      }
+        tmp += size unless j == length - 1 # avoid OOB
+      end
       ary
     end
 
@@ -124,10 +124,11 @@ module FFI
     #  ptr.write_array_of_type(TYPE_UINT8, :put_uint8, [1, 2, 3 ,4])
     def write_array_of_type(type, writer, ary)
       size = FFI.type_size(type)
-      ary.each_with_index { |val, i|
+      ary.each_with_index do |val, i|
         break unless i < self.size
-        self.send(writer, i * size, val)
-      }
+
+        send(writer, i * size, val)
+      end
       self
     end
 

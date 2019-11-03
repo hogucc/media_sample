@@ -15,11 +15,8 @@ module ChildProcess
       end
 
       def has_to_io?(io)
-        io.respond_to?(:to_io) && io.to_io.kind_of?(::IO)
+        io.respond_to?(:to_io) && io.to_io.is_a?(::IO)
       end
-
     end # IO
   end # Windows
 end # ChildProcess
-
-

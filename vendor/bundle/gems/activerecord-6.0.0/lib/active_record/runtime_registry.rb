@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "active_support/per_thread_registry"
+require 'active_support/per_thread_registry'
 
 module ActiveRecord
   # This is a thread locals registry for Active Record. For example:
@@ -17,7 +17,7 @@ module ActiveRecord
     attr_accessor :connection_handler, :sql_runtime
 
     [:connection_handler, :sql_runtime].each do |val|
-      class_eval %{ def self.#{val}; instance.#{val}; end }, __FILE__, __LINE__
+      class_eval %( def self.#{val}; instance.#{val}; end ), __FILE__, __LINE__
       class_eval %{ def self.#{val}=(x); instance.#{val}=x; end }, __FILE__, __LINE__
     end
   end

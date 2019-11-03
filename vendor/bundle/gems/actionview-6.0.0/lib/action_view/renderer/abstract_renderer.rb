@@ -54,7 +54,9 @@ module ActionView
           @format = format
         end
 
-        def body; nil; end
+        def body
+          nil
+        end
       end
     end
 
@@ -76,33 +78,33 @@ module ActionView
 
     private
 
-      def extract_details(options) # :doc:
-        @lookup_context.registered_details.each_with_object({}) do |key, details|
-          value = options[key]
+    def extract_details(options) # :doc:
+      @lookup_context.registered_details.each_with_object({}) do |key, details|
+        value = options[key]
 
-          details[key] = Array(value) if value
-        end
+        details[key] = Array(value) if value
       end
+    end
 
-      def instrument(name, **options) # :doc:
-        ActiveSupport::Notifications.instrument("render_#{name}.action_view", options) do |payload|
-          yield payload
-        end
+    def instrument(name, **options) # :doc:
+      ActiveSupport::Notifications.instrument("render_#{name}.action_view", options) do |payload|
+        yield payload
       end
+    end
 
-      def prepend_formats(formats) # :doc:
-        formats = Array(formats)
-        return if formats.empty? || @lookup_context.html_fallback_for_js
+    def prepend_formats(formats) # :doc:
+      formats = Array(formats)
+      return if formats.empty? || @lookup_context.html_fallback_for_js
 
-        @lookup_context.formats = formats | @lookup_context.formats
-      end
+      @lookup_context.formats = formats | @lookup_context.formats
+    end
 
-      def build_rendered_template(content, template, layout = nil)
-        RenderedTemplate.new content, layout, template
-      end
+    def build_rendered_template(content, template, layout = nil)
+      RenderedTemplate.new content, layout, template
+    end
 
-      def build_rendered_collection(templates, spacer)
-        RenderedCollection.new templates, spacer
-      end
+    def build_rendered_collection(templates, spacer)
+      RenderedCollection.new templates, spacer
+    end
   end
 end

@@ -1,5 +1,5 @@
-# encoding: utf-8
 # frozen_string_literal: true
+
 require 'mail/encodings/transfer_encoding'
 
 module Mail
@@ -16,7 +16,7 @@ module Mail
       end
 
       # 1 output byte per input byte.
-      def self.cost(str)
+      def self.cost(_str)
         1.0
       end
     end

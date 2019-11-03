@@ -47,13 +47,13 @@ module ActiveRecord
 
       private
 
-        def load_schema!
-          super
-          attribute_types.each do |name, type|
-            decorated_type = attribute_type_decorations.apply(name, type)
-            define_attribute(name, decorated_type)
-          end
+      def load_schema!
+        super
+        attribute_types.each do |name, type|
+          decorated_type = attribute_type_decorations.apply(name, type)
+          define_attribute(name, decorated_type)
         end
+      end
     end
 
     class TypeDecorator # :nodoc:
@@ -76,15 +76,15 @@ module ActiveRecord
 
       private
 
-        def decorators_for(name, type)
-          matching(name, type).map(&:last)
-        end
+      def decorators_for(name, type)
+        matching(name, type).map(&:last)
+      end
 
-        def matching(name, type)
-          @decorations.values.select do |(matcher, _)|
-            matcher.call(name, type)
-          end
+      def matching(name, type)
+        @decorations.values.select do |(matcher, _)|
+          matcher.call(name, type)
         end
+      end
     end
   end
 end

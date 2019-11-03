@@ -1,14 +1,14 @@
 # frozen_string_literal: true
 
-require "active_support/core_ext/module/attr_internal"
-require "active_support/core_ext/module/attribute_accessors"
-require "active_support/ordered_options"
-require "active_support/deprecation"
-require "action_view/log_subscriber"
-require "action_view/helpers"
-require "action_view/context"
-require "action_view/template"
-require "action_view/lookup_context"
+require 'active_support/core_ext/module/attr_internal'
+require 'active_support/core_ext/module/attribute_accessors'
+require 'active_support/ordered_options'
+require 'active_support/deprecation'
+require 'action_view/log_subscriber'
+require 'action_view/helpers'
+require 'action_view/context'
+require 'action_view/template'
+require 'action_view/lookup_context'
 
 module ActionView #:nodoc:
   # = Action View Base
@@ -140,10 +140,12 @@ module ActionView #:nodoc:
   # For more information on Builder please consult the {source
   # code}[https://github.com/jimweirich/builder].
   class Base
-    include Helpers, ::ERB::Util, Context
+    include Context
+    include ::ERB::Util
+    include Helpers
 
     # Specify the proc used to decorate input tags that refer to attributes with errors.
-    cattr_accessor :field_error_proc, default: Proc.new { |html_tag, instance| "<div class=\"field_with_errors\">#{html_tag}</div>".html_safe }
+    cattr_accessor :field_error_proc, default: proc { |html_tag, _instance| "<div class=\"field_with_errors\">#{html_tag}</div>".html_safe }
 
     # How to complete the streaming when an exception occurs.
     # This is our best guess: first try to close the attribute, then the tag.
@@ -167,7 +169,7 @@ module ActionView #:nodoc:
     class_attribute :logger
 
     class << self
-      delegate :erb_trim_mode=, to: "ActionView::Template::Handlers::ERB"
+      delegate :erb_trim_mode=, to: 'ActionView::Template::Handlers::ERB'
 
       def cache_template_loading
         ActionView::Resolver.caching?
@@ -182,13 +184,13 @@ module ActionView #:nodoc:
       end
 
       def with_empty_template_cache # :nodoc:
-        subclass = Class.new(self) {
+        subclass = Class.new(self) do
           # We can't implement these as self.class because subclasses will
           # share the same template cache as superclasses, so "changed?" won't work
           # correctly.
           define_method(:compiled_method_container)           { subclass }
           define_singleton_method(:compiled_method_container) { subclass }
-        }
+        end
       end
 
       def changed?(other) # :nodoc:
@@ -243,7 +245,7 @@ module ActionView #:nodoc:
 
       unless formats == NULL
         ActiveSupport::Deprecation.warn <<~eowarn.squish
-        Passing formats to ActionView::Base.new is deprecated
+          Passing formats to ActionView::Base.new is deprecated
         eowarn
       end
 
@@ -252,8 +254,8 @@ module ActionView #:nodoc:
         @lookup_context = lookup_context
       else
         ActiveSupport::Deprecation.warn <<~eowarn.squish
-        ActionView::Base instances should be constructed with a lookup context,
-        assignments, and a controller.
+          ActionView::Base instances should be constructed with a lookup context,
+          assignments, and a controller.
         eowarn
         @lookup_context = self.class.build_lookup_context(lookup_context)
       end
@@ -268,12 +270,16 @@ module ActionView #:nodoc:
     end
 
     def _run(method, template, locals, buffer, &block)
-      _old_output_buffer, _old_virtual_path, _old_template = @output_buffer, @virtual_path, @current_template
+      _old_output_buffer = @output_buffer
+      _old_virtual_path = @virtual_path
+      _old_template = @current_template
       @current_template = template
       @output_buffer = buffer
       send(method, locals, buffer, &block)
     ensure
-      @output_buffer, @virtual_path, @current_template = _old_output_buffer, _old_virtual_path, _old_template
+      @output_buffer = _old_output_buffer
+      @virtual_path = _old_virtual_path
+      @current_template = _old_template
     end
 
     def compiled_method_container
@@ -294,9 +300,7 @@ module ActionView #:nodoc:
 
       if !lookup_context.html_fallback_for_js && options[:formats]
         formats = Array(options[:formats])
-        if formats == [:js]
-          formats << :html
-        end
+        formats << :html if formats == [:js]
         @lookup_context = lookup_context.with_prepended_formats(formats)
         @view_renderer = ActionView::Renderer.new @lookup_context
       end

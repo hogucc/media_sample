@@ -1,6 +1,5 @@
 module Concurrent
   module Utility
-
     # @!visibility private
     module EngineDetector
       def on_jruby?
@@ -44,8 +43,8 @@ module Concurrent
         comparisons = { :== => [0],
                         :>= => [1, 0],
                         :<= => [-1, 0],
-                        :>  => [1],
-                        :<  => [-1] }
+                        :> => [1],
+                        :< => [-1] }
         comparisons.fetch(comparison).include? result
       end
     end

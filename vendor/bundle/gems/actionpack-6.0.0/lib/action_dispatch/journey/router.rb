@@ -1,16 +1,16 @@
 # frozen_string_literal: true
 
-require "action_dispatch/journey/router/utils"
-require "action_dispatch/journey/routes"
-require "action_dispatch/journey/formatter"
+require 'action_dispatch/journey/router/utils'
+require 'action_dispatch/journey/routes'
+require 'action_dispatch/journey/formatter'
 
 before = $-w
 $-w = false
-require "action_dispatch/journey/parser"
+require 'action_dispatch/journey/parser'
 $-w = before
 
-require "action_dispatch/journey/route"
-require "action_dispatch/journey/path/pattern"
+require 'action_dispatch/journey/route'
+require 'action_dispatch/journey/path/pattern'
 
 module ActionDispatch
   module Journey # :nodoc:
@@ -35,9 +35,9 @@ module ActionDispatch
           script_name = req.script_name
 
           unless route.path.anchored
-            req.script_name = (script_name.to_s + match.to_s).chomp("/")
+            req.script_name = (script_name.to_s + match.to_s).chomp('/')
             req.path_info = match.post_match
-            req.path_info = "/" + req.path_info unless req.path_info.start_with? "/"
+            req.path_info = '/' + req.path_info unless req.path_info.start_with? '/'
           end
 
           parameters = route.defaults.merge parameters.transform_values { |val|
@@ -48,7 +48,7 @@ module ActionDispatch
 
           status, headers, body = route.app.serve(req)
 
-          if "pass" == headers["X-Cascade"]
+          if headers['X-Cascade'] == 'pass'
             req.script_name     = script_name
             req.path_info       = path_info
             req.path_parameters = set_params
@@ -58,14 +58,14 @@ module ActionDispatch
           return [status, headers, body]
         end
 
-        [404, { "X-Cascade" => "pass" }, ["Not Found"]]
+        [404, { 'X-Cascade' => 'pass' }, ['Not Found']]
       end
 
       def recognize(rails_req)
         find_routes(rails_req).each do |match, parameters, route|
           unless route.path.anchored
             rails_req.script_name = match.to_s
-            rails_req.path_info   = match.post_match.sub(/^([^\/])/, '/\1')
+            rails_req.path_info   = match.post_match.sub(%r{^([^/])}, '/\1')
           end
 
           parameters = route.defaults.merge parameters
@@ -82,72 +82,73 @@ module ActionDispatch
 
       private
 
-        def partitioned_routes
-          routes.partition { |r|
-            r.path.anchored && r.ast.grep(Nodes::Symbol).all? { |n| n.default_regexp?  }
-          }
+      def partitioned_routes
+        routes.partition do |r|
+          r.path.anchored && r.ast.grep(Nodes::Symbol).all?(&:default_regexp?)
         end
+      end
 
-        def ast
-          routes.ast
-        end
+      def ast
+        routes.ast
+      end
 
-        def simulator
-          routes.simulator
-        end
+      def simulator
+        routes.simulator
+      end
 
-        def custom_routes
-          routes.custom_routes
-        end
+      def custom_routes
+        routes.custom_routes
+      end
 
-        def filter_routes(path)
-          return [] unless ast
-          simulator.memos(path) { [] }
-        end
+      def filter_routes(path)
+        return [] unless ast
 
-        def find_routes(req)
-          routes = filter_routes(req.path_info).concat custom_routes.find_all { |r|
-            r.path.match(req.path_info)
-          }
+        simulator.memos(path) { [] }
+      end
 
-          routes =
-            if req.head?
-              match_head_routes(routes, req)
-            else
-              match_routes(routes, req)
-            end
+      def find_routes(req)
+        routes = filter_routes(req.path_info).concat custom_routes.find_all { |r|
+          r.path.match(req.path_info)
+        }
 
-          routes.sort_by!(&:precedence)
-
-          routes.map! { |r|
-            match_data = r.path.match(req.path_info)
-            path_parameters = {}
-            match_data.names.zip(match_data.captures) { |name, val|
-              path_parameters[name.to_sym] = Utils.unescape_uri(val) if val
-            }
-            [match_data, path_parameters, r]
-          }
-        end
-
-        def match_head_routes(routes, req)
-          verb_specific_routes = routes.select(&:requires_matching_verb?)
-          head_routes = match_routes(verb_specific_routes, req)
-
-          if head_routes.empty?
-            begin
-              req.request_method = "GET"
-              match_routes(routes, req)
-            ensure
-              req.request_method = "HEAD"
-            end
+        routes =
+          if req.head?
+            match_head_routes(routes, req)
           else
-            head_routes
+            match_routes(routes, req)
           end
-        end
 
-        def match_routes(routes, req)
-          routes.select { |r| r.matches?(req) }
+        routes.sort_by!(&:precedence)
+
+        routes.map! do |r|
+          match_data = r.path.match(req.path_info)
+          path_parameters = {}
+          match_data.names.zip(match_data.captures) do |name, val|
+            path_parameters[name.to_sym] = Utils.unescape_uri(val) if val
+          end
+          [match_data, path_parameters, r]
         end
+      end
+
+      def match_head_routes(routes, req)
+        verb_specific_routes = routes.select(&:requires_matching_verb?)
+        head_routes = match_routes(verb_specific_routes, req)
+
+        if head_routes.empty?
+          begin
+            req.request_method = 'GET'
+            match_routes(routes, req)
+          ensure
+            req.request_method = 'HEAD'
+          end
+        else
+          head_routes
+        end
+      end
+
+      def match_routes(routes, req)
+        routes.select { |r| r.matches?(req) }
+      end
     end
   end
 end

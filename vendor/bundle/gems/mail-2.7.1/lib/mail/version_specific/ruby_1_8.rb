@@ -1,5 +1,5 @@
-# encoding: utf-8
 # frozen_string_literal: true
+
 require 'net/imap' # for decode_utf7
 
 module Mail
@@ -10,53 +10,53 @@ module Mail
     # Escapes any parenthesis in a string that are unescaped. This can't
     # use the Ruby 1.9.1 regexp feature of negative look behind so we have
     # to do two replacement, first unescape everything, then re-escape it
-    def Ruby18.escape_paren( str )
+    def self.escape_paren(str)
       re = /\\\)/
-      str = str.gsub(re) { |s| ')'}
+      str = str.gsub(re) { |_s| ')' }
       re = /\\\(/
-      str = str.gsub(re) { |s| '('}
+      str = str.gsub(re) { |_s| '(' }
       re = /([\(\)])/          # Only match unescaped parens
       str.gsub(re) { |s| '\\' + s }
     end
 
-    def Ruby18.paren( str )
-      str = $1 if str =~ /^\((.*)?\)$/
-      str = escape_paren( str )
+    def self.paren(str)
+      str = Regexp.last_match(1) if str =~ /^\((.*)?\)$/
+      str = escape_paren(str)
       '(' + str + ')'
     end
 
-    def Ruby18.escape_bracket( str )
+    def self.escape_bracket(str)
       re = /\\\>/
-      str = str.gsub(re) { |s| '>'}
+      str = str.gsub(re) { |_s| '>' }
       re = /\\\</
-      str = str.gsub(re) { |s| '<'}
+      str = str.gsub(re) { |_s| '<' }
       re = /([\<\>])/          # Only match unescaped parens
       str.gsub(re) { |s| '\\' + s }
     end
 
-    def Ruby18.bracket( str )
-      str = $1 if str =~ /^\<(.*)?\>$/
-      str = escape_bracket( str )
+    def self.bracket(str)
+      str = Regexp.last_match(1) if str =~ /^\<(.*)?\>$/
+      str = escape_bracket(str)
       '<' + str + '>'
     end
 
-    def Ruby18.decode_base64(str)
+    def self.decode_base64(str)
       Base64.decode64(str) if str
     end
 
-    def Ruby18.encode_base64(str)
+    def self.encode_base64(str)
       Base64.encode64(str)
     end
 
-    def Ruby18.has_constant?(klass, string)
-      klass.constants.include?( string )
+    def self.has_constant?(klass, string)
+      klass.constants.include?(string)
     end
 
-    def Ruby18.get_constant(klass, string)
-      klass.const_get( string )
+    def self.get_constant(klass, string)
+      klass.const_get(string)
     end
 
-    def Ruby18.transcode_charset(str, from_encoding, to_encoding = 'UTF-8')
+    def self.transcode_charset(str, from_encoding, to_encoding = 'UTF-8')
       case from_encoding
       when /utf-?7/i
         decode_utf7(str)
@@ -76,18 +76,19 @@ module Mail
       end
     end
 
-    def Ruby18.decode_utf7(str)
+    def self.decode_utf7(str)
       Net::IMAP.decode_utf7(str)
     end
 
-    def Ruby18.b_value_encode(str, encoding)
+    def self.b_value_encode(str, encoding)
       # Ruby 1.8 requires an encoding to work
-      raise ArgumentError, "Must supply an encoding" if encoding.nil?
+      raise ArgumentError, 'Must supply an encoding' if encoding.nil?
+
       encoding = encoding.to_s.upcase.gsub('_', '-')
       [Encodings::Base64.encode(str), normalize_iconv_charset_encoding(encoding)]
     end
 
-    def Ruby18.b_value_decode(str)
+    def self.b_value_decode(str)
       match = str.match(/\=\?(.+)?\?[Bb]\?(.*)\?\=/m)
       if match
         encoding = match[1]
@@ -97,14 +98,15 @@ module Mail
       str
     end
 
-    def Ruby18.q_value_encode(str, encoding)
+    def self.q_value_encode(str, encoding)
       # Ruby 1.8 requires an encoding to work
-      raise ArgumentError, "Must supply an encoding" if encoding.nil?
+      raise ArgumentError, 'Must supply an encoding' if encoding.nil?
+
       encoding = encoding.to_s.upcase.gsub('_', '-')
       [Encodings::QuotedPrintable.encode(str), encoding]
     end
 
-    def Ruby18.q_value_decode(str)
+    def self.q_value_decode(str)
       match = str.match(/\=\?(.+)?\?[Qq]\?(.*)\?\=/m)
       if match
         encoding = match[1]
@@ -117,7 +119,7 @@ module Mail
       str
     end
 
-    def Ruby18.param_decode(str, encoding)
+    def self.param_decode(str, encoding)
       str = URI.unescape(str)
       if encoding
         transcode_charset(str, encoding)
@@ -126,19 +128,19 @@ module Mail
       end
     end
 
-    def Ruby18.param_encode(str)
+    def self.param_encode(str)
       encoding = $KCODE.to_s.downcase
       language = Configuration.instance.param_encode_language
       "#{encoding}'#{language}'#{URI.escape(str)}"
     end
 
-    def Ruby18.string_byteslice(str, *args)
+    def self.string_byteslice(str, *args)
       str.slice(*args)
     end
 
     private
 
-    def Ruby18.normalize_iconv_charset_encoding(encoding)
+    def self.normalize_iconv_charset_encoding(encoding)
       case encoding.upcase
       when 'UTF8', 'UTF_8'
         'UTF-8'

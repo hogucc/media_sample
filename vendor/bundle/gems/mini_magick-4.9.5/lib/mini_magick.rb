@@ -2,7 +2,6 @@ require 'mini_magick/version'
 require 'mini_magick/configuration'
 
 module MiniMagick
-
   extend MiniMagick::Configuration
 
   ##
@@ -57,7 +56,6 @@ module MiniMagick
 
   class Error < RuntimeError; end
   class Invalid < StandardError; end
-
 end
 
 require 'mini_magick/tool'

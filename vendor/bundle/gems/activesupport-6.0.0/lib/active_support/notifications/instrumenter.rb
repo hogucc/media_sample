@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "securerandom"
+require 'securerandom'
 
 module ActiveSupport
   module Notifications
@@ -47,9 +47,9 @@ module ActiveSupport
 
       private
 
-        def unique_id
-          SecureRandom.hex(10)
-        end
+      def unique_id
+        SecureRandom.hex(10)
+      end
     end
 
     class Event
@@ -136,29 +136,30 @@ module ActiveSupport
       end
 
       private
-        def now
-          Concurrent.monotonic_time
-        end
 
-        if clock_gettime_supported?
-          def now_cpu
-            Process.clock_gettime(Process::CLOCK_PROCESS_CPUTIME_ID)
-          end
-        else
-          def now_cpu
-            0
-          end
-        end
+      def now
+        Concurrent.monotonic_time
+      end
 
-        if defined?(JRUBY_VERSION)
-          def now_allocations
-            0
-          end
-        else
-          def now_allocations
-            GC.stat :total_allocated_objects
-          end
+      if clock_gettime_supported?
+        def now_cpu
+          Process.clock_gettime(Process::CLOCK_PROCESS_CPUTIME_ID)
         end
+      else
+        def now_cpu
+          0
+        end
+      end
+
+      if defined?(JRUBY_VERSION)
+        def now_allocations
+          0
+        end
+      else
+        def now_allocations
+          GC.stat :total_allocated_objects
+        end
+      end
     end
   end
 end

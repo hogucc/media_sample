@@ -1,22 +1,22 @@
 # frozen_string_literal: true
 
-require "action_view/helpers/tag_helper"
+require 'action_view/helpers/tag_helper'
 
 module ActionView
   module Helpers #:nodoc:
     module JavaScriptHelper
       JS_ESCAPE_MAP = {
-        '\\'    => '\\\\',
-        "</"    => '<\/',
-        "\r\n"  => '\n',
-        "\n"    => '\n',
-        "\r"    => '\n',
-        '"'     => '\\"',
-        "'"     => "\\'"
-      }
+        '\\' => '\\\\',
+        '</' => '<\/',
+        "\r\n" => '\n',
+        "\n" => '\n',
+        "\r" => '\n',
+        '"' => '\\"',
+        "'" => "\\'"
+      }.freeze
 
-      JS_ESCAPE_MAP[(+"\342\200\250").force_encoding(Encoding::UTF_8).encode!] = "&#x2028;"
-      JS_ESCAPE_MAP[(+"\342\200\251").force_encoding(Encoding::UTF_8).encode!] = "&#x2029;"
+      JS_ESCAPE_MAP[(+"\342\200\250").force_encoding(Encoding::UTF_8).encode!] = '&#x2028;'
+      JS_ESCAPE_MAP[(+"\342\200\251").force_encoding(Encoding::UTF_8).encode!] = '&#x2029;'
 
       # Escapes carriage returns and single and double quotes for JavaScript segments.
       #
@@ -26,15 +26,15 @@ module ActionView
       #   $('some_element').replaceWith('<%= j render 'some/element_template' %>');
       def escape_javascript(javascript)
         javascript = javascript.to_s
-        if javascript.empty?
-          result = ""
-        else
-          result = javascript.gsub(/(\\|<\/|\r\n|\342\200\250|\342\200\251|[\n\r"'])/u) { |match| JS_ESCAPE_MAP[match] }
-        end
+        result = if javascript.empty?
+                   ''
+                 else
+                   javascript.gsub(%r{(\\|</|\r\n|\342\200\250|\342\200\251|[\n\r"'])}u) { |match| JS_ESCAPE_MAP[match] }
+                 end
         javascript.html_safe? ? result.html_safe : result
       end
 
-      alias_method :j, :escape_javascript
+      alias j escape_javascript
 
       # Returns a JavaScript tag with the +content+ inside. Example:
       #   javascript_tag "alert('All is good')"
@@ -80,11 +80,9 @@ module ActionView
             content_or_options_with_block
           end
 
-        if html_options[:nonce] == true
-          html_options[:nonce] = content_security_policy_nonce
-        end
+        html_options[:nonce] = content_security_policy_nonce if html_options[:nonce] == true
 
-        content_tag("script", javascript_cdata_section(content), html_options)
+        content_tag('script', javascript_cdata_section(content), html_options)
       end
 
       def javascript_cdata_section(content) #:nodoc:

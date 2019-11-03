@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "concurrent/map"
+require 'concurrent/map'
 
 module ActiveRecord
   module ConnectionAdapters # :nodoc:
@@ -8,7 +8,7 @@ module ActiveRecord
       class << self
         def included(base) #:nodoc:
           dirties_query_cache base, :insert, :update, :delete, :truncate, :truncate_tables,
-            :rollback_to_savepoint, :rollback_db_transaction
+                              :rollback_to_savepoint, :rollback_db_transaction
 
           base.set_callback :checkout, :after, :configure_query_cache!
           base.set_callback :checkin, :after, :disable_query_cache!
@@ -57,7 +57,8 @@ module ActiveRecord
 
       # Enable the query cache within the block.
       def cache
-        old, @query_cache_enabled = @query_cache_enabled, true
+        old = @query_cache_enabled
+        @query_cache_enabled = true
         yield
       ensure
         @query_cache_enabled = old
@@ -75,7 +76,8 @@ module ActiveRecord
 
       # Disable the query cache within the block.
       def uncached
-        old, @query_cache_enabled = @query_cache_enabled, false
+        old = @query_cache_enabled
+        @query_cache_enabled = false
         yield
       ensure
         @query_cache_enabled = old
@@ -110,45 +112,45 @@ module ActiveRecord
 
       private
 
-        def cache_sql(sql, name, binds)
-          @lock.synchronize do
-            result =
-              if @query_cache[sql].key?(binds)
-                ActiveSupport::Notifications.instrument(
-                  "sql.active_record",
-                  cache_notification_info(sql, name, binds)
-                )
-                @query_cache[sql][binds]
-              else
-                @query_cache[sql][binds] = yield
-              end
-            result.dup
-          end
+      def cache_sql(sql, name, binds)
+        @lock.synchronize do
+          result =
+            if @query_cache[sql].key?(binds)
+              ActiveSupport::Notifications.instrument(
+                'sql.active_record',
+                cache_notification_info(sql, name, binds)
+              )
+              @query_cache[sql][binds]
+            else
+              @query_cache[sql][binds] = yield
+            end
+          result.dup
         end
+      end
 
-        # Database adapters can override this method to
-        # provide custom cache information.
-        def cache_notification_info(sql, name, binds)
-          {
-            sql: sql,
-            binds: binds,
-            type_casted_binds: -> { type_casted_binds(binds) },
-            name: name,
-            connection_id: object_id,
-            cached: true
-          }
-        end
+      # Database adapters can override this method to
+      # provide custom cache information.
+      def cache_notification_info(sql, name, binds)
+        {
+          sql: sql,
+          binds: binds,
+          type_casted_binds: -> { type_casted_binds(binds) },
+          name: name,
+          connection_id: object_id,
+          cached: true
+        }
+      end
 
-        # If arel is locked this is a SELECT ... FOR UPDATE or somesuch. Such
-        # queries should not be cached.
-        def locked?(arel)
-          arel = arel.arel if arel.is_a?(Relation)
-          arel.respond_to?(:locked) && arel.locked
-        end
+      # If arel is locked this is a SELECT ... FOR UPDATE or somesuch. Such
+      # queries should not be cached.
+      def locked?(arel)
+        arel = arel.arel if arel.is_a?(Relation)
+        arel.respond_to?(:locked) && arel.locked
+      end
 
-        def configure_query_cache!
-          enable_query_cache! if pool.query_cache_enabled
-        end
+      def configure_query_cache!
+        enable_query_cache! if pool.query_cache_enabled
+      end
     end
   end
 end

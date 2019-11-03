@@ -97,11 +97,25 @@ class Capybara::RackTest::Driver < Capybara::Driver::Base
     @browser = nil
   end
 
-  def get(*args, &block); browser.get(*args, &block); end
-  def post(*args, &block); browser.post(*args, &block); end
-  def put(*args, &block); browser.put(*args, &block); end
-  def delete(*args, &block); browser.delete(*args, &block); end
-  def header(key, value); browser.header(key, value); end
+  def get(*args, &block)
+    browser.get(*args, &block)
+  end
+
+  def post(*args, &block)
+    browser.post(*args, &block)
+  end
+
+  def put(*args, &block)
+    browser.put(*args, &block)
+  end
+
+  def delete(*args, &block)
+    browser.delete(*args, &block)
+  end
+
+  def header(key, value)
+    browser.header(key, value)
+  end
 
   def invalid_element_errors
     [Capybara::RackTest::Errors::StaleElementReferenceError]

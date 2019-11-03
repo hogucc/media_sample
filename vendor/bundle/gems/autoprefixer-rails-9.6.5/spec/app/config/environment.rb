@@ -1,3 +1,3 @@
-require "tzinfo"
-require File.expand_path("../application", __FILE__)
+require 'tzinfo'
+require File.expand_path('application', __dir__)
 App::Application.initialize!

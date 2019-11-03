@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
-require "active_support/core_ext/class/subclasses"
+require 'active_support/core_ext/class/subclasses'
 
 module ActiveJob
   # Provides helper methods for testing Active Job
   module TestHelper
     delegate :enqueued_jobs, :enqueued_jobs=,
-      :performed_jobs, :performed_jobs=,
-      to: :queue_adapter
+             :performed_jobs, :performed_jobs=,
+             to: :queue_adapter
 
     module TestQueueAdapter
       extend ActiveSupport::Concern
@@ -18,7 +18,7 @@ module ActiveJob
 
       module ClassMethods
         def queue_adapter
-          self._test_adapter.nil? ? super : self._test_adapter
+          _test_adapter.nil? ? super : _test_adapter
         end
 
         def disable_test_adapter
@@ -48,7 +48,7 @@ module ActiveJob
     def after_teardown # :nodoc:
       super
 
-      queue_adapter_changed_jobs.each { |klass| klass.disable_test_adapter }
+      queue_adapter_changed_jobs.each(&:disable_test_adapter)
     end
 
     # Specifies the queue adapter to use with all Active Job test helpers.
@@ -577,101 +577,102 @@ module ActiveJob
     end
 
     private
-      def clear_enqueued_jobs
-        enqueued_jobs.clear
-      end
 
-      def clear_performed_jobs
-        performed_jobs.clear
-      end
+    def clear_enqueued_jobs
+      enqueued_jobs.clear
+    end
 
-      def jobs_with(jobs, only: nil, except: nil, queue: nil)
-        validate_option(only: only, except: except)
+    def clear_performed_jobs
+      performed_jobs.clear
+    end
 
-        jobs.count do |job|
-          job_class = job.fetch(:job)
+    def jobs_with(jobs, only: nil, except: nil, queue: nil)
+      validate_option(only: only, except: except)
 
-          if only
-            next false unless filter_as_proc(only).call(job)
-          elsif except
-            next false if filter_as_proc(except).call(job)
-          end
+      jobs.count do |job|
+        job_class = job.fetch(:job)
 
-          if queue
-            next false unless queue.to_s == job.fetch(:queue, job_class.queue_name)
-          end
-
-          yield job if block_given?
-
-          true
+        if only
+          next false unless filter_as_proc(only).call(job)
+        elsif except
+          next false if filter_as_proc(except).call(job)
         end
-      end
 
-      def filter_as_proc(filter)
-        return filter if filter.is_a?(Proc)
-
-        ->(job) { Array(filter).include?(job.fetch(:job)) }
-      end
-
-      def enqueued_jobs_with(only: nil, except: nil, queue: nil, &block)
-        jobs_with(enqueued_jobs, only: only, except: except, queue: queue, &block)
-      end
-
-      def performed_jobs_with(only: nil, except: nil, queue: nil, &block)
-        jobs_with(performed_jobs, only: only, except: except, queue: queue, &block)
-      end
-
-      def flush_enqueued_jobs(only: nil, except: nil, queue: nil)
-        enqueued_jobs_with(only: only, except: except, queue: queue) do |payload|
-          instantiate_job(payload).perform_now
-          queue_adapter.performed_jobs << payload
+        if queue
+          next false unless queue.to_s == job.fetch(:queue, job_class.queue_name)
         end
-      end
 
-      def prepare_args_for_assertion(args)
-        args.dup.tap do |arguments|
-          arguments[:at] = round_time_arguments(arguments[:at]) if arguments[:at]
-          arguments[:args] = round_time_arguments(arguments[:args]) if arguments[:args]
-        end
-      end
+        yield job if block_given?
 
-      def round_time_arguments(argument)
-        case argument
-        when Time, ActiveSupport::TimeWithZone, DateTime
-          argument.change(usec: 0)
-        when Hash
-          argument.transform_values { |value| round_time_arguments(value) }
-        when Array
-          argument.map { |element| round_time_arguments(element) }
-        else
-          argument
-        end
+        true
       end
+    end
 
-      def deserialize_args_for_assertion(job)
-        job.dup.tap do |new_job|
-          new_job[:at] = round_time_arguments(Time.at(new_job[:at])) if new_job[:at]
-          new_job[:args] = ActiveJob::Arguments.deserialize(new_job[:args]) if new_job[:args]
-        end
-      end
+    def filter_as_proc(filter)
+      return filter if filter.is_a?(Proc)
 
-      def instantiate_job(payload)
-        args = ActiveJob::Arguments.deserialize(payload[:args])
-        job = payload[:job].new(*args)
-        job.scheduled_at = Time.at(payload[:at]) if payload.key?(:at)
-        job.queue_name = payload[:queue]
-        job
-      end
+      ->(job) { Array(filter).include?(job.fetch(:job)) }
+    end
 
-      def queue_adapter_changed_jobs
-        (ActiveJob::Base.descendants << ActiveJob::Base).select do |klass|
-          # only override explicitly set adapters, a quirk of `class_attribute`
-          klass.singleton_class.public_instance_methods(false).include?(:_queue_adapter)
-        end
-      end
+    def enqueued_jobs_with(only: nil, except: nil, queue: nil, &block)
+      jobs_with(enqueued_jobs, only: only, except: except, queue: queue, &block)
+    end
 
-      def validate_option(only: nil, except: nil)
-        raise ArgumentError, "Cannot specify both `:only` and `:except` options." if only && except
+    def performed_jobs_with(only: nil, except: nil, queue: nil, &block)
+      jobs_with(performed_jobs, only: only, except: except, queue: queue, &block)
+    end
+
+    def flush_enqueued_jobs(only: nil, except: nil, queue: nil)
+      enqueued_jobs_with(only: only, except: except, queue: queue) do |payload|
+        instantiate_job(payload).perform_now
+        queue_adapter.performed_jobs << payload
       end
+    end
+
+    def prepare_args_for_assertion(args)
+      args.dup.tap do |arguments|
+        arguments[:at] = round_time_arguments(arguments[:at]) if arguments[:at]
+        arguments[:args] = round_time_arguments(arguments[:args]) if arguments[:args]
+      end
+    end
+
+    def round_time_arguments(argument)
+      case argument
+      when Time, ActiveSupport::TimeWithZone, DateTime
+        argument.change(usec: 0)
+      when Hash
+        argument.transform_values { |value| round_time_arguments(value) }
+      when Array
+        argument.map { |element| round_time_arguments(element) }
+      else
+        argument
+      end
+    end
+
+    def deserialize_args_for_assertion(job)
+      job.dup.tap do |new_job|
+        new_job[:at] = round_time_arguments(Time.at(new_job[:at])) if new_job[:at]
+        new_job[:args] = ActiveJob::Arguments.deserialize(new_job[:args]) if new_job[:args]
+      end
+    end
+
+    def instantiate_job(payload)
+      args = ActiveJob::Arguments.deserialize(payload[:args])
+      job = payload[:job].new(*args)
+      job.scheduled_at = Time.at(payload[:at]) if payload.key?(:at)
+      job.queue_name = payload[:queue]
+      job
+    end
+
+    def queue_adapter_changed_jobs
+      (ActiveJob::Base.descendants << ActiveJob::Base).select do |klass|
+        # only override explicitly set adapters, a quirk of `class_attribute`
+        klass.singleton_class.public_instance_methods(false).include?(:_queue_adapter)
+      end
+    end
+
+    def validate_option(only: nil, except: nil)
+      raise ArgumentError, 'Cannot specify both `:only` and `:except` options.' if only && except
+    end
   end
 end

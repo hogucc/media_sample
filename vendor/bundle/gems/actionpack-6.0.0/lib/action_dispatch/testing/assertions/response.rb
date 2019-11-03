@@ -5,11 +5,11 @@ module ActionDispatch
     # A small suite of assertions that test responses from \Rails applications.
     module ResponseAssertions
       RESPONSE_PREDICATES = { # :nodoc:
-        success:  :successful?,
-        missing:  :not_found?,
+        success: :successful?,
+        missing: :not_found?,
         redirect: :redirection?,
-        error:    :server_error?,
-      }
+        error: :server_error?
+      }.freeze
 
       # Asserts that the response is one of the following types:
       #
@@ -64,43 +64,44 @@ module ActionDispatch
       end
 
       private
-        # Proxy to to_param if the object will respond to it.
-        def parameterize(value)
-          value.respond_to?(:to_param) ? value.to_param : value
-        end
 
-        def normalize_argument_to_redirection(fragment)
-          if Regexp === fragment
-            fragment
-          else
-            handle = @controller || ActionController::Redirecting
-            handle._compute_redirect_to_location(@request, fragment)
-          end
-        end
+      # Proxy to to_param if the object will respond to it.
+      def parameterize(value)
+        value.respond_to?(:to_param) ? value.to_param : value
+      end
 
-        def generate_response_message(expected, actual = @response.response_code)
-          (+"Expected response to be a <#{code_with_name(expected)}>,"\
-          " but was a <#{code_with_name(actual)}>").concat(location_if_redirected).concat(response_body_if_short)
+      def normalize_argument_to_redirection(fragment)
+        if Regexp === fragment
+          fragment
+        else
+          handle = @controller || ActionController::Redirecting
+          handle._compute_redirect_to_location(@request, fragment)
         end
+      end
 
-        def response_body_if_short
-          return "" if @response.body.size > 500
-          "\nResponse body: #{@response.body}"
-        end
+      def generate_response_message(expected, actual = @response.response_code)
+        (+"Expected response to be a <#{code_with_name(expected)}>,"\
+        " but was a <#{code_with_name(actual)}>").concat(location_if_redirected).concat(response_body_if_short)
+      end
 
-        def location_if_redirected
-          return "" unless @response.redirection? && @response.location.present?
-          location = normalize_argument_to_redirection(@response.location)
-          " redirect to <#{location}>"
-        end
+      def response_body_if_short
+        return '' if @response.body.size > 500
 
-        def code_with_name(code_or_name)
-          if RESPONSE_PREDICATES.values.include?("#{code_or_name}?".to_sym)
-            code_or_name = RESPONSE_PREDICATES.invert["#{code_or_name}?".to_sym]
-          end
+        "\nResponse body: #{@response.body}"
+      end
 
-          AssertionResponse.new(code_or_name).code_and_name
-        end
+      def location_if_redirected
+        return '' unless @response.redirection? && @response.location.present?
+
+        location = normalize_argument_to_redirection(@response.location)
+        " redirect to <#{location}>"
+      end
+
+      def code_with_name(code_or_name)
+        code_or_name = RESPONSE_PREDICATES.invert["#{code_or_name}?".to_sym] if RESPONSE_PREDICATES.values.include?("#{code_or_name}?".to_sym)
+
+        AssertionResponse.new(code_or_name).code_and_name
+      end
     end
   end
 end

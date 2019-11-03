@@ -148,7 +148,7 @@ Capybara::SpecHelper.spec '#attach_file' do
     end
   end
 
-  context 'with :make_visible option', requires: %i[js es_args] do
+  context 'with :make_visible option', requires: [:js, :es_args] do
     it 'applies a default style change when true' do
       @session.visit('/with_js')
       expect do
@@ -188,7 +188,7 @@ Capybara::SpecHelper.spec '#attach_file' do
     end
   end
 
-  context 'with a block', requires: %i[js] do
+  context 'with a block', requires: [:js] do
     it 'can upload by clicking the file input' do
       @session.attach_file(with_os_path_separators(__FILE__)) do
         @session.find(:file_field, 'form[image]').click

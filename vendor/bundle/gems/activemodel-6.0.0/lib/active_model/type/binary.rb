@@ -21,6 +21,7 @@ module ActiveModel
 
       def serialize(value)
         return if value.nil?
+
         Data.new(super)
       end
 
@@ -37,10 +38,10 @@ module ActiveModel
         def to_s
           @value
         end
-        alias_method :to_str, :to_s
+        alias to_str to_s
 
         def hex
-          @value.unpack1("H*")
+          @value.unpack1('H*')
         end
 
         def ==(other)

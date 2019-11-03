@@ -14,7 +14,7 @@ Capybara::SpecHelper.spec '#has_css?' do
     # This was never a specifically accepted format but it has worked for a
     # lot of versions.
     # TODO: Remove in 4.0
-    expect_any_instance_of(Kernel).to receive(:warn) # rubocop:disable RSpec/AnyInstance
+    expect_any_instance_of(Kernel).to receive(:warn)
     expect(@session).to have_css(:p)
   end
 

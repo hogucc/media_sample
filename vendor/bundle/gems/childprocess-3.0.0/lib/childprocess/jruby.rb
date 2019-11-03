@@ -6,9 +6,7 @@ class Java::SunNioCh::FileChannelImpl
 end
 
 class Java::JavaIo::FileDescriptor
-  if ChildProcess.os == :windows
-    field_reader :handle
-  end
+  field_reader :handle if ChildProcess.os == :windows
 
   field_reader :fd
 end
@@ -21,13 +19,11 @@ module ChildProcess
         channel.getFDVal
       rescue NoMethodError
         fileno = channel.fd
-        if fileno.kind_of?(Java::JavaIo::FileDescriptor)
-          fileno = fileno.fd
-        end
+        fileno = fileno.fd if fileno.is_a?(Java::JavaIo::FileDescriptor)
 
         fileno == -1 ? obj.fileno : fileno
       end
-    rescue
+    rescue StandardError
       # fall back
       obj.fileno
     end
@@ -42,7 +38,7 @@ module ChildProcess
         fileno = channel.fd if channel.respond_to?(:fd)
       end
 
-      if fileno.kind_of? Java::JavaIo::FileDescriptor
+      if fileno.is_a? Java::JavaIo::FileDescriptor
         fileno.handle
       else
         Windows::Lib.handle_for fileno
@@ -51,6 +47,6 @@ module ChildProcess
   end
 end
 
-require "childprocess/jruby/pump"
-require "childprocess/jruby/io"
-require "childprocess/jruby/process"
+require 'childprocess/jruby/pump'
+require 'childprocess/jruby/io'
+require 'childprocess/jruby/process'

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "byebug/command"
-require "byebug/helpers/parse"
+require 'byebug/command'
+require 'byebug/helpers/parse'
 
 module Byebug
   #
@@ -29,20 +29,20 @@ module Byebug
     end
 
     def self.short_description
-      "Stops displaying all or some expressions when program stops"
+      'Stops displaying all or some expressions when program stops'
     end
 
     def execute
       if @match[1]
-        pos, err = get_int(@match[1], "Undisplay", 1, Byebug.displays.size)
+        pos, err = get_int(@match[1], 'Undisplay', 1, Byebug.displays.size)
         return errmsg(err) unless err.nil?
 
         last_display = Byebug.displays[pos - 1]
-        return errmsg(pr("display.errors.undefined", expr: pos)) unless last_display
+        return errmsg(pr('display.errors.undefined', expr: pos)) unless last_display
 
         last_display[0] = nil
       else
-        return unless confirm(pr("display.confirmations.clear_all"))
+        return unless confirm(pr('display.confirmations.clear_all'))
 
         Byebug.displays.each { |d| d[0] = false }
       end

@@ -40,12 +40,12 @@ RSpec.describe Capybara::Server do
   end
 
   it 'should use specified port' do
-    Capybara.server_port = 22789
+    Capybara.server_port = 22_789
 
     app = proc { |_env| [200, {}, ['Hello Server!']] }
     server = described_class.new(app).boot
 
-    res = Net::HTTP.start(server.host, 22789) { |http| http.get('/') }
+    res = Net::HTTP.start(server.host, 22_789) { |http| http.get('/') }
     expect(res.body).to include('Hello Server')
 
     Capybara.server_port = nil
@@ -53,9 +53,9 @@ RSpec.describe Capybara::Server do
 
   it 'should use given port' do
     app = proc { |_env| [200, {}, ['Hello Server!']] }
-    server = described_class.new(app, port: 22790).boot
+    server = described_class.new(app, port: 22_790).boot
 
-    res = Net::HTTP.start(server.host, 22790) { |http| http.get('/') }
+    res = Net::HTTP.start(server.host, 22_790) { |http| http.get('/') }
     expect(res.body).to include('Hello Server')
 
     Capybara.server_port = nil
@@ -82,29 +82,27 @@ RSpec.describe Capybara::Server do
   end
 
   it 'should support SSL' do
-    begin
-      key = File.join(Dir.pwd, 'spec', 'fixtures', 'key.pem')
-      cert = File.join(Dir.pwd, 'spec', 'fixtures', 'certificate.pem')
-      Capybara.server = :puma, { Host: "ssl://#{Capybara.server_host}?key=#{key}&cert=#{cert}" }
-      app = proc { |_env| [200, {}, ['Hello SSL Server!']] }
-      server = described_class.new(app).boot
+    key = File.join(Dir.pwd, 'spec', 'fixtures', 'key.pem')
+    cert = File.join(Dir.pwd, 'spec', 'fixtures', 'certificate.pem')
+    Capybara.server = :puma, { Host: "ssl://#{Capybara.server_host}?key=#{key}&cert=#{cert}" }
+    app = proc { |_env| [200, {}, ['Hello SSL Server!']] }
+    server = described_class.new(app).boot
 
-      expect do
-        Net::HTTP.start(server.host, server.port, max_retries: 0) { |http| http.get('/__identify__') }
-      end.to(raise_error do |e|
-        expect(e.is_a?(EOFError) || e.is_a?(Net::ReadTimeout)).to be true
-      end)
+    expect do
+      Net::HTTP.start(server.host, server.port, max_retries: 0) { |http| http.get('/__identify__') }
+    end.to(raise_error do |e|
+      expect(e.is_a?(EOFError) || e.is_a?(Net::ReadTimeout)).to be true
+    end)
 
-      res = Net::HTTP.start(server.host, server.port, use_ssl: true, verify_mode: OpenSSL::SSL::VERIFY_NONE) do |https|
-        https.get('/')
-      end
-
-      expect(res.body).to include('Hello SSL Server!')
-      uri = ::Addressable::URI.parse(server.base_url)
-      expect(uri.to_hash).to include(scheme: 'https', host: server.host, port: server.port)
-    ensure
-      Capybara.server = :default
+    res = Net::HTTP.start(server.host, server.port, use_ssl: true, verify_mode: OpenSSL::SSL::VERIFY_NONE) do |https|
+      https.get('/')
     end
+
+    expect(res.body).to include('Hello SSL Server!')
+    uri = ::Addressable::URI.parse(server.base_url)
+    expect(uri.to_hash).to include(scheme: 'https', host: server.host, port: server.port)
+  ensure
+    Capybara.server = :default
   end
 
   context 'When Capybara.reuse_server is true' do
@@ -160,7 +158,7 @@ RSpec.describe Capybara::Server do
     end
 
     after do
-      Capybara.reuse_server = @old_reuse_server # rubocop:disable RSpec/InstanceVariable
+      Capybara.reuse_server = @old_reuse_server
     end
 
     it 'should not reuse an already running server' do
@@ -202,19 +200,17 @@ RSpec.describe Capybara::Server do
   end
 
   it 'should raise server errors when the server errors before the timeout' do
-    begin
-      Capybara.register_server :kaboom do
-        sleep 0.1
-        raise 'kaboom'
-      end
-      Capybara.server = :kaboom
-
-      expect do
-        described_class.new(proc { |e| }).boot
-      end.to raise_error(RuntimeError, 'kaboom')
-    ensure
-      Capybara.server = :default
+    Capybara.register_server :kaboom do
+      sleep 0.1
+      raise 'kaboom'
     end
+    Capybara.server = :kaboom
+
+    expect do
+      described_class.new(proc { |e| }).boot
+    end.to raise_error(RuntimeError, 'kaboom')
+  ensure
+    Capybara.server = :default
   end
 
   it 'is not #responsive? when Net::HTTP raises a SystemCallError' do

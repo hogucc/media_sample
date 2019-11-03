@@ -8,18 +8,18 @@
 # require "codeclimate-test-reporter"
 # CodeClimate::TestReporter.start
 
-require "simplecov"
+require 'simplecov'
 SimpleCov.start do
-  add_filter "/spec/"
+  add_filter '/spec/'
 end
 
-require "rspec"
-require "timecop"
-require "pp"
-require "fakefs/safe"
-require "fakefs/spec_helpers"
+require 'rspec'
+require 'timecop'
+require 'pp'
+require 'fakefs/safe'
+require 'fakefs/spec_helpers'
 
-$:.unshift File.expand_path("../../lib", __FILE__)
+$:.unshift File.expand_path('../lib', __dir__)
 
 def mock_export_error(message)
   expect { yield }.to raise_error(Foreman::Export::Exception, message)
@@ -33,21 +33,19 @@ def mock_error(subject, message)
 end
 
 def make_pipe
-  IO.method(:pipe).arity.zero? ? IO.pipe : IO.pipe("BINARY")
+  IO.method(:pipe).arity.zero? ? IO.pipe : IO.pipe('BINARY')
 end
 
 def foreman(args)
   capture_stdout do
-    begin
-      Foreman::CLI.start(args.split(" "))
-    rescue SystemExit
-    end
+    Foreman::CLI.start(args.split(' '))
+  rescue SystemExit
   end
 end
 
 def forked_foreman(args)
   rd, wr = make_pipe
-  Process.spawn("bundle exec bin/foreman #{args}", :out => wr, :err => wr)
+  Process.spawn("bundle exec bin/foreman #{args}", out: wr, err: wr)
   wr.close
   rd.read
 end
@@ -65,14 +63,12 @@ def fork_and_capture(&blk)
   end
   wr.close
   Process.wait pid
-  buffer = ""
-  until rd.eof?
-    buffer += rd.gets
-  end
+  buffer = ''
+  buffer += rd.gets until rd.eof?
 end
 
 def fork_and_get_exitstatus(args)
-  pid = Process.spawn("bundle exec bin/foreman #{args}", :out => "/dev/null", :err => "/dev/null")
+  pid = Process.spawn("bundle exec bin/foreman #{args}", out: '/dev/null', err: '/dev/null')
   Process.wait(pid)
   $?.exitstatus
 end
@@ -82,17 +78,17 @@ def mock_exit(&block)
 end
 
 def write_foreman_config(app)
-  File.open("/etc/foreman/#{app}.conf", "w") do |file|
-    file.puts %{#{app}_processes="alpha bravo"}
-    file.puts %{#{app}_alpha="1"}
-    file.puts %{#{app}_bravo="2"}
+  File.open("/etc/foreman/#{app}.conf", 'w') do |file|
+    file.puts %(#{app}_processes="alpha bravo")
+    file.puts %(#{app}_alpha="1")
+    file.puts %(#{app}_bravo="2")
   end
 end
 
-def write_procfile(procfile="Procfile", alpha_env="")
+def write_procfile(procfile = 'Procfile', alpha_env = '')
   FileUtils.mkdir_p(File.dirname(procfile))
-  File.open(procfile, "w") do |file|
-    file.puts "alpha: ./alpha" + " #{alpha_env}".rstrip
+  File.open(procfile, 'w') do |file|
+    file.puts 'alpha: ./alpha' + " #{alpha_env}".rstrip
     file.puts "\n"
     file.puts "bravo:\t./bravo"
     file.puts "foo_bar:\t./foo_bar"
@@ -109,8 +105,8 @@ def write_file(file)
   end
 end
 
-def write_env(env=".env", options={"FOO"=>"bar"})
-  File.open(env, "w") do |file|
+def write_env(env = '.env', options = { 'FOO' => 'bar' })
+  File.open(env, 'w') do |file|
     options.each do |key, val|
       file.puts "#{key}=#{val}"
     end
@@ -128,11 +124,12 @@ def load_export_templates_into_fakefs(type)
   without_fakefs do
     Dir[File.expand_path("../../data/export/#{type}/**/*", __FILE__)].inject({}) do |hash, file|
       next(hash) if File.directory?(file)
+
       hash.update(file => File.read(file))
     end
   end.each do |filename, contents|
     FileUtils.mkdir_p File.dirname(filename)
-    File.open(filename, "w") do |f|
+    File.open(filename, 'w') do |f|
       f.puts contents
     end
   end

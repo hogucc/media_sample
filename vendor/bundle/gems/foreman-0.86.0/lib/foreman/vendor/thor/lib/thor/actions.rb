@@ -1,12 +1,12 @@
-require "fileutils"
-require "uri"
-require "foreman/vendor/thor/lib/thor/core_ext/io_binary_read"
-require "foreman/vendor/thor/lib/thor/actions/create_file"
-require "foreman/vendor/thor/lib/thor/actions/create_link"
-require "foreman/vendor/thor/lib/thor/actions/directory"
-require "foreman/vendor/thor/lib/thor/actions/empty_directory"
-require "foreman/vendor/thor/lib/thor/actions/file_manipulation"
-require "foreman/vendor/thor/lib/thor/actions/inject_into_file"
+require 'fileutils'
+require 'uri'
+require 'foreman/vendor/thor/lib/thor/core_ext/io_binary_read'
+require 'foreman/vendor/thor/lib/thor/actions/create_file'
+require 'foreman/vendor/thor/lib/thor/actions/create_link'
+require 'foreman/vendor/thor/lib/thor/actions/directory'
+require 'foreman/vendor/thor/lib/thor/actions/empty_directory'
+require 'foreman/vendor/thor/lib/thor/actions/file_manipulation'
+require 'foreman/vendor/thor/lib/thor/actions/inject_into_file'
 
 class Foreman::Thor
   module Actions
@@ -48,17 +48,17 @@ class Foreman::Thor
       # Add runtime options that help actions execution.
       #
       def add_runtime_options!
-        class_option :force, :type => :boolean, :aliases => "-f", :group => :runtime,
-                             :desc => "Overwrite files that already exist"
+        class_option :force, type: :boolean, aliases: '-f', group: :runtime,
+                             desc: 'Overwrite files that already exist'
 
-        class_option :pretend, :type => :boolean, :aliases => "-p", :group => :runtime,
-                               :desc => "Run but do not make any changes"
+        class_option :pretend, type: :boolean, aliases: '-p', group: :runtime,
+                               desc: 'Run but do not make any changes'
 
-        class_option :quiet, :type => :boolean, :aliases => "-q", :group => :runtime,
-                             :desc => "Suppress status output"
+        class_option :quiet, type: :boolean, aliases: '-q', group: :runtime,
+                             desc: 'Suppress status output'
 
-        class_option :skip, :type => :boolean, :aliases => "-s", :group => :runtime,
-                            :desc => "Skip files that already exist"
+        class_option :skip, type: :boolean, aliases: '-s', group: :runtime,
+                            desc: 'Skip files that already exist'
       end
     end
 
@@ -73,13 +73,13 @@ class Foreman::Thor
     #
     def initialize(args = [], options = {}, config = {})
       self.behavior = case config[:behavior].to_s
-      when "force", "skip"
-        _cleanup_options_and_set(options, config[:behavior])
-        :invoke
-      when "revoke"
-        :revoke
-      else
-        :invoke
+                      when 'force', 'skip'
+                        _cleanup_options_and_set(options, config[:behavior])
+                        :invoke
+                      when 'revoke'
+                        :revoke
+                      else
+                        :invoke
       end
 
       super
@@ -107,7 +107,7 @@ class Foreman::Thor
     #
     def destination_root=(root)
       @destination_stack ||= []
-      @destination_stack[0] = File.expand_path(root || "")
+      @destination_stack[0] = File.expand_path(root || '')
     end
 
     # Returns the given path relative to the absolute root (ie, root where
@@ -115,8 +115,8 @@ class Foreman::Thor
     #
     def relative_to_original_destination_root(path, remove_dot = true)
       path = path.dup
-      if path.gsub!(@destination_stack[0], ".")
-        remove_dot ? (path[2..-1] || "") : path
+      if path.gsub!(@destination_stack[0], '.')
+        remove_dot ? (path[2..-1] || '') : path
       else
         path
       end
@@ -143,12 +143,10 @@ class Foreman::Thor
 
       message = "Could not find #{file.inspect} in any of your source paths. "
 
-      unless self.class.source_root
-        message << "Please invoke #{self.class.name}.source_root(PATH) with the PATH containing your templates. "
-      end
+      message << "Please invoke #{self.class.name}.source_root(PATH) with the PATH containing your templates. " unless self.class.source_root
 
       message << if source_paths.empty?
-                   "Currently you have no source paths."
+                   'Currently you have no source paths.'
                  else
                    "Your current source paths are: \n#{source_paths.join("\n")}"
                  end
@@ -165,7 +163,7 @@ class Foreman::Thor
     # dir<String>:: the directory to move to.
     # config<Hash>:: give :verbose => true to log and use padding.
     #
-    def inside(dir = "", config = {}, &block)
+    def inside(dir = '', config = {}, &block)
       verbose = config.fetch(:verbose, false)
       pretend = options[:pretend]
 
@@ -174,9 +172,7 @@ class Foreman::Thor
       @destination_stack.push File.expand_path(dir, destination_root)
 
       # If the directory doesnt exist and we're not pretending
-      if !File.exist?(destination_root) && !pretend
-        FileUtils.mkdir_p(destination_root)
-      end
+      FileUtils.mkdir_p(destination_root) if !File.exist?(destination_root) && !pretend
 
       if pretend
         # In pretend mode, just yield down to the block
@@ -216,9 +212,9 @@ class Foreman::Thor
       shell.padding += 1 if verbose
 
       contents = if is_uri
-        open(path, "Accept" => "application/x-thor-template", &:read)
-      else
-        open(path, &:read)
+                   open(path, 'Accept' => 'application/x-thor-template', &:read)
+                 else
+                   open(path, &:read)
       end
 
       instance_eval(contents, path)
@@ -262,7 +258,8 @@ class Foreman::Thor
     #
     def run_ruby_script(command, config = {})
       return unless behavior == :invoke
-      run command, config.merge(:with => Foreman::Thor::Util.ruby_command)
+
+      run command, config.merge(with: Foreman::Thor::Util.ruby_command)
     end
 
     # Run a thor command. A hash of options can be given and it's converted to
@@ -291,26 +288,26 @@ class Foreman::Thor
 
       args.unshift(command)
       args.push Foreman::Thor::Options.to_switches(config)
-      command = args.join(" ").strip
+      command = args.join(' ').strip
 
-      run command, :with => :thor, :verbose => verbose, :pretend => pretend, :capture => capture
+      run command, with: :thor, verbose: verbose, pretend: pretend, capture: capture
     end
 
-  protected
+    protected
 
     # Allow current root to be shared between invocations.
     #
     def _shared_configuration #:nodoc:
-      super.merge!(:destination_root => destination_root)
+      super.merge!(destination_root: destination_root)
     end
 
     def _cleanup_options_and_set(options, key) #:nodoc:
       case options
       when Array
-        %w(--force -f --skip -s).each { |i| options.delete(i) }
+        %w[--force -f --skip -s].each { |i| options.delete(i) }
         options << "--#{key}"
       when Hash
-        [:force, :skip, "force", "skip"].each { |i| options.delete(i) }
+        [:force, :skip, 'force', 'skip'].each { |i| options.delete(i) }
         options.merge!(key => true)
       end
     end

@@ -1,15 +1,14 @@
 # frozen_string_literal: true
 
-require "active_support/callbacks"
-require "concurrent/hash"
+require 'active_support/callbacks'
+require 'concurrent/hash'
 
 module ActiveSupport
   class ExecutionWrapper
     include ActiveSupport::Callbacks
 
     Null = Object.new # :nodoc:
-    def Null.complete! # :nodoc:
-    end
+    def Null.complete!; end
 
     define_callbacks :run
     define_callbacks :complete
@@ -32,11 +31,9 @@ module ActiveSupport
     CompleteHook = Struct.new(:hook) do # :nodoc:
       def before(target)
         hook_state = target.send(:hook_state)
-        if hook_state.key?(hook)
-          hook.complete hook_state[hook]
-        end
+        hook.complete hook_state[hook] if hook_state.key?(hook)
       end
-      alias after before
+      alias_method :after, :before
     end
 
     # Register an object to be invoked during both the +run+ and
@@ -122,8 +119,9 @@ module ActiveSupport
     end
 
     private
-      def hook_state
-        @_hook_state ||= {}
-      end
+
+    def hook_state
+      @_hook_state ||= {}
+    end
   end
 end

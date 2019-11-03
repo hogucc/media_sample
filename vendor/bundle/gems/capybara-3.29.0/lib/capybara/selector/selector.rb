@@ -42,7 +42,7 @@ module Capybara
     def format
       @format || @definition.default_format
     end
-    alias_method :current_format, :format
+    alias current_format format
 
     def enable_aria_label
       @config[:enable_aria_label]
@@ -61,7 +61,9 @@ module Capybara
         warn 'Selector has no format'
       end
     ensure
-      warn "Locator #{locator.class}:#{locator.inspect} for selector #{name.inspect} must #{locator_description}. This will raise an error in a future version of Capybara." unless locator_valid?(locator)
+      unless locator_valid?(locator)
+        warn "Locator #{locator.class}:#{locator.inspect} for selector #{name.inspect} must #{locator_description}. This will raise an error in a future version of Capybara."
+      end
     end
 
     def add_error(error_msg)
@@ -93,7 +95,7 @@ module Capybara
       end.new(expr)
     end
 
-  private
+    private
 
     def locator_description
       locator_types.group_by { |lt| lt.is_a? Symbol }.map do |symbol, types_or_methods|

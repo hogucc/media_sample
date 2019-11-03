@@ -1,14 +1,14 @@
-require "tempfile"
+require 'tempfile'
 
 module ImageProcessing
   class Pipeline
-    DEFAULT_FORMAT = "jpg"
+    DEFAULT_FORMAT = 'jpg'.freeze
 
     attr_reader :loader, :saver, :format, :operations, :processor, :destination
 
     # Initializes the pipeline with all the processing options.
     def initialize(options)
-      fail Error, "source file is not provided" unless options[:source]
+      raise Error, 'source file is not provided' unless options[:source]
 
       options.each do |name, value|
         instance_variable_set(:"@#{name}", value)
@@ -48,10 +48,10 @@ module ImageProcessing
 
     def call_processor(**options)
       processor.call(
-        source:     source,
-        loader:     loader,
+        source: source,
+        loader: loader,
         operations: operations,
-        saver:      saver,
+        saver: saver,
         **options
       )
     end
@@ -59,14 +59,14 @@ module ImageProcessing
     # Creates a new tempfile for the destination file, yields it, and refreshes
     # the file descriptor to get the updated file.
     def create_tempfile
-      tempfile = Tempfile.new(["image_processing", ".#{destination_format}"], binmode: true)
+      tempfile = Tempfile.new(['image_processing', ".#{destination_format}"], binmode: true)
 
       yield tempfile
 
       tempfile.open
       tempfile
-    rescue
-      tempfile.close! if tempfile
+    rescue StandardError
+      tempfile&.close!
       raise
     end
 
@@ -76,7 +76,7 @@ module ImageProcessing
     def handle_destination
       destination_existed = File.exist?(destination)
       yield
-    rescue
+    rescue StandardError
       File.delete(destination) if File.exist?(destination) && !destination_existed
       raise
     end

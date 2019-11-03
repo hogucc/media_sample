@@ -1,17 +1,17 @@
 # frozen_string_literal: true
 
-require "active_record/connection_adapters/determine_if_preparable_visitor"
-require "active_record/connection_adapters/schema_cache"
-require "active_record/connection_adapters/sql_type_metadata"
-require "active_record/connection_adapters/abstract/schema_dumper"
-require "active_record/connection_adapters/abstract/schema_creation"
-require "active_support/concurrency/load_interlock_aware_monitor"
-require "active_support/deprecation"
-require "arel/collectors/bind"
-require "arel/collectors/composite"
-require "arel/collectors/sql_string"
-require "arel/collectors/substitute_binds"
-require "concurrent/atomic/thread_local_var"
+require 'active_record/connection_adapters/determine_if_preparable_visitor'
+require 'active_record/connection_adapters/schema_cache'
+require 'active_record/connection_adapters/sql_type_metadata'
+require 'active_record/connection_adapters/abstract/schema_dumper'
+require 'active_record/connection_adapters/abstract/schema_creation'
+require 'active_support/concurrency/load_interlock_aware_monitor'
+require 'active_support/deprecation'
+require 'arel/collectors/bind'
+require 'arel/collectors/composite'
+require 'arel/collectors/sql_string'
+require 'arel/collectors/substitute_binds'
+require 'concurrent/atomic/thread_local_var'
 
 module ActiveRecord
   module ConnectionAdapters # :nodoc:
@@ -20,7 +20,7 @@ module ActiveRecord
     autoload :Column
     autoload :ConnectionSpecification
 
-    autoload_at "active_record/connection_adapters/abstract/schema_definitions" do
+    autoload_at 'active_record/connection_adapters/abstract/schema_definitions' do
       autoload :IndexDefinition
       autoload :ColumnDefinition
       autoload :ChangeColumnDefinition
@@ -31,11 +31,11 @@ module ActiveRecord
       autoload :ReferenceDefinition
     end
 
-    autoload_at "active_record/connection_adapters/abstract/connection_pool" do
+    autoload_at 'active_record/connection_adapters/abstract/connection_pool' do
       autoload :ConnectionHandler
     end
 
-    autoload_under "abstract" do
+    autoload_under 'abstract' do
       autoload :SchemaStatements
       autoload :DatabaseStatements
       autoload :DatabaseLimits
@@ -45,7 +45,7 @@ module ActiveRecord
       autoload :Savepoints
     end
 
-    autoload_at "active_record/connection_adapters/abstract/transaction" do
+    autoload_at 'active_record/connection_adapters/abstract/transaction' do
       autoload :TransactionManager
       autoload :NullTransaction
       autoload :RealTransaction
@@ -67,20 +67,22 @@ module ActiveRecord
     # Most of the methods in the adapter are useful during migrations. Most
     # notably, the instance methods provided by SchemaStatements are very useful.
     class AbstractAdapter
-      ADAPTER_NAME = "Abstract"
+      ADAPTER_NAME = 'Abstract'
       include ActiveSupport::Callbacks
       define_callbacks :checkout, :checkin
 
-      include Quoting, DatabaseStatements, SchemaStatements
+      include SchemaStatements
+      include DatabaseStatements
+      include Quoting
       include DatabaseLimits
       include QueryCache
       include Savepoints
 
-      SIMPLE_INT = /\A\d+\z/
+      SIMPLE_INT = /\A\d+\z/.freeze
 
       attr_accessor :pool
       attr_reader :visitor, :owner, :logger, :lock
-      alias :in_use? :owner
+      alias in_use? owner
 
       set_callback :checkin, :after, :enable_lazy_transactions!
 
@@ -95,7 +97,7 @@ module ActiveRecord
       end
 
       def self.type_cast_config_to_boolean(config)
-        if config == "false"
+        if config == 'false'
           false
         else
           config
@@ -186,16 +188,16 @@ module ActiveRecord
         attr_reader :full_version_string
 
         def initialize(version_string, full_version_string = nil)
-          @version = version_string.split(".").map(&:to_i)
+          @version = version_string.split('.').map(&:to_i)
           @full_version_string = full_version_string
         end
 
         def <=>(version_string)
-          @version <=> version_string.split(".").map(&:to_i)
+          @version <=> version_string.split('.').map(&:to_i)
         end
 
         def to_s
-          @version.join(".")
+          @version.join('.')
         end
       end
 
@@ -206,13 +208,13 @@ module ActiveRecord
       # this method must only be called while holding connection pool's mutex
       def lease
         if in_use?
-          msg = +"Cannot lease connection, "
-          if @owner == Thread.current
-            msg << "it is already leased by the current thread."
-          else
-            msg << "it is already in use by a different thread: #{@owner}. " \
-                   "Current thread: #{Thread.current}."
-          end
+          msg = +'Cannot lease connection, '
+          msg << if @owner == Thread.current
+                   'it is already leased by the current thread.'
+                 else
+                   "it is already in use by a different thread: #{@owner}. " \
+                          "Current thread: #{Thread.current}."
+                 end
           raise ActiveRecordError, msg
         end
 
@@ -232,7 +234,7 @@ module ActiveRecord
       def expire
         if in_use?
           if @owner != Thread.current
-            raise ActiveRecordError, "Cannot expire connection, " \
+            raise ActiveRecordError, 'Cannot expire connection, ' \
               "it is owned by a different thread: #{@owner}. " \
               "Current thread: #{Thread.current}."
           end
@@ -240,7 +242,7 @@ module ActiveRecord
           @idle_since = Concurrent.monotonic_time
           @owner = nil
         else
-          raise ActiveRecordError, "Cannot expire connection, it is not currently leased."
+          raise ActiveRecordError, 'Cannot expire connection, it is not currently leased.'
         end
       end
 
@@ -253,13 +255,14 @@ module ActiveRecord
             @owner = Thread.current
           end
         else
-          raise ActiveRecordError, "Cannot steal connection, it is not currently leased."
+          raise ActiveRecordError, 'Cannot steal connection, it is not currently leased.'
         end
       end
 
       # Seconds since this connection was returned to the pool
       def seconds_idle # :nodoc:
         return 0 if in_use?
+
         Concurrent.monotonic_time - @idle_since
       end
 
@@ -274,7 +277,7 @@ module ActiveRecord
       end
 
       # Does the database for this adapter exist?
-      def self.database_exists?(config)
+      def self.database_exists?(_config)
         raise NotImplementedError
       end
 
@@ -301,7 +304,7 @@ module ActiveRecord
       # Should primary key values be selected from their corresponding
       # sequence before the insert statement? If true, next_sequence_value
       # is called before each insert to set the record's primary key.
-      def prefetch_primary_key?(table_name = nil)
+      def prefetch_primary_key?(_table_name = nil)
         false
       end
 
@@ -430,12 +433,10 @@ module ActiveRecord
       end
 
       # This is meant to be implemented by the adapters that support extensions
-      def disable_extension(name)
-      end
+      def disable_extension(name); end
 
       # This is meant to be implemented by the adapters that support extensions
-      def enable_extension(name)
-      end
+      def enable_extension(name); end
 
       def advisory_locks_enabled? # :nodoc:
         supports_advisory_locks? && @advisory_locks_enabled
@@ -445,15 +446,13 @@ module ActiveRecord
       # locks
       #
       # Return true if we got the lock, otherwise false
-      def get_advisory_lock(lock_id) # :nodoc:
-      end
+      def get_advisory_lock(lock_id); end
 
       # This is meant to be implemented by the adapters that support advisory
       # locks.
       #
       # Return true if we released the lock, otherwise false
-      def release_advisory_lock(lock_id) # :nodoc:
-      end
+      def release_advisory_lock(lock_id); end
 
       # A list of extensions, to be filled in by adapters that support them.
       def extensions
@@ -477,8 +476,7 @@ module ActiveRecord
       # Checks whether the connection to the database is still active. This includes
       # checking whether the database is actually capable of responding, i.e. whether
       # the connection isn't stale.
-      def active?
-      end
+      def active?; end
 
       # Disconnects from the database if already connected, and establishes a
       # new connection with the database. Implementors should call super if they
@@ -506,9 +504,7 @@ module ActiveRecord
         #
         # Prevent @connection's finalizer from touching the socket, or
         # otherwise communicating with its server, when it is collected.
-        if schema_cache.connection == self
-          schema_cache.connection = nil
-        end
+        schema_cache.connection = nil if schema_cache.connection == self
       end
 
       # Reset the state of this connection, directing the DBMS to clear
@@ -549,7 +545,7 @@ module ActiveRecord
         @connection
       end
 
-      def default_uniqueness_comparison(attribute, value, klass) # :nodoc:
+      def default_uniqueness_comparison(attribute, value, _klass) # :nodoc:
         attribute.eq(value)
       end
 
@@ -567,7 +563,7 @@ module ActiveRecord
         end
       end
 
-      def can_perform_case_insensitive_comparison_for?(column)
+      def can_perform_case_insensitive_comparison_for?(_column)
         true
       end
       private :can_perform_case_insensitive_comparison_for?
@@ -577,7 +573,7 @@ module ActiveRecord
         pool.checkin self
       end
 
-      def column_name_for_operation(operation, node) # :nodoc:
+      def column_name_for_operation(_operation, node) # :nodoc:
         visitor.compile(node)
       end
 
@@ -598,164 +594,162 @@ module ActiveRecord
         "INSERT #{insert.into} #{insert.values_list}"
       end
 
-      def get_database_version # :nodoc:
-      end
+      def get_database_version; end
 
       def database_version # :nodoc:
         schema_cache.database_version
       end
 
-      def check_version # :nodoc:
-      end
+      def check_version; end
 
       private
 
-        def type_map
-          @type_map ||= Type::TypeMap.new.tap do |mapping|
-            initialize_type_map(mapping)
+      def type_map
+        @type_map ||= Type::TypeMap.new.tap do |mapping|
+          initialize_type_map(mapping)
+        end
+      end
+
+      def initialize_type_map(m = type_map)
+        register_class_with_limit m, /boolean/i,       Type::Boolean
+        register_class_with_limit m, /char/i,          Type::String
+        register_class_with_limit m, /binary/i,        Type::Binary
+        register_class_with_limit m, /text/i,          Type::Text
+        register_class_with_precision m, /date/i,      Type::Date
+        register_class_with_precision m, /time/i,      Type::Time
+        register_class_with_precision m, /datetime/i,  Type::DateTime
+        register_class_with_limit m, /float/i,         Type::Float
+        register_class_with_limit m, /int/i,           Type::Integer
+
+        m.alias_type /blob/i,      'binary'
+        m.alias_type /clob/i,      'text'
+        m.alias_type /timestamp/i, 'datetime'
+        m.alias_type /numeric/i,   'decimal'
+        m.alias_type /number/i,    'decimal'
+        m.alias_type /double/i,    'float'
+
+        m.register_type /^json/i, Type::Json.new
+
+        m.register_type(/decimal/i) do |sql_type|
+          scale = extract_scale(sql_type)
+          precision = extract_precision(sql_type)
+
+          if scale == 0
+            # FIXME: Remove this class as well
+            Type::DecimalWithoutScale.new(precision: precision)
+          else
+            Type::Decimal.new(precision: precision, scale: scale)
           end
         end
+      end
 
-        def initialize_type_map(m = type_map)
-          register_class_with_limit m, %r(boolean)i,       Type::Boolean
-          register_class_with_limit m, %r(char)i,          Type::String
-          register_class_with_limit m, %r(binary)i,        Type::Binary
-          register_class_with_limit m, %r(text)i,          Type::Text
-          register_class_with_precision m, %r(date)i,      Type::Date
-          register_class_with_precision m, %r(time)i,      Type::Time
-          register_class_with_precision m, %r(datetime)i,  Type::DateTime
-          register_class_with_limit m, %r(float)i,         Type::Float
-          register_class_with_limit m, %r(int)i,           Type::Integer
+      def reload_type_map
+        type_map.clear
+        initialize_type_map
+      end
 
-          m.alias_type %r(blob)i,      "binary"
-          m.alias_type %r(clob)i,      "text"
-          m.alias_type %r(timestamp)i, "datetime"
-          m.alias_type %r(numeric)i,   "decimal"
-          m.alias_type %r(number)i,    "decimal"
-          m.alias_type %r(double)i,    "float"
+      def register_class_with_limit(mapping, key, klass)
+        mapping.register_type(key) do |*args|
+          limit = extract_limit(args.last)
+          klass.new(limit: limit)
+        end
+      end
 
-          m.register_type %r(^json)i, Type::Json.new
+      def register_class_with_precision(mapping, key, klass)
+        mapping.register_type(key) do |*args|
+          precision = extract_precision(args.last)
+          klass.new(precision: precision)
+        end
+      end
 
-          m.register_type(%r(decimal)i) do |sql_type|
-            scale = extract_scale(sql_type)
-            precision = extract_precision(sql_type)
+      def extract_scale(sql_type)
+        case sql_type
+        when /\((\d+)\)/ then 0
+        when /\((\d+)(,(\d+))\)/ then Regexp.last_match(3).to_i
+        end
+      end
 
-            if scale == 0
-              # FIXME: Remove this class as well
-              Type::DecimalWithoutScale.new(precision: precision)
-            else
-              Type::Decimal.new(precision: precision, scale: scale)
-            end
+      def extract_precision(sql_type)
+        Regexp.last_match(1).to_i if sql_type =~ /\((\d+)(,\d+)?\)/
+      end
+
+      def extract_limit(sql_type)
+        Regexp.last_match(1).to_i if sql_type =~ /\((.*)\)/
+      end
+
+      def translate_exception_class(e, sql, binds)
+        message = "#{e.class.name}: #{e.message}"
+
+        exception = translate_exception(
+          e, message: message, sql: sql, binds: binds
+        )
+        exception.set_backtrace e.backtrace
+        exception
+      end
+
+      def log(sql, name = 'SQL', binds = [], type_casted_binds = [], statement_name = nil) # :doc:
+        @instrumenter.instrument(
+          'sql.active_record',
+          sql: sql,
+          name: name,
+          binds: binds,
+          type_casted_binds: type_casted_binds,
+          statement_name: statement_name,
+          connection_id: object_id,
+          connection: self
+        ) do
+          @lock.synchronize do
+            yield
           end
+        rescue StandardError => e
+          raise translate_exception_class(e, sql, binds)
         end
+      end
 
-        def reload_type_map
-          type_map.clear
-          initialize_type_map
-        end
-
-        def register_class_with_limit(mapping, key, klass)
-          mapping.register_type(key) do |*args|
-            limit = extract_limit(args.last)
-            klass.new(limit: limit)
-          end
-        end
-
-        def register_class_with_precision(mapping, key, klass)
-          mapping.register_type(key) do |*args|
-            precision = extract_precision(args.last)
-            klass.new(precision: precision)
-          end
-        end
-
-        def extract_scale(sql_type)
-          case sql_type
-          when /\((\d+)\)/ then 0
-          when /\((\d+)(,(\d+))\)/ then $3.to_i
-          end
-        end
-
-        def extract_precision(sql_type)
-          $1.to_i if sql_type =~ /\((\d+)(,\d+)?\)/
-        end
-
-        def extract_limit(sql_type)
-          $1.to_i if sql_type =~ /\((.*)\)/
-        end
-
-        def translate_exception_class(e, sql, binds)
-          message = "#{e.class.name}: #{e.message}"
-
-          exception = translate_exception(
-            e, message: message, sql: sql, binds: binds
-          )
-          exception.set_backtrace e.backtrace
+      def translate_exception(exception, message:, sql:, binds:)
+        # override in derived class
+        case exception
+        when RuntimeError
           exception
+        else
+          ActiveRecord::StatementInvalid.new(message, sql: sql, binds: binds)
         end
+      end
 
-        def log(sql, name = "SQL", binds = [], type_casted_binds = [], statement_name = nil) # :doc:
-          @instrumenter.instrument(
-            "sql.active_record",
-            sql:               sql,
-            name:              name,
-            binds:             binds,
-            type_casted_binds: type_casted_binds,
-            statement_name:    statement_name,
-            connection_id:     object_id,
-            connection:        self) do
-            @lock.synchronize do
-              yield
-            end
-          rescue => e
-            raise translate_exception_class(e, sql, binds)
-          end
-        end
+      def without_prepared_statement?(binds)
+        !prepared_statements || binds.empty?
+      end
 
-        def translate_exception(exception, message:, sql:, binds:)
-          # override in derived class
-          case exception
-          when RuntimeError
-            exception
-          else
-            ActiveRecord::StatementInvalid.new(message, sql: sql, binds: binds)
-          end
-        end
+      def column_for(table_name, column_name)
+        column_name = column_name.to_s
+        columns(table_name).detect { |c| c.name == column_name } ||
+          raise(ActiveRecordError, "No such column: #{table_name}.#{column_name}")
+      end
 
-        def without_prepared_statement?(binds)
-          !prepared_statements || binds.empty?
-        end
+      def column_for_attribute(attribute)
+        table_name = attribute.relation.name
+        schema_cache.columns_hash(table_name)[attribute.name.to_s]
+      end
 
-        def column_for(table_name, column_name)
-          column_name = column_name.to_s
-          columns(table_name).detect { |c| c.name == column_name } ||
-            raise(ActiveRecordError, "No such column: #{table_name}.#{column_name}")
+      def collector
+        if prepared_statements
+          Arel::Collectors::Composite.new(
+            Arel::Collectors::SQLString.new,
+            Arel::Collectors::Bind.new
+          )
+        else
+          Arel::Collectors::SubstituteBinds.new(
+            self,
+            Arel::Collectors::SQLString.new
+          )
         end
+      end
 
-        def column_for_attribute(attribute)
-          table_name = attribute.relation.name
-          schema_cache.columns_hash(table_name)[attribute.name.to_s]
-        end
+      def arel_visitor
+        Arel::Visitors::ToSql.new(self)
+      end
 
-        def collector
-          if prepared_statements
-            Arel::Collectors::Composite.new(
-              Arel::Collectors::SQLString.new,
-              Arel::Collectors::Bind.new,
-            )
-          else
-            Arel::Collectors::SubstituteBinds.new(
-              self,
-              Arel::Collectors::SQLString.new,
-            )
-          end
-        end
-
-        def arel_visitor
-          Arel::Visitors::ToSql.new(self)
-        end
-
-        def build_statement_pool
-        end
+      def build_statement_pool; end
     end
   end
 end

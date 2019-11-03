@@ -1,4 +1,3 @@
-# encoding: utf-8
 require './lib/crass/version'
 
 Gem::Specification.new do |s|

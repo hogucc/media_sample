@@ -1,6 +1,5 @@
 module CarrierWave
   module Compatibility
-
     ##
     # Mix this module into an Uploader to make it mimic Paperclip's storage paths
     # This will make your Uploader use the same default storage path as paperclip
@@ -47,16 +46,16 @@ module CarrierWave
       extend ActiveSupport::Concern
 
       DEFAULT_MAPPINGS = {
-        :rails_root   => lambda{|u, f| Rails.root.to_s },
-        :rails_env    => lambda{|u, f| Rails.env },
-        :id_partition => lambda{|u, f| ("%09d" % u.model.id).scan(/\d{3}/).join("/")},
-        :id           => lambda{|u, f| u.model.id },
-        :attachment   => lambda{|u, f| u.mounted_as.to_s.downcase.pluralize },
-        :style        => lambda{|u, f| u.paperclip_style },
-        :basename     => lambda{|u, f| u.filename.gsub(/#{File.extname(u.filename)}$/, "") },
-        :extension    => lambda{|u, d| File.extname(u.filename).gsub(/^\.+/, "")},
-        :class        => lambda{|u, f| u.model.class.name.underscore.pluralize}
-      }
+        rails_root: ->(_u, _f) { Rails.root.to_s },
+        rails_env: ->(_u, _f) { Rails.env },
+        id_partition: ->(u, _f) { ('%09d' % u.model.id).scan(/\d{3}/).join('/') },
+        id: ->(u, _f) { u.model.id },
+        attachment: ->(u, _f) { u.mounted_as.to_s.downcase.pluralize },
+        style: ->(u, _f) { u.paperclip_style },
+        basename: ->(u, _f) { u.filename.gsub(/#{File.extname(u.filename)}$/, '') },
+        extension: ->(u, _d) { File.extname(u.filename).gsub(/^\.+/, '') },
+        class: ->(u, _f) { u.model.class.name.underscore.pluralize }
+      }.freeze
 
       included do
         attr_accessor :filename
@@ -64,7 +63,7 @@ module CarrierWave
         self.mappings ||= DEFAULT_MAPPINGS.dup
       end
 
-      def store_path(for_file=filename)
+      def store_path(for_file = filename)
         path = paperclip_path
         self.filename = for_file
         path ||= File.join(*[store_dir, paperclip_style.to_s, for_file].compact)
@@ -72,15 +71,14 @@ module CarrierWave
       end
 
       def store_dir
-        ":rails_root/public/system/:attachment/:id"
+        ':rails_root/public/system/:attachment/:id'
       end
 
       def paperclip_default_style
         :original
       end
 
-      def paperclip_path
-      end
+      def paperclip_path; end
 
       def paperclip_style
         version_name || paperclip_default_style
@@ -93,9 +91,10 @@ module CarrierWave
       end
 
       private
+
       def interpolate_paperclip_path(path)
         mappings.each_pair.inject(path) do |agg, pair|
-          agg.gsub(":#{pair[0]}") { pair[1].call(self, self.paperclip_style).to_s }
+          agg.gsub(":#{pair[0]}") { pair[1].call(self, paperclip_style).to_s }
         end
       end
     end # Paperclip

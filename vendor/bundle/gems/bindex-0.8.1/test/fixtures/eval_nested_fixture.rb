@@ -4,7 +4,7 @@ module Skiptrace
 
     def call
       tap { raise_an_error_in_eval }
-    rescue => exc
+    rescue StandardError => e
       exc
     end
 

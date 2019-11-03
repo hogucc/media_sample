@@ -7,7 +7,7 @@ module ActionDispatch
         attr_reader :spec, :requirements, :anchored
 
         def self.from_string(string)
-          build(string, {}, "/.?", true)
+          build(string, {}, '/.?', true)
         end
 
         def self.build(path, requirements, separators, anchored)
@@ -63,9 +63,9 @@ module ActionDispatch
         end
 
         def optional_names
-          @optional_names ||= spec.find_all(&:group?).flat_map { |group|
+          @optional_names ||= spec.find_all(&:group?).flat_map do |group|
             group.find_all(&:symbol?)
-          }.map(&:name).uniq
+          end.map(&:name).uniq
         end
 
         class AnchoredRegexp < Journey::Visitors::Visitor # :nodoc:
@@ -77,7 +77,7 @@ module ActionDispatch
           end
 
           def accept(node)
-            %r{\A#{visit node}\Z}
+            /\A#{visit node}\Z/
           end
 
           def visit_CAT(node)
@@ -100,27 +100,27 @@ module ActionDispatch
           def visit_LITERAL(node)
             Regexp.escape(node.left)
           end
-          alias :visit_DOT :visit_LITERAL
+          alias visit_DOT visit_LITERAL
 
           def visit_SLASH(node)
             node.left
           end
 
           def visit_STAR(node)
-            re = @matchers[node.left.to_sym] || ".+"
+            re = @matchers[node.left.to_sym] || '.+'
             "(#{re})"
           end
 
           def visit_OR(node)
             children = node.children.map { |n| visit n }
-            "(?:#{children.join(?|)})"
+            "(?:#{children.join('|')})"
           end
         end
 
         class UnanchoredRegexp < AnchoredRegexp # :nodoc:
           def accept(node)
             path = visit node
-            path == "/" ? %r{\A/} : %r{\A#{path}(?:\b|\Z|/)}
+            path == '/' ? %r{\A/} : %r{\A#{path}(?:\b|\Z|/)}
           end
         end
 
@@ -161,9 +161,10 @@ module ActionDispatch
 
         def match(other)
           return unless match = to_regexp.match(other)
+
           MatchData.new(names, offsets, match)
         end
-        alias :=~ :match
+        alias =~ match
 
         def source
           to_regexp.source
@@ -175,28 +176,28 @@ module ActionDispatch
 
         private
 
-          def regexp_visitor
-            @anchored ? AnchoredRegexp : UnanchoredRegexp
-          end
+        def regexp_visitor
+          @anchored ? AnchoredRegexp : UnanchoredRegexp
+        end
 
-          def offsets
-            return @offsets if @offsets
+        def offsets
+          return @offsets if @offsets
 
-            @offsets = [0]
+          @offsets = [0]
 
-            spec.find_all(&:symbol?).each do |node|
-              node = node.to_sym
+          spec.find_all(&:symbol?).each do |node|
+            node = node.to_sym
 
-              if @requirements.key?(node)
-                re = /#{Regexp.union(@requirements[node])}|/
-                @offsets.push((re.match("").length - 1) + @offsets.last)
-              else
-                @offsets << @offsets.last
-              end
+            if @requirements.key?(node)
+              re = /#{Regexp.union(@requirements[node])}|/
+              @offsets.push((re.match('').length - 1) + @offsets.last)
+            else
+              @offsets << @offsets.last
             end
-
-            @offsets
           end
+
+          @offsets
+        end
       end
     end
   end

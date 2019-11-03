@@ -1,5 +1,4 @@
 module CarrierWave
-
   ##
   # This module simplifies manipulation with RMagick by providing a set
   # of convenient helper methods. If you want to use them, you'll need to
@@ -60,11 +59,11 @@ module CarrierWave
 
     included do
       begin
-        require "rmagick"
+        require 'rmagick'
       rescue LoadError
-        require "RMagick"
+        require 'RMagick'
       rescue LoadError => e
-        e.message << " (You may need to install the rmagick gem)"
+        e.message << ' (You may need to install the rmagick gem)'
         raise e
       end
 
@@ -78,27 +77,27 @@ module CarrierWave
 
     module ClassMethods
       def convert(format)
-        process :convert => format
+        process convert: format
       end
 
       def resize_to_limit(width, height)
-        process :resize_to_limit => [width, height]
+        process resize_to_limit: [width, height]
       end
 
       def resize_to_fit(width, height)
-        process :resize_to_fit => [width, height]
+        process resize_to_fit: [width, height]
       end
 
-      def resize_to_fill(width, height, gravity=::Magick::CenterGravity)
-        process :resize_to_fill => [width, height, gravity]
+      def resize_to_fill(width, height, gravity = ::Magick::CenterGravity)
+        process resize_to_fill: [width, height, gravity]
       end
 
-      def resize_and_pad(width, height, background=:transparent, gravity=::Magick::CenterGravity)
-        process :resize_and_pad => [width, height, background, gravity]
+      def resize_and_pad(width, height, background = :transparent, gravity = ::Magick::CenterGravity)
+        process resize_and_pad: [width, height, background, gravity]
       end
 
       def resize_to_geometry_string(geometry_string)
-        process :resize_to_geometry_string => [geometry_string]
+        process resize_to_geometry_string: [geometry_string]
       end
     end
 
@@ -120,7 +119,7 @@ module CarrierWave
     #     image.convert(:png)
     #
     def convert(format)
-      manipulate!(:format => format)
+      manipulate!(format: format)
       @format = format
     end
 
@@ -196,7 +195,7 @@ module CarrierWave
     #
     # [Magick::Image] additional manipulations to perform
     #
-    def resize_to_fill(width, height, gravity=::Magick::CenterGravity)
+    def resize_to_fill(width, height, gravity = ::Magick::CenterGravity)
       width = dimension_from width
       height = dimension_from height
       manipulate! do |img|
@@ -223,17 +222,17 @@ module CarrierWave
     #
     # [Magick::Image] additional manipulations to perform
     #
-    def resize_and_pad(width, height, background=:transparent, gravity=::Magick::CenterGravity)
+    def resize_and_pad(width, height, background = :transparent, gravity = ::Magick::CenterGravity)
       width = dimension_from width
       height = dimension_from height
       manipulate! do |img|
         img.resize_to_fit!(width, height)
         new_img = ::Magick::Image.new(width, height) { self.background_color = background == :transparent ? 'rgba(255,255,255,0)' : background.to_s }
-        if background == :transparent
-          filled = new_img.matte_floodfill(1, 1)
-        else
-          filled = new_img.color_floodfill(1, 1, ::Magick::Pixel.from_color(background))
-        end
+        filled = if background == :transparent
+                   new_img.matte_floodfill(1, 1)
+                 else
+                   new_img.color_floodfill(1, 1, ::Magick::Pixel.from_color(background))
+                 end
         destroy_image(new_img)
         filled.composite!(img, gravity, ::Magick::OverCompositeOp)
         destroy_image(img)
@@ -345,8 +344,8 @@ module CarrierWave
     #
     # [CarrierWave::ProcessingError] if manipulation failed.
     #
-    def manipulate!(options={}, &block)
-      cache_stored_file! if !cached?
+    def manipulate!(options = {}, &block)
+      cache_stored_file! unless cached?
 
       read_block = create_info_block(options[:read])
       image = ::Magick::Image.read(current_path, &read_block)
@@ -371,15 +370,16 @@ module CarrierWave
 
       destroy_image(frames)
     rescue ::Magick::ImageMagickError => e
-      raise CarrierWave::ProcessingError, I18n.translate(:"errors.messages.rmagick_processing_error", :e => e)
+      raise CarrierWave::ProcessingError, I18n.translate(:"errors.messages.rmagick_processing_error", e: e)
     end
 
-  private
+    private
 
     def create_info_block(options)
       return nil unless options
+
       assignments = options.map { |k, v| "self.#{k} = #{v}" }
-      code = "lambda { |img| " + assignments.join(";") + "}"
+      code = 'lambda { |img| ' + assignments.join(';') + '}'
       eval code
     end
 
@@ -389,12 +389,12 @@ module CarrierWave
 
     def dimension_from(value)
       return value unless value.instance_of?(Proc)
+
       value.arity >= 1 ? value.call(self) : value.call
     end
 
     def rmagick_image
-      ::Magick::Image.from_blob(self.read).first
+      ::Magick::Image.from_blob(read).first
     end
-
   end # RMagick
 end # CarrierWave

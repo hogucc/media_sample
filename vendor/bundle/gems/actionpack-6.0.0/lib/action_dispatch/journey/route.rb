@@ -7,10 +7,10 @@ module ActionDispatch
       attr_reader :app, :path, :defaults, :name, :precedence, :constraints,
                   :internal, :scope_options
 
-      alias :conditions :constraints
+      alias conditions constraints
 
       module VerbMatchers
-        VERBS = %w{ DELETE GET HEAD OPTIONS LINK PATCH POST PUT TRACE UNLINK }
+        VERBS = %w[DELETE GET HEAD OPTIONS LINK PATCH POST PUT TRACE UNLINK].freeze
         VERBS.each do |v|
           class_eval <<-eoc, __FILE__, __LINE__ + 1
             class #{v}
@@ -27,12 +27,19 @@ module ActionDispatch
             @verb = verb
           end
 
-          def call(request); @verb === request.request_method; end
+          def call(request)
+            @verb === request.request_method
+          end
         end
 
         class All
-          def self.call(_); true; end
-          def self.verb; ""; end
+          def self.call(_)
+            true
+          end
+
+          def self.verb
+            ''
+          end
         end
 
         VERB_TO_CLASS = VERBS.each_with_object(all: All) do |verb, hash|
@@ -67,13 +74,13 @@ module ActionDispatch
         @defaults    = defaults
         @required_defaults = nil
         @_required_defaults = required_defaults
-        @required_parts    = nil
-        @parts             = nil
-        @decorated_ast     = nil
-        @precedence        = precedence
-        @path_formatter    = @path.build_formatter
-        @scope_options     = scope_options
-        @internal          = internal
+        @required_parts = nil
+        @parts = nil
+        @decorated_ast = nil
+        @precedence = precedence
+        @path_formatter = @path.build_formatter
+        @scope_options = scope_options
+        @internal = internal
       end
 
       def eager_load!
@@ -101,9 +108,9 @@ module ActionDispatch
       # will have {:controller=>"photos", :action=>"show", :id=>/[A-Z]\d{5}/}
       # as requirements.
       def requirements
-        @defaults.merge(path.requirements).delete_if { |_, v|
-          /.+?/ == v
-        }
+        @defaults.merge(path.requirements).delete_if do |_, v|
+          v == /.+?/
+        end
       end
 
       def segments
@@ -132,7 +139,7 @@ module ActionDispatch
       def parts
         @parts ||= segments.map(&:to_sym)
       end
-      alias :segment_keys :parts
+      alias segment_keys parts
 
       def format(path_options)
         @path_formatter.evaluate path_options
@@ -162,20 +169,20 @@ module ActionDispatch
 
       def matches?(request)
         match_verb(request) &&
-        constraints.all? { |method, value|
-          case value
-          when Regexp, String
-            value === request.send(method).to_s
-          when Array
-            value.include?(request.send(method))
-          when TrueClass
-            request.send(method).present?
-          when FalseClass
-            request.send(method).blank?
-          else
-            value === request.send(method)
+          constraints.all? do |method, value|
+            case value
+            when Regexp, String
+              value === request.send(method).to_s
+            when Array
+              value.include?(request.send(method))
+            when TrueClass
+              request.send(method).present?
+            when FalseClass
+              request.send(method).blank?
+            else
+              value === request.send(method)
+            end
           end
-        }
       end
 
       def ip
@@ -187,17 +194,18 @@ module ActionDispatch
       end
 
       def verb
-        verbs.join("|")
+        verbs.join('|')
       end
 
       private
-        def verbs
-          @request_method_match.map(&:verb)
-        end
 
-        def match_verb(request)
-          @request_method_match.any? { |m| m.call request }
-        end
+      def verbs
+        @request_method_match.map(&:verb)
+      end
+
+      def match_verb(request)
+        @request_method_match.any? { |m| m.call request }
+      end
     end
   end
   # :startdoc:

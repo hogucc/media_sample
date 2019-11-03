@@ -9,7 +9,7 @@ module Puma
           return output if output
 
           data = @socket.read_nonblock(size, exception: false)
-          raise IO::EAGAINWaitReadable if %i[wait_readable wait_writable].include? data
+          raise IO::EAGAINWaitReadable if [:wait_readable, :wait_writable].include? data
           return nil if data.nil?
 
           @engine.inject(data)

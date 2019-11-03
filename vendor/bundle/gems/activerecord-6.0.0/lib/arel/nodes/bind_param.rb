@@ -11,14 +11,14 @@ module Arel # :nodoc: all
       end
 
       def hash
-        [self.class, self.value].hash
+        [self.class, value].hash
       end
 
       def eql?(other)
         other.is_a?(BindParam) &&
           value == other.value
       end
-      alias :== :eql?
+      alias == eql?
 
       def nil?
         value.nil?

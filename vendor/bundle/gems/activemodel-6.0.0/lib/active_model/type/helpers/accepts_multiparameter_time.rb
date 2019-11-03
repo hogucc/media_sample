@@ -34,6 +34,7 @@ module ActiveModel
               values_hash[k] ||= v
             end
             return unless values_hash[1] && values_hash[2] && values_hash[3]
+
             values = values_hash.sort.map(&:last)
             ::Time.send(default_timezone, *values)
           end

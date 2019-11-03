@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "action_controller/metal/exceptions"
+require 'action_controller/metal/exceptions'
 
 module ActionDispatch
   # :stopdoc:
@@ -29,6 +29,7 @@ module ActionDispatch
 
           missing_keys = missing_keys(route, parameterized_parts)
           next if missing_keys && !missing_keys.empty?
+
           params = options.dup.delete_if do |key, _|
             parameterized_parts.key?(key) || route.defaults.key?(key)
           end
@@ -50,7 +51,7 @@ module ActionDispatch
         unmatched_keys = (missing_keys || []) & constraints.keys
         missing_keys = (missing_keys || []) - unmatched_keys
 
-        message = +"No route matches #{Hash[constraints.sort_by { |k, v| k.to_s }].inspect}"
+        message = +"No route matches #{Hash[constraints.sort_by { |k, _v| k.to_s }].inspect}"
         message << ", missing required keys: #{missing_keys.sort.inspect}" if missing_keys && !missing_keys.empty?
         message << ", possible unmatched constraints: #{unmatched_keys.sort.inspect}" if unmatched_keys && !unmatched_keys.empty?
 
@@ -63,126 +64,126 @@ module ActionDispatch
 
       private
 
-        def extract_parameterized_parts(route, options, recall, parameterize = nil)
-          parameterized_parts = recall.merge(options)
+      def extract_parameterized_parts(route, options, recall, parameterize = nil)
+        parameterized_parts = recall.merge(options)
 
-          keys_to_keep = route.parts.reverse_each.drop_while { |part|
-            !(options.key?(part) || route.scope_options.key?(part)) || (options[part] || recall[part]).nil?
-          } | route.required_parts
+        keys_to_keep = route.parts.reverse_each.drop_while do |part|
+          !(options.key?(part) || route.scope_options.key?(part)) || (options[part] || recall[part]).nil?
+        end | route.required_parts
 
-          parameterized_parts.delete_if do |bad_key, _|
-            !keys_to_keep.include?(bad_key)
+        parameterized_parts.delete_if do |bad_key, _|
+          !keys_to_keep.include?(bad_key)
+        end
+
+        if parameterize
+          parameterized_parts.each do |k, v|
+            parameterized_parts[k] = parameterize.call(k, v)
+          end
+        end
+
+        parameterized_parts.keep_if { |_, v| v }
+        parameterized_parts
+      end
+
+      def named_routes
+        routes.named_routes
+      end
+
+      def match_route(name, options)
+        if named_routes.key?(name)
+          yield named_routes[name]
+        else
+          routes = non_recursive(cache, options)
+
+          supplied_keys = options.each_with_object({}) do |(k, v), h|
+            h[k.to_s] = true if v
           end
 
-          if parameterize
-            parameterized_parts.each do |k, v|
-              parameterized_parts[k] = parameterize.call(k, v)
+          hash = routes.group_by { |_, r| r.score(supplied_keys) }
+
+          hash.keys.sort.reverse_each do |score|
+            break if score < 0
+
+            hash[score].sort_by { |i, _| i }.each do |_, route|
+              yield route
             end
           end
+        end
+      end
 
-          parameterized_parts.keep_if { |_, v| v }
-          parameterized_parts
+      def non_recursive(cache, options)
+        routes = []
+        queue  = [cache]
+
+        while queue.any?
+          c = queue.shift
+          routes.concat(c[:___routes]) if c.key?(:___routes)
+
+          options.each do |pair|
+            queue << c[pair] if c.key?(pair)
+          end
         end
 
-        def named_routes
-          routes.named_routes
-        end
+        routes
+      end
 
-        def match_route(name, options)
-          if named_routes.key?(name)
-            yield named_routes[name]
+      module RegexCaseComparator
+        DEFAULT_INPUT = %r{[-_.a-zA-Z0-9]+/[-_.a-zA-Z0-9]+}.freeze
+        DEFAULT_REGEX = /\A#{DEFAULT_INPUT}\Z/.freeze
+
+        def self.===(regex)
+          DEFAULT_INPUT == regex
+        end
+      end
+
+      # Returns an array populated with missing keys if any are present.
+      def missing_keys(route, parts)
+        missing_keys = nil
+        tests = route.path.requirements
+        route.required_parts.each do |key|
+          case tests[key]
+          when nil
+            unless parts[key]
+              missing_keys ||= []
+              missing_keys << key
+            end
+          when RegexCaseComparator
+            unless RegexCaseComparator::DEFAULT_REGEX === parts[key]
+              missing_keys ||= []
+              missing_keys << key
+            end
           else
-            routes = non_recursive(cache, options)
-
-            supplied_keys = options.each_with_object({}) do |(k, v), h|
-              h[k.to_s] = true if v
-            end
-
-            hash = routes.group_by { |_, r| r.score(supplied_keys) }
-
-            hash.keys.sort.reverse_each do |score|
-              break if score < 0
-
-              hash[score].sort_by { |i, _| i }.each do |_, route|
-                yield route
-              end
+            unless /\A#{tests[key]}\Z/ === parts[key]
+              missing_keys ||= []
+              missing_keys << key
             end
           end
         end
+        missing_keys
+      end
 
-        def non_recursive(cache, options)
-          routes = []
-          queue  = [cache]
+      def possibles(cache, options, depth = 0)
+        cache.fetch(:___routes) { [] } + options.find_all do |pair|
+          cache.key?(pair)
+        end.flat_map do |pair|
+          possibles(cache[pair], options, depth + 1)
+        end
+      end
 
-          while queue.any?
-            c = queue.shift
-            routes.concat(c[:___routes]) if c.key?(:___routes)
-
-            options.each do |pair|
-              queue << c[pair] if c.key?(pair)
-            end
+      def build_cache
+        root = { ___routes: [] }
+        routes.routes.each_with_index do |route, i|
+          leaf = route.required_defaults.inject(root) do |h, tuple|
+            h[tuple] ||= {}
           end
-
-          routes
+          (leaf[:___routes] ||= []) << [i, route]
         end
+        root
+      end
 
-        module RegexCaseComparator
-          DEFAULT_INPUT = /[-_.a-zA-Z0-9]+\/[-_.a-zA-Z0-9]+/
-          DEFAULT_REGEX = /\A#{DEFAULT_INPUT}\Z/
-
-          def self.===(regex)
-            DEFAULT_INPUT == regex
-          end
-        end
-
-        # Returns an array populated with missing keys if any are present.
-        def missing_keys(route, parts)
-          missing_keys = nil
-          tests = route.path.requirements
-          route.required_parts.each { |key|
-            case tests[key]
-            when nil
-              unless parts[key]
-                missing_keys ||= []
-                missing_keys << key
-              end
-            when RegexCaseComparator
-              unless RegexCaseComparator::DEFAULT_REGEX === parts[key]
-                missing_keys ||= []
-                missing_keys << key
-              end
-            else
-              unless /\A#{tests[key]}\Z/ === parts[key]
-                missing_keys ||= []
-                missing_keys << key
-              end
-            end
-          }
-          missing_keys
-        end
-
-        def possibles(cache, options, depth = 0)
-          cache.fetch(:___routes) { [] } + options.find_all { |pair|
-            cache.key?(pair)
-          }.flat_map { |pair|
-            possibles(cache[pair], options, depth + 1)
-          }
-        end
-
-        def build_cache
-          root = { ___routes: [] }
-          routes.routes.each_with_index do |route, i|
-            leaf = route.required_defaults.inject(root) do |h, tuple|
-              h[tuple] ||= {}
-            end
-            (leaf[:___routes] ||= []) << [i, route]
-          end
-          root
-        end
-
-        def cache
-          @cache ||= build_cache
-        end
+      def cache
+        @cache ||= build_cache
+      end
     end
   end
   # :startdoc:

@@ -1,12 +1,12 @@
 class Foreman::Thor
   class Argument #:nodoc:
-    VALID_TYPES = [:numeric, :hash, :array, :string]
+    VALID_TYPES = [:numeric, :hash, :array, :string].freeze
 
     attr_reader :name, :description, :enum, :required, :type, :default, :banner
-    alias_method :human_name, :name
+    alias human_name name
 
     def initialize(name, options = {})
-      class_name = self.class.name.split("::").last
+      class_name = self.class.name.split('::').last
 
       type = options[:type]
 
@@ -41,11 +41,11 @@ class Foreman::Thor
       end
     end
 
-  protected
+    protected
 
     def validate!
-      raise ArgumentError, "An argument cannot be required and have default value." if required? && !default.nil?
-      raise ArgumentError, "An argument cannot have an enum other than an array." if @enum && !@enum.is_a?(Array)
+      raise ArgumentError, 'An argument cannot be required and have default value.' if required? && !default.nil?
+      raise ArgumentError, 'An argument cannot have an enum other than an array.' if @enum && !@enum.is_a?(Array)
     end
 
     def valid_type?(type)
@@ -59,11 +59,11 @@ class Foreman::Thor
       when :string, :default
         human_name.upcase
       when :numeric
-        "N"
+        'N'
       when :hash
-        "key:value"
+        'key:value'
       when :array
-        "one two three"
+        'one two three'
       end
     end
   end

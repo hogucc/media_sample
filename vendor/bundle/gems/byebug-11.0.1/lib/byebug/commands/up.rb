@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require "pathname"
-require "byebug/command"
-require "byebug/helpers/frame"
-require "byebug/helpers/parse"
+require 'pathname'
+require 'byebug/command'
+require 'byebug/helpers/frame'
+require 'byebug/helpers/parse'
 
 module Byebug
   #
@@ -30,11 +30,11 @@ module Byebug
     end
 
     def self.short_description
-      "Moves to a higher frame in the stack trace"
+      'Moves to a higher frame in the stack trace'
     end
 
     def execute
-      pos, err = parse_steps(@match[1], "Up")
+      pos, err = parse_steps(@match[1], 'Up')
       return errmsg(err) unless pos
 
       jump_frames(pos)

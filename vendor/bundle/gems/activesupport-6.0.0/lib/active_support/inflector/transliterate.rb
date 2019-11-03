@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "active_support/core_ext/string/multibyte"
-require "active_support/i18n"
+require 'active_support/core_ext/string/multibyte'
+require 'active_support/i18n'
 
 module ActiveSupport
   module Inflector
@@ -59,7 +59,7 @@ module ActiveSupport
     #
     # Transliteration is restricted to UTF-8, US-ASCII and GB18030 strings
     # Other encodings will raise an ArgumentError.
-    def transliterate(string, replacement = "?", locale: nil)
+    def transliterate(string, replacement = '?', locale: nil)
       string = string.dup if string.frozen?
       raise ArgumentError, "Can only transliterate strings. Received #{string.class.name}" unless string.is_a?(String)
 
@@ -118,7 +118,7 @@ module ActiveSupport
     # the word will be parameterized as a word of that language.
     # By default, this parameter is set to <tt>nil</tt> and it will use
     # the configured <tt>I18n.locale<tt>.
-    def parameterize(string, separator: "-", preserve_case: false, locale: nil)
+    def parameterize(string, separator: '-', preserve_case: false, locale: nil)
       # Replace accented chars with their ASCII equivalents.
       parameterized_string = transliterate(string, locale: locale)
 
@@ -126,18 +126,18 @@ module ActiveSupport
       parameterized_string.gsub!(/[^a-z0-9\-_]+/i, separator)
 
       unless separator.nil? || separator.empty?
-        if separator == "-"
+        if separator == '-'
           re_duplicate_separator        = /-{2,}/
           re_leading_trailing_separator = /^-|-$/i
         else
           re_sep = Regexp.escape(separator)
-          re_duplicate_separator        = /#{re_sep}{2,}/
+          re_duplicate_separator = /#{re_sep}{2,}/
           re_leading_trailing_separator = /^#{re_sep}|#{re_sep}$/i
         end
         # No more than one of the separator in a row.
         parameterized_string.gsub!(re_duplicate_separator, separator)
         # Remove leading/trailing separator.
-        parameterized_string.gsub!(re_leading_trailing_separator, "")
+        parameterized_string.gsub!(re_leading_trailing_separator, '')
       end
 
       parameterized_string.downcase! unless preserve_case

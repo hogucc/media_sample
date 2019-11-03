@@ -1,7 +1,6 @@
 module Concurrent
   # noinspection RubyInstanceVariableNamingConvention
   module Synchronization
-
     # @!visibility private
     # @!macro internal_implementation_note
     module ConditionSignalling
@@ -17,7 +16,6 @@ module Concurrent
         self
       end
     end
-
 
     # @!visibility private
     # @!macro internal_implementation_note
@@ -63,7 +61,7 @@ module Concurrent
 
       protected
 
-      def synchronize # TODO may be a problem with lock.synchronize { lock.wait }
+      def synchronize # TODO: may be a problem with lock.synchronize { lock.wait }
         @__Lock__.synchronize { yield }
       end
 

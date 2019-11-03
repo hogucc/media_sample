@@ -1,5 +1,4 @@
 module CarrierWave
-
   ##
   # This module simplifies manipulation with MiniMagick by providing a set
   # of convenient helper methods. If you want to use them, you'll need to
@@ -56,28 +55,28 @@ module CarrierWave
     extend ActiveSupport::Concern
 
     included do
-      require "image_processing/mini_magick"
+      require 'image_processing/mini_magick'
     end
 
     module ClassMethods
       def convert(format)
-        process :convert => format
+        process convert: format
       end
 
       def resize_to_limit(width, height)
-        process :resize_to_limit => [width, height]
+        process resize_to_limit: [width, height]
       end
 
       def resize_to_fit(width, height)
-        process :resize_to_fit => [width, height]
+        process resize_to_fit: [width, height]
       end
 
-      def resize_to_fill(width, height, gravity='Center')
-        process :resize_to_fill => [width, height, gravity]
+      def resize_to_fill(width, height, gravity = 'Center')
+        process resize_to_fill: [width, height, gravity]
       end
 
-      def resize_and_pad(width, height, background=:transparent, gravity='Center')
-        process :resize_and_pad => [width, height, background, gravity]
+      def resize_and_pad(width, height, background = :transparent, gravity = 'Center')
+        process resize_and_pad: [width, height, background, gravity]
       end
     end
 
@@ -98,7 +97,7 @@ module CarrierWave
     #
     #     image.convert(:png)
     #
-    def convert(format, page=nil, &block)
+    def convert(format, page = nil, &block)
       minimagick!(block) do |builder|
         builder = builder.convert(format)
         builder = builder.loader(page: page) if page
@@ -127,7 +126,7 @@ module CarrierWave
 
       minimagick!(block) do |builder|
         builder.resize_to_limit(width, height)
-          .apply(combine_options)
+               .apply(combine_options)
       end
     end
 
@@ -151,7 +150,7 @@ module CarrierWave
 
       minimagick!(block) do |builder|
         builder.resize_to_fit(width, height)
-          .apply(combine_options)
+               .apply(combine_options)
       end
     end
 
@@ -176,7 +175,7 @@ module CarrierWave
 
       minimagick!(block) do |builder|
         builder.resize_to_fill(width, height, gravity: gravity)
-          .apply(combine_options)
+               .apply(combine_options)
       end
     end
 
@@ -201,12 +200,12 @@ module CarrierWave
     #
     # [MiniMagick::Image] additional manipulations to perform
     #
-    def resize_and_pad(width, height, background=:transparent, gravity='Center', combine_options: {}, &block)
+    def resize_and_pad(width, height, background = :transparent, gravity = 'Center', combine_options: {}, &block)
       width, height = resolve_dimensions(width, height)
 
       minimagick!(block) do |builder|
         builder.resize_and_pad(width, height, background: background, gravity: gravity)
-          .apply(combine_options)
+               .apply(combine_options)
       end
     end
 
@@ -256,18 +255,18 @@ module CarrierWave
     # [CarrierWave::ProcessingError] if manipulation failed.
     #
     def manipulate!
-      cache_stored_file! if !cached?
+      cache_stored_file! unless cached?
       image = ::MiniMagick::Image.open(current_path)
 
       image = yield(image)
       FileUtils.mv image.path, current_path
 
-      image.run_command("identify", current_path)
+      image.run_command('identify', current_path)
     rescue ::MiniMagick::Error, ::MiniMagick::Invalid => e
-      message = I18n.translate(:"errors.messages.mini_magick_processing_error", :e => e)
+      message = I18n.translate(:"errors.messages.mini_magick_processing_error", e: e)
       raise CarrierWave::ProcessingError, message
     ensure
-      image.destroy! if image
+      image&.destroy!
     end
 
     # Process the image with MiniMagick, using the ImageProcessing gem. This
@@ -310,22 +309,22 @@ module CarrierWave
         file.move_to(move_to, permissions, directory_permissions)
       end
     rescue ::MiniMagick::Error, ::MiniMagick::Invalid => e
-      message = I18n.translate(:"errors.messages.mini_magick_processing_error", :e => e)
+      message = I18n.translate(:"errors.messages.mini_magick_processing_error", e: e)
       raise CarrierWave::ProcessingError, message
     end
 
     private
 
-      def resolve_dimensions(*dimensions)
-        dimensions.map do |value|
-          next value unless value.instance_of?(Proc)
-          value.arity >= 1 ? value.call(self) : value.call
-        end
-      end
+    def resolve_dimensions(*dimensions)
+      dimensions.map do |value|
+        next value unless value.instance_of?(Proc)
 
-      def mini_magick_image
-        ::MiniMagick::Image.read(read)
+        value.arity >= 1 ? value.call(self) : value.call
       end
+    end
 
+    def mini_magick_image
+      ::MiniMagick::Image.read(read)
+    end
   end # MiniMagick
 end # CarrierWave

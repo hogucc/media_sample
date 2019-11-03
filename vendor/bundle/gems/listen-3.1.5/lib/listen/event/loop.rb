@@ -1,5 +1,3 @@
-require 'thread'
-
 require 'timeout'
 require 'listen/event/processor'
 
@@ -22,6 +20,7 @@ module Listen
         return if stopped?
         return unless processing?
         return unless wait_thread.alive?
+
         _wakeup(:event)
       end
 
@@ -32,6 +31,7 @@ module Listen
       def processing?
         return false if stopped?
         return false if paused?
+
         state == :processing
       end
 
@@ -47,8 +47,9 @@ module Listen
       end
 
       def resume
-        fail Error::NotStarted if stopped?
+        raise Error::NotStarted if stopped?
         return unless wait_thread
+
         _wakeup(:resume)
       end
 
@@ -59,6 +60,7 @@ module Listen
 
       def teardown
         return unless wait_thread
+
         if wait_thread.alive?
           _wakeup(:teardown)
           wait_thread.join
@@ -82,8 +84,8 @@ module Listen
 
         _wait_until_resumed(ready_queue)
         processor.loop_for(config.min_delay_between_events)
-      rescue StandardError => ex
-        _nice_error(ex)
+      rescue StandardError => e
+        _nice_error(e)
       end
 
       def _sleep(*args)

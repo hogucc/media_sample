@@ -1,26 +1,26 @@
-require "foreman/vendor/thor/lib/thor/command"
-require "foreman/vendor/thor/lib/thor/core_ext/hash_with_indifferent_access"
-require "foreman/vendor/thor/lib/thor/core_ext/ordered_hash"
-require "foreman/vendor/thor/lib/thor/error"
-require "foreman/vendor/thor/lib/thor/invocation"
-require "foreman/vendor/thor/lib/thor/parser"
-require "foreman/vendor/thor/lib/thor/shell"
-require "foreman/vendor/thor/lib/thor/line_editor"
-require "foreman/vendor/thor/lib/thor/util"
+require 'foreman/vendor/thor/lib/thor/command'
+require 'foreman/vendor/thor/lib/thor/core_ext/hash_with_indifferent_access'
+require 'foreman/vendor/thor/lib/thor/core_ext/ordered_hash'
+require 'foreman/vendor/thor/lib/thor/error'
+require 'foreman/vendor/thor/lib/thor/invocation'
+require 'foreman/vendor/thor/lib/thor/parser'
+require 'foreman/vendor/thor/lib/thor/shell'
+require 'foreman/vendor/thor/lib/thor/line_editor'
+require 'foreman/vendor/thor/lib/thor/util'
 
 class Foreman::Thor
-  autoload :Actions,    "foreman/vendor/thor/lib/thor/actions"
-  autoload :RakeCompat, "foreman/vendor/thor/lib/thor/rake_compat"
-  autoload :Group,      "foreman/vendor/thor/lib/thor/group"
+  autoload :Actions,    'foreman/vendor/thor/lib/thor/actions'
+  autoload :RakeCompat, 'foreman/vendor/thor/lib/thor/rake_compat'
+  autoload :Group,      'foreman/vendor/thor/lib/thor/group'
 
   # Shortcuts for help.
-  HELP_MAPPINGS       = %w(-h -? --help -D)
+  HELP_MAPPINGS       = %w[-h -? --help -D].freeze
 
   # Foreman::Thor methods that should not be overwritten by the user.
-  THOR_RESERVED_WORDS = %w(invoke shell options behavior root destination_root relative_root
-                           action add_file create_file in_root inside run run_ruby_script)
+  THOR_RESERVED_WORDS = %w[invoke shell options behavior root destination_root relative_root
+                           action add_file create_file in_root inside run run_ruby_script].freeze
 
-  TEMPLATE_EXTNAME = ".tt"
+  TEMPLATE_EXTNAME = '.tt'.freeze
 
   module Base
     attr_accessor :options, :parent_options, :args
@@ -42,7 +42,7 @@ class Foreman::Thor
     # config<Hash>:: Configuration for this Foreman::Thor class.
     #
     def initialize(args = [], local_options = {}, config = {})
-      parse_options = config[:current_command] && config[:current_command].disable_class_options ? {} : self.class.class_options
+      parse_options = config[:current_command]&.disable_class_options ? {} : self.class.class_options
 
       # The start method splits inbound arguments at the first argument
       # that looks like an option (starts with - or --). It then calls
@@ -146,14 +146,14 @@ class Foreman::Thor
         @check_unknown_options ||= from_superclass(:check_unknown_options, false)
       end
 
-      def check_unknown_options?(config) #:nodoc:
+      def check_unknown_options?(_config) #:nodoc:
         !!check_unknown_options
       end
 
       # If true, option parsing is suspended as soon as an unknown option or a
       # regular argument is encountered.  All remaining arguments are passed to
       # the command as regular arguments.
-      def stop_on_unknown_option?(command_name) #:nodoc:
+      def stop_on_unknown_option?(_command_name) #:nodoc:
         false
       end
 
@@ -168,7 +168,7 @@ class Foreman::Thor
         @strict_args_position ||= from_superclass(:strict_args_position, false)
       end
 
-      def strict_args_position?(config) #:nodoc:
+      def strict_args_position?(_config) #:nodoc:
         !!strict_args_position
       end
 
@@ -212,11 +212,11 @@ class Foreman::Thor
         no_commands { attr_accessor name }
 
         required = if options.key?(:optional)
-          !options[:optional]
-        elsif options.key?(:required)
-          options[:required]
-        else
-          options[:default].nil?
+                     !options[:optional]
+                   elsif options.key?(:required)
+                     options[:required]
+                   else
+                     options[:default].nil?
         end
 
         remove_argument name
@@ -224,6 +224,7 @@ class Foreman::Thor
         if required
           arguments.each do |argument|
             next if argument.required?
+
             raise ArgumentError, "You cannot have #{name.to_s.inspect} as required argument after " \
                                 "the non-required argument #{argument.human_name.inspect}."
           end
@@ -324,7 +325,7 @@ class Foreman::Thor
         if name
           @group = name.to_s
         else
-          @group ||= from_superclass(:group, "standard")
+          @group ||= from_superclass(:group, 'standard')
         end
       end
 
@@ -337,7 +338,7 @@ class Foreman::Thor
       def commands
         @commands ||= Foreman::Thor::CoreExt::OrderedHash.new
       end
-      alias_method :tasks, :commands
+      alias tasks commands
 
       # Returns the commands for this Foreman::Thor class and all subclasses.
       #
@@ -349,7 +350,7 @@ class Foreman::Thor
         @all_commands ||= from_superclass(:all_commands, Foreman::Thor::CoreExt::OrderedHash.new)
         @all_commands.merge!(commands)
       end
-      alias_method :all_tasks, :all_commands
+      alias all_tasks all_commands
 
       # Removes a given command from this Foreman::Thor class. This is usually done if you
       # are inheriting from another class and don't want it to be available
@@ -372,7 +373,7 @@ class Foreman::Thor
           undef_method name if options[:undefine]
         end
       end
-      alias_method :remove_task, :remove_command
+      alias remove_task remove_command
 
       # All methods defined inside the given block are not added as commands.
       #
@@ -399,7 +400,7 @@ class Foreman::Thor
       ensure
         @no_commands = false
       end
-      alias_method :no_tasks, :no_commands
+      alias no_tasks no_commands
 
       # Sets the namespace for the Foreman::Thor or Foreman::Thor::Group class. By default the
       # namespace is retrieved from the class name. If your Foreman::Thor class is named
@@ -443,7 +444,7 @@ class Foreman::Thor
         config[:shell] ||= Foreman::Thor::Base.shell.new
         dispatch(nil, given_args.dup, nil, config)
       rescue Foreman::Thor::Error => e
-        config[:debug] || ENV["THOR_DEBUG"] == "1" ? (raise e) : config[:shell].error(e.message)
+        config[:debug] || ENV['THOR_DEBUG'] == '1' ? (raise e) : config[:shell].error(e.message)
         exit(1) if exit_on_failure?
       rescue Errno::EPIPE
         # This happens if a thor command is piped to something like `head`,
@@ -468,23 +469,24 @@ class Foreman::Thor
           class_eval "def #{name}(*); super end"
         end
       end
-      alias_method :public_task, :public_command
+      alias public_task public_command
 
       def handle_no_command_error(command, has_namespace = $thor_runner) #:nodoc:
         raise UndefinedCommandError, "Could not find command #{command.inspect} in #{namespace.inspect} namespace." if has_namespace
+
         raise UndefinedCommandError, "Could not find command #{command.inspect}."
       end
-      alias_method :handle_no_task_error, :handle_no_command_error
+      alias handle_no_task_error handle_no_command_error
 
-      def handle_argument_error(command, error, args, arity) #:nodoc:
+      def handle_argument_error(command, _error, args, _arity) #:nodoc:
         msg = "ERROR: \"#{basename} #{command.name}\" was called with "
-        msg << "no arguments"               if     args.empty?
-        msg << "arguments " << args.inspect unless args.empty?
+        msg << 'no arguments'               if     args.empty?
+        msg << 'arguments ' << args.inspect unless args.empty?
         msg << "\nUsage: #{banner(command).inspect}"
         raise InvocationError, msg
       end
 
-    protected
+      protected
 
       # Prints the class options per group. If an option does not belong to
       # any group, it's printed as Class option.
@@ -515,22 +517,24 @@ class Foreman::Thor
 
         options.each do |option|
           next if option.hide
+
           item = [option.usage(padding)]
-          item.push(option.description ? "# #{option.description}" : "")
+          item.push(option.description ? "# #{option.description}" : '')
 
           list << item
-          list << ["", "# Default: #{option.default}"] if option.show_default?
-          list << ["", "# Possible values: #{option.enum.join(', ')}"] if option.enum
+          list << ['', "# Default: #{option.default}"] if option.show_default?
+          list << ['', "# Possible values: #{option.enum.join(', ')}"] if option.enum
         end
 
-        shell.say(group_name ? "#{group_name} options:" : "Options:")
-        shell.print_table(list, :indent => 2)
-        shell.say ""
+        shell.say(group_name ? "#{group_name} options:" : 'Options:')
+        shell.print_table(list, indent: 2)
+        shell.say ''
       end
 
       # Raises an error if the word given is a Foreman::Thor reserved word.
       def is_thor_reserved_word?(word, type) #:nodoc:
         return false unless THOR_RESERVED_WORDS.include?(word.to_s)
+
         raise "#{word.inspect} is a Foreman::Thor reserved word and cannot be defined as #{type}"
       end
 
@@ -569,7 +573,7 @@ class Foreman::Thor
           raise ArgumentError, "You supplied :for => #{name.inspect}, but the command #{name.inspect} could not be found."
         end
       end
-      alias_method :find_and_refresh_task, :find_and_refresh_command
+      alias find_and_refresh_task find_and_refresh_command
 
       # Everytime someone inherits from a Foreman::Thor class, register the klass
       # and file into baseclass.
@@ -583,7 +587,7 @@ class Foreman::Thor
       def method_added(meth)
         meth = meth.to_s
 
-        if meth == "initialize"
+        if meth == 'initialize'
           initialize_added
           return
         end
@@ -628,27 +632,24 @@ class Foreman::Thor
       # The basename of the program invoking the thor class.
       #
       def basename
-        File.basename($PROGRAM_NAME).split(" ").first
+        File.basename($0).split(' ').first
       end
 
       # SIGNATURE: Sets the baseclass. This is where the superclass lookup
       # finishes.
-      def baseclass #:nodoc:
-      end
+      def baseclass; end
 
       # SIGNATURE: Creates a new command if valid_command? is true. This method is
       # called when a new method is added to the class.
-      def create_command(meth) #:nodoc:
-      end
-      alias_method :create_task, :create_command
+      def create_command(meth); end
+      alias create_task create_command
 
       # SIGNATURE: Defines behavior when the initialize method is added to the
       # class.
-      def initialize_added #:nodoc:
-      end
+      def initialize_added; end
 
       # SIGNATURE: The hook invoked by start.
-      def dispatch(command, given_args, given_opts, config) #:nodoc:
+      def dispatch(_command, _given_args, _given_opts, _config) #:nodoc:
         raise NotImplementedError
       end
     end

@@ -44,7 +44,8 @@ module ActiveRecord
             end
 
             private
-              attr_reader :value
+
+            attr_reader :value
           end
         end
       end

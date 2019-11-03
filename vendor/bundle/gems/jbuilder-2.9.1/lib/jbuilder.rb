@@ -12,7 +12,7 @@ class Jbuilder
   def initialize(options = {})
     @attributes = {}
 
-    @key_formatter = options.fetch(:key_formatter){ @@key_formatter ? @@key_formatter.clone : nil}
+    @key_formatter = options.fetch(:key_formatter) { @@key_formatter ? @@key_formatter.clone : nil }
     @ignore_nil = options.fetch(:ignore_nil, @@ignore_nil)
 
     yield self if ::Kernel.block_given?
@@ -24,38 +24,38 @@ class Jbuilder
   end
 
   BLANK = Blank.new
-  NON_ENUMERABLES = [ ::Struct, ::OpenStruct ].to_set
+  NON_ENUMERABLES = [::Struct, ::OpenStruct].to_set
 
   def set!(key, value = BLANK, *args)
     result = if ::Kernel.block_given?
-      if !_blank?(value)
-        # json.comments @post.comments { |comment| ... }
-        # { "comments": [ { ... }, { ... } ] }
-        _scope{ array! value, &::Proc.new }
-      else
-        # json.comments { ... }
-        # { "comments": ... }
-        _merge_block(key){ yield self }
-      end
-    elsif args.empty?
-      if ::Jbuilder === value
-        # json.age 32
-        # json.person another_jbuilder
-        # { "age": 32, "person": { ...  }
-        value.attributes!
-      else
-        # json.age 32
-        # { "age": 32 }
-        value
-      end
-    elsif _is_collection?(value)
-      # json.comments @post.comments, :content, :created_at
-      # { "comments": [ { "content": "hello", "created_at": "..." }, { "content": "world", "created_at": "..." } ] }
-      _scope{ array! value, *args }
-    else
-      # json.author @post.creator, :name, :email_address
-      # { "author": { "name": "David", "email_address": "david@loudthinking.com" } }
-      _merge_block(key){ extract! value, *args }
+               if !_blank?(value)
+                 # json.comments @post.comments { |comment| ... }
+                 # { "comments": [ { ... }, { ... } ] }
+                 _scope { array! value, &::Proc.new }
+               else
+                 # json.comments { ... }
+                 # { "comments": ... }
+                 _merge_block(key) { yield self }
+               end
+             elsif args.empty?
+               if ::Jbuilder === value
+                 # json.age 32
+                 # json.person another_jbuilder
+                 # { "age": 32, "person": { ...  }
+                 value.attributes!
+               else
+                 # json.age 32
+                 # { "age": 32 }
+                 value
+               end
+             elsif _is_collection?(value)
+               # json.comments @post.comments, :content, :created_at
+               # { "comments": [ { "content": "hello", "created_at": "..." }, { "content": "world", "created_at": "..." } ] }
+               _scope { array! value, *args }
+             else
+               # json.author @post.creator, :name, :email_address
+               # { "author": { "name": "David", "email_address": "david@loudthinking.com" } }
+               _merge_block(key) { extract! value, *args }
     end
 
     _set_value key, result
@@ -148,7 +148,7 @@ class Jbuilder
   #   end
   def child!
     @attributes = [] unless ::Array === @attributes
-    @attributes << _scope{ yield self }
+    @attributes << _scope { yield self }
   end
 
   # Turns the current element into an array and iterates over the passed collection, adding each iteration as
@@ -183,13 +183,13 @@ class Jbuilder
   #   [1,2,3]
   def array!(collection = [], *attributes)
     array = if collection.nil?
-      []
-    elsif ::Kernel.block_given?
-      _map_collection(collection, &::Proc.new)
-    elsif attributes.any?
-      _map_collection(collection) { |element| extract! element, *attributes }
-    else
-      collection.to_a
+              []
+            elsif ::Kernel.block_given?
+              _map_collection(collection, &::Proc.new)
+            elsif attributes.any?
+              _map_collection(collection) { |element| extract! element, *attributes }
+            else
+              collection.to_a
     end
 
     merge! array
@@ -233,7 +233,7 @@ class Jbuilder
     @attributes = nil
   end
 
-  alias_method :null!, :nil!
+  alias null! nil!
 
   # Returns the attributes of the current builder.
   def attributes!
@@ -253,17 +253,18 @@ class Jbuilder
   private
 
   def _extract_hash_values(object, attributes)
-    attributes.each{ |key| _set_value key, object.fetch(key) }
+    attributes.each { |key| _set_value key, object.fetch(key) }
   end
 
   def _extract_method_values(object, attributes)
-    attributes.each{ |key| _set_value key, object.public_send(key) }
+    attributes.each { |key| _set_value key, object.public_send(key) }
   end
 
   def _merge_block(key)
     current_value = _blank? ? BLANK : @attributes.fetch(_key(key), BLANK)
     raise NullError.build(key) if current_value.nil?
-    new_value = _scope{ yield self }
+
+    new_value = _scope { yield self }
     _merge_values(current_value, new_value)
   end
 
@@ -288,36 +289,39 @@ class Jbuilder
   def _set_value(key, value)
     raise NullError.build(key) if @attributes.nil?
     raise ArrayError.build(key) if ::Array === @attributes
-    return if @ignore_nil && value.nil? or _blank?(value)
+    return if @ignore_nil && value.nil? || _blank?(value)
+
     @attributes = {} if _blank?
     @attributes[_key(key)] = value
   end
 
   def _map_collection(collection)
     collection.map do |element|
-      _scope{ yield element }
+      _scope { yield element }
     end - [BLANK]
   end
 
   def _scope
-    parent_attributes, parent_formatter = @attributes, @key_formatter
+    parent_attributes = @attributes
+    parent_formatter = @key_formatter
     @attributes = BLANK
     yield
     @attributes
   ensure
-    @attributes, @key_formatter = parent_attributes, parent_formatter
+    @attributes = parent_attributes
+    @key_formatter = parent_formatter
   end
 
   def _is_collection?(object)
-    _object_respond_to?(object, :map, :count) && NON_ENUMERABLES.none?{ |klass| klass === object }
+    _object_respond_to?(object, :map, :count) && NON_ENUMERABLES.none? { |klass| klass === object }
   end
 
-  def _blank?(value=@attributes)
+  def _blank?(value = @attributes)
     BLANK == value
   end
 
   def _object_respond_to?(object, *methods)
-    methods.all?{ |m| object.respond_to?(m) }
+    methods.all? { |m| object.respond_to?(m) }
   end
 end
 

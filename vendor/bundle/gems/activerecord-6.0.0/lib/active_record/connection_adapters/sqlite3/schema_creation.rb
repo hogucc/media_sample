@@ -5,12 +5,11 @@ module ActiveRecord
     module SQLite3
       class SchemaCreation < AbstractAdapter::SchemaCreation # :nodoc:
         private
-          def add_column_options!(sql, options)
-            if options[:collation]
-              sql << " COLLATE \"#{options[:collation]}\""
-            end
-            super
-          end
+
+        def add_column_options!(sql, options)
+          sql << " COLLATE \"#{options[:collation]}\"" if options[:collation]
+          super
+        end
       end
     end
   end

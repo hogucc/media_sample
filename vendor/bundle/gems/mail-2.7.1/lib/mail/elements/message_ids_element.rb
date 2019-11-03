@@ -1,5 +1,5 @@
-# encoding: utf-8
 # frozen_string_literal: true
+
 require 'mail/parsers/message_ids_parser'
 
 module Mail
@@ -15,8 +15,9 @@ module Mail
     end
 
     private
+
     def clean_msg_id(val)
-      val =~ /.*<(.*)>.*/ ? $1 : val
+      val =~ /.*<(.*)>.*/ ? Regexp.last_match(1) : val
     end
   end
 end

@@ -11,7 +11,7 @@ module Loofah
       include Loofah::TextBehavior
 
       def serialize_root
-        at_xpath("/html/body")
+        at_xpath('/html/body')
       end
     end
   end

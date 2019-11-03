@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "byebug/command"
-require "byebug/helpers/parse"
+require 'byebug/command'
+require 'byebug/helpers/parse'
 
 module Byebug
   #
@@ -26,11 +26,11 @@ module Byebug
     end
 
     def self.short_description
-      "Steps into blocks or methods one or more times"
+      'Steps into blocks or methods one or more times'
     end
 
     def execute
-      steps, err = parse_steps(@match[1], "Steps")
+      steps, err = parse_steps(@match[1], 'Steps')
       return errmsg(err) unless steps
 
       context.step_into(steps, context.frame.pos)

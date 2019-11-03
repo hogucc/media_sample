@@ -10,9 +10,7 @@ module CarrierWave
       def original_filename
         filename = filename_from_header || filename_from_uri
         mime_type = MiniMime.lookup_by_content_type(file.content_type)
-        unless File.extname(filename).present? || mime_type.blank?
-          filename = "#{filename}.#{mime_type.extension}"
-        end
+        filename = "#{filename}.#{mime_type.extension}" unless File.extname(filename).present? || mime_type.blank?
         filename
       end
 
@@ -41,4 +39,3 @@ module CarrierWave
     end
   end
 end
-

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "bigdecimal/util"
+require 'bigdecimal/util'
 
 module ActiveModel
   module Validations
@@ -11,14 +11,12 @@ module ActiveModel
 
       RESERVED_OPTIONS = CHECKS.keys + [:only_integer]
 
-      INTEGER_REGEX = /\A[+-]?\d+\z/
+      INTEGER_REGEX = /\A[+-]?\d+\z/.freeze
 
       def check_validity!
         keys = CHECKS.keys - [:odd, :even]
         options.slice(*keys).each do |option, value|
-          unless value.is_a?(Numeric) || value.is_a?(Proc) || value.is_a?(Symbol)
-            raise ArgumentError, ":#{option} must be a number, a symbol or a proc"
-          end
+          raise ArgumentError, ":#{option} must be a number, a symbol or a proc" unless value.is_a?(Numeric) || value.is_a?(Proc) || value.is_a?(Symbol)
         end
       end
 
@@ -33,15 +31,11 @@ module ActiveModel
           end
         else
           before_type_cast = :"#{attr_name}_before_type_cast"
-          if record.respond_to?(before_type_cast)
-            raw_value = record.public_send(before_type_cast)
-          end
+          raw_value = record.public_send(before_type_cast) if record.respond_to?(before_type_cast)
         end
         raw_value ||= value
 
-        if record_attribute_changed_in_place?(record, attr_name)
-          raw_value = value
-        end
+        raw_value = value if record_attribute_changed_in_place?(record, attr_name)
 
         unless is_number?(raw_value)
           record.errors.add(attr_name, :not_a_number, filtered_options(raw_value))
@@ -58,9 +52,7 @@ module ActiveModel
         options.slice(*CHECKS.keys).each do |option, option_value|
           case option
           when :odd, :even
-            unless value.to_i.send(CHECKS[option])
-              record.errors.add(attr_name, option, filtered_options(value))
-            end
+            record.errors.add(attr_name, option, filtered_options(value)) unless value.to_i.send(CHECKS[option])
           else
             case option_value
             when Proc
@@ -71,14 +63,12 @@ module ActiveModel
 
             option_value = parse_as_number(option_value)
 
-            unless value.send(CHECKS[option], option_value)
-              record.errors.add(attr_name, option, filtered_options(value).merge!(count: option_value))
-            end
+            record.errors.add(attr_name, option, filtered_options(value).merge!(count: option_value)) unless value.send(CHECKS[option], option_value)
           end
         end
       end
 
-    private
+      private
 
       def is_number?(raw_value)
         !parse_as_number(raw_value).nil?

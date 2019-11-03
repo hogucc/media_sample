@@ -4,7 +4,7 @@ module Skiptrace
 
     def call
       reraise_an_error
-    rescue => exc
+    rescue StandardError => e
       exc
     end
 
@@ -12,8 +12,8 @@ module Skiptrace
 
     def raise_an_error_in_eval
       method_that_raises
-    rescue => exc
-      raise exc
+    rescue StandardError => e
+      raise e
     end
 
     def method_that_raises

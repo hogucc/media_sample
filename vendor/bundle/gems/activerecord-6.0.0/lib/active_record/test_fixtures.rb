@@ -41,6 +41,7 @@ module ActiveRecord
       def fixtures(*fixture_set_names)
         if fixture_set_names.first == :all
           raise StandardError, "No fixture path found. Please set `#{self}.fixture_path`." if fixture_path.blank?
+
           fixture_set_names = Dir["#{fixture_path}/{**,*}/*.{yml}"].uniq
           fixture_set_names.map! { |f| f[(fixture_path.to_s.size + 1)..-5] }
         else
@@ -56,7 +57,7 @@ module ActiveRecord
         methods = Module.new do
           fixture_set_names.each do |fs_name|
             fs_name = fs_name.to_s
-            accessor_name = fs_name.tr("/", "_").to_sym
+            accessor_name = fs_name.tr('/', '_').to_sym
 
             define_method(accessor_name) do |*fixture_names|
               force_reload = fixture_names.pop if fixture_names.last == true || fixture_names.last == :reload
@@ -101,9 +102,7 @@ module ActiveRecord
     end
 
     def setup_fixtures(config = ActiveRecord::Base)
-      if pre_loaded_fixtures && !use_transactional_tests
-        raise RuntimeError, "pre_loaded_fixtures requires use_transactional_tests"
-      end
+      raise 'pre_loaded_fixtures requires use_transactional_tests' if pre_loaded_fixtures && !use_transactional_tests
 
       @fixture_cache = {}
       @fixture_connections = []
@@ -127,7 +126,7 @@ module ActiveRecord
         end
 
         # When connections are established in the future, begin a transaction too
-        @connection_subscriber = ActiveSupport::Notifications.subscribe("!connection.active_record") do |_, _, _, _, payload|
+        @connection_subscriber = ActiveSupport::Notifications.subscribe('!connection.active_record') do |_, _, _, _, payload|
           spec_name = payload[:spec_name] if payload.key?(:spec_name)
 
           if spec_name
@@ -180,45 +179,47 @@ module ActiveRecord
 
     private
 
-      # Shares the writing connection pool with connections on
-      # other handlers.
-      #
-      # In an application with a primary and replica the test fixtures
-      # need to share a connection pool so that the reading connection
-      # can see data in the open transaction on the writing connection.
-      def setup_shared_connection_pool
-        writing_handler = ActiveRecord::Base.connection_handler
+    # Shares the writing connection pool with connections on
+    # other handlers.
+    #
+    # In an application with a primary and replica the test fixtures
+    # need to share a connection pool so that the reading connection
+    # can see data in the open transaction on the writing connection.
+    def setup_shared_connection_pool
+      writing_handler = ActiveRecord::Base.connection_handler
 
-        ActiveRecord::Base.connection_handlers.values.each do |handler|
-          if handler != writing_handler
-            handler.connection_pool_list.each do |pool|
-              name = pool.spec.name
-              writing_connection = writing_handler.retrieve_connection_pool(name)
-              handler.send(:owner_to_pool)[name] = writing_connection
-            end
-          end
+      ActiveRecord::Base.connection_handlers.values.each do |handler|
+        next unless handler != writing_handler
+
+        handler.connection_pool_list.each do |pool|
+          name = pool.spec.name
+          writing_connection = writing_handler.retrieve_connection_pool(name)
+          handler.send(:owner_to_pool)[name] = writing_connection
         end
       end
+    end
 
-      def load_fixtures(config)
-        fixtures = ActiveRecord::FixtureSet.create_fixtures(fixture_path, fixture_table_names, fixture_class_names, config)
-        Hash[fixtures.map { |f| [f.name, f] }]
-      end
+    def load_fixtures(config)
+      fixtures = ActiveRecord::FixtureSet.create_fixtures(fixture_path, fixture_table_names, fixture_class_names, config)
+      Hash[fixtures.map { |f| [f.name, f] }]
+    end
 
-      def instantiate_fixtures
-        if pre_loaded_fixtures
-          raise RuntimeError, "Load fixtures before instantiating them." if ActiveRecord::FixtureSet.all_loaded_fixtures.empty?
-          ActiveRecord::FixtureSet.instantiate_all_loaded_fixtures(self, load_instances?)
-        else
-          raise RuntimeError, "Load fixtures before instantiating them." if @loaded_fixtures.nil?
-          @loaded_fixtures.each_value do |fixture_set|
-            ActiveRecord::FixtureSet.instantiate_fixtures(self, fixture_set, load_instances?)
-          end
+    def instantiate_fixtures
+      if pre_loaded_fixtures
+        raise 'Load fixtures before instantiating them.' if ActiveRecord::FixtureSet.all_loaded_fixtures.empty?
+
+        ActiveRecord::FixtureSet.instantiate_all_loaded_fixtures(self, load_instances?)
+      else
+        raise 'Load fixtures before instantiating them.' if @loaded_fixtures.nil?
+
+        @loaded_fixtures.each_value do |fixture_set|
+          ActiveRecord::FixtureSet.instantiate_fixtures(self, fixture_set, load_instances?)
         end
       end
+    end
 
-      def load_instances?
-        use_instantiated_fixtures != :no_instances
-      end
+    def load_instances?
+      use_instantiated_fixtures != :no_instances
+    end
   end
 end

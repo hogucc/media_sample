@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "byebug/helpers/thread"
+require 'byebug/helpers/thread'
 
 module Byebug
   #
@@ -26,7 +26,7 @@ module Byebug
       end
 
       def self.short_description
-        "Stops the execution of the specified thread"
+        'Stops the execution of the specified thread'
       end
 
       def execute

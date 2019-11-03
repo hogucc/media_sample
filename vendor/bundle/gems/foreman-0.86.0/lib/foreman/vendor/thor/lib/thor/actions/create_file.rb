@@ -1,4 +1,4 @@
-require "foreman/vendor/thor/lib/thor/actions/empty_directory"
+require 'foreman/vendor/thor/lib/thor/actions/empty_directory'
 
 class Foreman::Thor
   module Actions
@@ -24,7 +24,7 @@ class Foreman::Thor
       data = args.first
       action CreateFile.new(self, destination, block || data.to_s, config)
     end
-    alias_method :add_file, :create_file
+    alias add_file create_file
 
     # CreateFile is a subset of Template, which instead of rendering a file with
     # ERB, it gets the content from the user.
@@ -50,21 +50,21 @@ class Foreman::Thor
       #
       def render
         @render ||= if data.is_a?(Proc)
-          data.call
-        else
-          data
+                      data.call
+                    else
+                      data
         end
       end
 
       def invoke!
         invoke_with_conflict_check do
           FileUtils.mkdir_p(File.dirname(destination))
-          File.open(destination, "wb") { |f| f.write render }
+          File.open(destination, 'wb') { |f| f.write render }
         end
         given_destination
       end
 
-    protected
+      protected
 
       # Now on conflict we check if the file is identical or not.
       #

@@ -1,7 +1,7 @@
-require "vips"
-require "image_processing"
+require 'vips'
+require 'image_processing'
 
-fail "image_processing/vips requires libvips 8.6+" unless Vips.at_least_libvips?(8, 6)
+raise 'image_processing/vips requires libvips 8.6+' unless Vips.at_least_libvips?(8, 6)
 
 module ImageProcessing
   module Vips
@@ -22,7 +22,6 @@ module ImageProcessing
       SHARPEN_MASK = ::Vips::Image.new_from_array [[-1, -1, -1],
                                                    [-1, 32, -1],
                                                    [-1, -1, -1]], 24
-
 
       # Loads the image on disk into a Vips::Image object. Accepts additional
       # loader-specific options (e.g. interlacing). Afterwards auto-rotates the
@@ -84,7 +83,7 @@ module ImageProcessing
 
       # Resizes the image to fit within the specified dimensions and fills
       # the remaining area with the specified background color.
-      def resize_and_pad(width, height, gravity: "centre", extend: nil, background: nil, alpha: nil, **options)
+      def resize_and_pad(width, height, gravity: 'centre', extend: nil, background: nil, alpha: nil, **options)
         image = thumbnail(width, height, **options)
         image = image.add_alpha if alpha && !image.has_alpha?
         image.gravity(gravity, width, height, extend: extend, background: background)
@@ -97,22 +96,22 @@ module ImageProcessing
 
       # Overlays the specified image over the current one. Supports specifying
       # composite mode, direction or offset of the overlay image.
-      def composite(overlay, _mode = nil, mode: "over", gravity: "north-west", offset: nil, **options)
+      def composite(overlay, _mode = nil, mode: 'over', gravity: 'north-west', offset: nil, **options)
         # if the mode argument is given, call the original Vips::Image#composite
         if _mode
           overlay = [overlay] unless overlay.is_a?(Array)
-          overlay = overlay.map { |object| convert_to_image(object, "overlay") }
+          overlay = overlay.map { |object| convert_to_image(object, 'overlay') }
 
           return image.composite(overlay, _mode, **options)
         end
 
-        overlay = convert_to_image(overlay, "overlay")
+        overlay = convert_to_image(overlay, 'overlay')
         # add alpha channel so that #gravity can use a transparent background
         overlay = overlay.add_alpha unless overlay.has_alpha?
 
         # apply offset with correct gravity and make remainder transparent
         if offset
-          opposite_gravity = gravity.to_s.gsub(/\w+/, "north"=>"south", "south"=>"north", "east"=>"west", "west"=>"east")
+          opposite_gravity = gravity.to_s.gsub(/\w+/, 'north' => 'south', 'south' => 'north', 'east' => 'west', 'west' => 'east')
           overlay = overlay.gravity(opposite_gravity, overlay.width + offset.first, overlay.height + offset.last)
         end
 
@@ -124,29 +123,40 @@ module ImageProcessing
       end
 
       # make metadata setter methods chainable
-      def set(*args)       image.tap { |img| img.set(*args) }       end
-      def set_type(*args)  image.tap { |img| img.set_type(*args) }  end
-      def set_value(*args) image.tap { |img| img.set_value(*args) } end
-      def remove(*args)    image.tap { |img| img.remove(*args) }    end
+      def set(*args)
+        image.tap { |img| img.set(*args) }
+      end
+
+      def set_type(*args)
+        image.tap { |img| img.set_type(*args) }
+      end
+
+      def set_value(*args)
+        image.tap { |img| img.set_value(*args) }
+      end
+
+      def remove(*args)
+        image.tap { |img| img.remove(*args) }
+      end
 
       private
 
       # Resizes the image according to the specified parameters, and sharpens
       # the resulting thumbnail.
       def thumbnail(width, height, sharpen: SHARPEN_MASK, **options)
-        if self.image.is_a?(String) # path
-          # resize on load
-          image = ::Vips::Image.thumbnail(self.image, width, height: height, **options)
-        else
-          image = self.image.thumbnail_image(width, height: height, **options)
-        end
+        image = if image.is_a?(String) # path
+                  # resize on load
+                  ::Vips::Image.thumbnail(self.image, width, height: height, **options)
+                else
+                  self.image.thumbnail_image(width, height: height, **options)
+                end
         image = image.conv(sharpen, precision: :integer) if sharpen
         image
       end
 
       # Hack to allow omitting one dimension.
       def default_dimensions(width, height)
-        raise Error, "either width or height must be specified" unless width || height
+        raise Error, 'either width or height must be specified' unless width || height
 
         [width || ::Vips::MAX_COORD, height || ::Vips::MAX_COORD]
       end
@@ -193,11 +203,11 @@ module ImageProcessing
           operation = ::Vips::Operation.new(operation_name)
 
           operation_options = operation.get_construct_args
-            .select { |name, flags| (flags & ::Vips::ARGUMENT_INPUT)    != 0 }
-            .select { |name, flags| (flags & ::Vips::ARGUMENT_REQUIRED) == 0 }
-            .map(&:first).map(&:to_sym)
+                                       .reject { |_name, flags| (flags & ::Vips::ARGUMENT_INPUT)    == 0 }
+                                       .select { |_name, flags| (flags & ::Vips::ARGUMENT_REQUIRED) == 0 }
+                                       .map(&:first).map(&:to_sym)
 
-          options.select { |name, value| operation_options.include?(name) }
+          options.select { |name, _value| operation_options.include?(name) }
         end
       end
     end

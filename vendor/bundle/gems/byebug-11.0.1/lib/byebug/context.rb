@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require "byebug/frame"
-require "byebug/helpers/path"
-require "byebug/helpers/file"
-require "byebug/processors/command_processor"
+require 'byebug/frame'
+require 'byebug/helpers/path'
+require 'byebug/helpers/file'
+require 'byebug/processors/command_processor'
 
 module Byebug
   #

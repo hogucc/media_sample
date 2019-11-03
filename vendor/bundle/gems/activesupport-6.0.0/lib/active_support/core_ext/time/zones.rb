@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require "active_support/time_with_zone"
-require "active_support/core_ext/time/acts_like"
-require "active_support/core_ext/date_and_time/zones"
+require 'active_support/time_with_zone'
+require 'active_support/core_ext/time/acts_like'
+require 'active_support/core_ext/date_and_time/zones'
 
 class Time
   include DateAndTime::Zones
@@ -62,7 +62,8 @@ class Time
     def use_zone(time_zone)
       new_zone = find_zone!(time_zone)
       begin
-        old_zone, ::Time.zone = ::Time.zone, new_zone
+        old_zone = ::Time.zone
+        ::Time.zone = new_zone
         yield
       ensure
         ::Time.zone = old_zone
@@ -85,9 +86,7 @@ class Time
       else
         # Look up the timezone based on the identifier (unless we've been
         # passed a TZInfo::Timezone)
-        unless time_zone.respond_to?(:period_for_local)
-          time_zone = ActiveSupport::TimeZone[time_zone] || TZInfo::Timezone.get(time_zone)
-        end
+        time_zone = ActiveSupport::TimeZone[time_zone] || TZInfo::Timezone.get(time_zone) unless time_zone.respond_to?(:period_for_local)
 
         # Return if a TimeZone instance, or wrap in a TimeZone instance if a TZInfo::Timezone
         if time_zone.is_a?(ActiveSupport::TimeZone)
@@ -107,7 +106,9 @@ class Time
     #   Time.find_zone "America/New_York" # => #<ActiveSupport::TimeZone @name="America/New_York" ...>
     #   Time.find_zone "NOT-A-TIMEZONE"   # => nil
     def find_zone(time_zone)
-      find_zone!(time_zone) rescue nil
+      find_zone!(time_zone)
+    rescue StandardError
+      nil
     end
   end
 end

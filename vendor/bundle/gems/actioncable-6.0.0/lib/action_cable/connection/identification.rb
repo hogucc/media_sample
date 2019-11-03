@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "set"
+require 'set'
 
 module ActionCable
   module Connection
@@ -25,23 +25,22 @@ module ActionCable
 
       # Return a single connection identifier that combines the value of all the registered identifiers into a single gid.
       def connection_identifier
-        unless defined? @connection_identifier
-          @connection_identifier = connection_gid identifiers.map { |id| instance_variable_get("@#{id}") }.compact
-        end
+        @connection_identifier = connection_gid identifiers.map { |id| instance_variable_get("@#{id}") }.compact unless defined? @connection_identifier
 
         @connection_identifier
       end
 
       private
-        def connection_gid(ids)
-          ids.map do |o|
-            if o.respond_to? :to_gid_param
-              o.to_gid_param
-            else
-              o.to_s
-            end
-          end.sort.join(":")
-        end
+
+      def connection_gid(ids)
+        ids.map do |o|
+          if o.respond_to? :to_gid_param
+            o.to_gid_param
+          else
+            o.to_s
+          end
+        end.sort.join(':')
+      end
     end
   end
 end

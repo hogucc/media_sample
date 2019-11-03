@@ -300,11 +300,12 @@ module ActiveRecord
       :before_save, :around_save, :after_save, :before_create, :around_create,
       :after_create, :before_update, :around_update, :after_update,
       :before_destroy, :around_destroy, :after_destroy, :after_commit, :after_rollback
-    ]
+    ].freeze
 
     def destroy #:nodoc:
       @_destroy_callback_already_called ||= false
       return if @_destroy_callback_already_called
+
       @_destroy_callback_already_called = true
       _run_destroy_callbacks { super }
     rescue RecordNotDestroyed => e
@@ -322,7 +323,7 @@ module ActiveRecord
       touch ? _run_touch_callbacks { super } : super
     end
 
-  private
+    private
 
     def create_or_update(**)
       _run_save_callbacks { super }

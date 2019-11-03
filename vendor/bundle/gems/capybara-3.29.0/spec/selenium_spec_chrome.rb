@@ -57,7 +57,7 @@ module TestSessions
   Chrome = Capybara::Session.new(CHROME_DRIVER, TestApp)
 end
 
-skipped_tests = %i[response_headers status_code trigger]
+skipped_tests = [:response_headers, :status_code, :trigger]
 
 Capybara::SpecHelper.log_selenium_driver_version(Selenium::WebDriver::Chrome) if ENV['CI']
 

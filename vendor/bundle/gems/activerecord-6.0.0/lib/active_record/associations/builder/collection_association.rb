@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require "active_record/associations"
+require 'active_record/associations'
 
 module ActiveRecord::Associations::Builder # :nodoc:
   class CollectionAssociation < Association #:nodoc:
-    CALLBACKS = [:before_add, :after_add, :before_remove, :after_remove]
+    CALLBACKS = [:before_add, :after_add, :before_remove, :after_remove].freeze
 
     def self.valid_options(options)
       super + [:table_name, :before_add,
@@ -15,9 +15,9 @@ module ActiveRecord::Associations::Builder # :nodoc:
       super
       name    = reflection.name
       options = reflection.options
-      CALLBACKS.each { |callback_name|
+      CALLBACKS.each do |callback_name|
         define_callback(model, callback_name, name, options)
-      }
+      end
     end
 
     def self.define_extensions(model, name, &block)
@@ -36,9 +36,9 @@ module ActiveRecord::Associations::Builder # :nodoc:
       callbacks = Array(options[callback_name.to_sym]).map do |callback|
         case callback
         when Symbol
-          ->(method, owner, record) { owner.send(callback, record) }
+          ->(_method, owner, record) { owner.send(callback, record) }
         when Proc
-          ->(method, owner, record) { callback.call(owner, record) }
+          ->(_method, owner, record) { callback.call(owner, record) }
         else
           ->(method, owner, record) { callback.send(method, owner, record) }
         end

@@ -34,13 +34,14 @@ module ActiveRecord
       end
 
       private
-        def concise_options(options)
-          if columns.size == options.size && options.values.uniq.size == 1
-            options.values.first
-          else
-            options
-          end
+
+      def concise_options(options)
+        if columns.size == options.size && options.values.uniq.size == 1
+          options.values.first
+        else
+          options
         end
+      end
     end
 
     # Abstract representation of a column definition. Instances of this type
@@ -99,7 +100,7 @@ module ActiveRecord
       def validate?
         options.fetch(:validate, true)
       end
-      alias validated? validate?
+      alias_method :validated?, :validate?
 
       def export_name_on_schema_dump?
         !ActiveRecord::SchemaDumper.fk_ignore_pattern.match?(name) if name
@@ -111,9 +112,10 @@ module ActiveRecord
       end
 
       private
-        def default_primary_key
-          "id"
-        end
+
+      def default_primary_key
+        'id'
+      end
     end
 
     class ReferenceDefinition # :nodoc:
@@ -132,9 +134,7 @@ module ActiveRecord
         @type = type
         @options = options
 
-        if polymorphic && foreign_key
-          raise ArgumentError, "Cannot add a foreign key to a polymorphic relation"
-        end
+        raise ArgumentError, 'Cannot add a foreign key to a polymorphic relation' if polymorphic && foreign_key
       end
 
       def add_to(table)
@@ -142,55 +142,50 @@ module ActiveRecord
           table.column(*column_options)
         end
 
-        if index
-          table.index(column_names, index_options)
-        end
+        table.index(column_names, index_options) if index
 
-        if foreign_key
-          table.foreign_key(foreign_table_name, foreign_key_options)
-        end
+        table.foreign_key(foreign_table_name, foreign_key_options) if foreign_key
       end
 
       private
-        attr_reader :name, :polymorphic, :index, :foreign_key, :type, :options
 
-        def as_options(value)
-          value.is_a?(Hash) ? value : {}
-        end
+      attr_reader :name, :polymorphic, :index, :foreign_key, :type, :options
 
-        def polymorphic_options
-          as_options(polymorphic).merge(options.slice(:null, :first, :after))
-        end
+      def as_options(value)
+        value.is_a?(Hash) ? value : {}
+      end
 
-        def index_options
-          as_options(index)
-        end
+      def polymorphic_options
+        as_options(polymorphic).merge(options.slice(:null, :first, :after))
+      end
 
-        def foreign_key_options
-          as_options(foreign_key).merge(column: column_name)
-        end
+      def index_options
+        as_options(index)
+      end
 
-        def columns
-          result = [[column_name, type, options]]
-          if polymorphic
-            result.unshift(["#{name}_type", :string, polymorphic_options])
-          end
-          result
-        end
+      def foreign_key_options
+        as_options(foreign_key).merge(column: column_name)
+      end
 
-        def column_name
-          "#{name}_id"
-        end
+      def columns
+        result = [[column_name, type, options]]
+        result.unshift(["#{name}_type", :string, polymorphic_options]) if polymorphic
+        result
+      end
 
-        def column_names
-          columns.map(&:first)
-        end
+      def column_name
+        "#{name}_id"
+      end
 
-        def foreign_table_name
-          foreign_key_options.fetch(:to_table) do
-            Base.pluralize_table_names ? name.to_s.pluralize : name
-          end
+      def column_names
+        columns.map(&:first)
+      end
+
+      def foreign_table_name
+        foreign_key_options.fetch(:to_table) do
+          Base.pluralize_table_names ? name.to_s.pluralize : name
         end
+      end
     end
 
     module ColumnMethods
@@ -215,9 +210,9 @@ module ActiveRecord
 
       included do
         define_column_methods :bigint, :binary, :boolean, :date, :datetime, :decimal,
-          :float, :integer, :json, :string, :text, :time, :timestamp, :virtual
+                              :float, :integer, :json, :string, :text, :time, :timestamp, :virtual
 
-        alias :numeric :decimal
+        alias_method :numeric, :decimal
       end
 
       class_methods do
@@ -286,7 +281,9 @@ module ActiveRecord
       end
 
       # Returns an array of ColumnDefinition objects for the columns of the table.
-      def columns; @columns_hash.values; end
+      def columns
+        @columns_hash.values
+      end
 
       # Returns a ColumnDefinition for the column with name +name+.
       def [](name)
@@ -404,9 +401,7 @@ module ActiveRecord
       def timestamps(**options)
         options[:null] = false if options[:null].nil?
 
-        if !options.key?(:precision) && @conn.supports_datetime_with_precision?
-          options[:precision] = 6
-        end
+        options[:precision] = 6 if !options.key?(:precision) && @conn.supports_datetime_with_precision?
 
         column(:created_at, :datetime, options)
         column(:updated_at, :datetime, options)
@@ -424,12 +419,10 @@ module ActiveRecord
           ReferenceDefinition.new(ref_name, options).add_to(self)
         end
       end
-      alias :belongs_to :references
+      alias belongs_to references
 
       def new_column_definition(name, type, **options) # :nodoc:
-        if integer_like_primary_key?(type, options)
-          type = integer_like_primary_key_type(type, options)
-        end
+        type = integer_like_primary_key_type(type, options) if integer_like_primary_key?(type, options)
         type = aliased_types(type.to_s, type)
         options[:primary_key] ||= type == :primary_key
         options[:null] = false if options[:primary_key]
@@ -437,21 +430,22 @@ module ActiveRecord
       end
 
       private
-        def create_column_definition(name, type, options)
-          ColumnDefinition.new(name, type, options)
-        end
 
-        def aliased_types(name, fallback)
-          "timestamp" == name ? :datetime : fallback
-        end
+      def create_column_definition(name, type, options)
+        ColumnDefinition.new(name, type, options)
+      end
 
-        def integer_like_primary_key?(type, options)
-          options[:primary_key] && [:integer, :bigint].include?(type) && !options.key?(:default)
-        end
+      def aliased_types(name, fallback)
+        name == 'timestamp' ? :datetime : fallback
+      end
 
-        def integer_like_primary_key_type(type, options)
-          type
-        end
+      def integer_like_primary_key?(type, options)
+        options[:primary_key] && [:integer, :bigint].include?(type) && !options.key?(:default)
+      end
+
+      def integer_like_primary_key_type(type, _options)
+        type
+      end
     end
 
     class AlterTable # :nodoc:
@@ -466,7 +460,9 @@ module ActiveRecord
         @foreign_key_drops = []
       end
 
-      def name; @td.name; end
+      def name
+        @td.name
+      end
 
       def add_foreign_key(to_table, options)
         @foreign_key_adds << ForeignKeyDefinition.new(name, to_table, options)
@@ -665,7 +661,7 @@ module ActiveRecord
           @base.add_reference(name, ref_name, options)
         end
       end
-      alias :belongs_to :references
+      alias belongs_to references
 
       # Removes a reference. Optionally removes a +type+ column.
       #
@@ -678,7 +674,7 @@ module ActiveRecord
           @base.remove_reference(name, ref_name, options)
         end
       end
-      alias :remove_belongs_to :remove_references
+      alias remove_belongs_to remove_references
 
       # Adds a foreign key to the table using a supplied table name.
       #

@@ -16,7 +16,7 @@ class Jbuilder
       end
     end
 
-    def initialize_copy(original)
+    def initialize_copy(_original)
       @cache = {}
     end
 

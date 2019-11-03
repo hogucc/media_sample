@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-require "openssl"
-require "base64"
-require "active_support/core_ext/array/extract_options"
-require "active_support/core_ext/module/attribute_accessors"
-require "active_support/message_verifier"
-require "active_support/messages/metadata"
+require 'openssl'
+require 'base64'
+require 'active_support/core_ext/array/extract_options'
+require 'active_support/core_ext/module/attribute_accessors'
+require 'active_support/message_verifier'
+require 'active_support/messages/metadata'
 
 module ActiveSupport
   # MessageEncryptor is a simple way to encrypt values which get stored
@@ -87,9 +87,9 @@ module ActiveSupport
     class << self
       def default_cipher #:nodoc:
         if use_authenticated_message_encryption
-          "aes-256-gcm"
+          'aes-256-gcm'
         else
-          "aes-256-cbc"
+          'aes-256-cbc'
         end
       end
     end
@@ -140,7 +140,7 @@ module ActiveSupport
       @secret = secret
       @sign_secret = sign_secret
       @cipher = options[:cipher] || self.class.default_cipher
-      @digest = options[:digest] || "SHA1" unless aead_mode?
+      @digest = options[:digest] || 'SHA1' unless aead_mode?
       @verifier = resolve_verifier
       @serializer = options[:serializer] || Marshal
     end
@@ -163,65 +163,66 @@ module ActiveSupport
     end
 
     private
-      def _encrypt(value, **metadata_options)
-        cipher = new_cipher
-        cipher.encrypt
-        cipher.key = @secret
 
-        # Rely on OpenSSL for the initialization vector
-        iv = cipher.random_iv
-        cipher.auth_data = "" if aead_mode?
+    def _encrypt(value, **metadata_options)
+      cipher = new_cipher
+      cipher.encrypt
+      cipher.key = @secret
 
-        encrypted_data = cipher.update(Messages::Metadata.wrap(@serializer.dump(value), metadata_options))
-        encrypted_data << cipher.final
+      # Rely on OpenSSL for the initialization vector
+      iv = cipher.random_iv
+      cipher.auth_data = '' if aead_mode?
 
-        blob = "#{::Base64.strict_encode64 encrypted_data}--#{::Base64.strict_encode64 iv}"
-        blob = "#{blob}--#{::Base64.strict_encode64 cipher.auth_tag}" if aead_mode?
-        blob
+      encrypted_data = cipher.update(Messages::Metadata.wrap(@serializer.dump(value), metadata_options))
+      encrypted_data << cipher.final
+
+      blob = "#{::Base64.strict_encode64 encrypted_data}--#{::Base64.strict_encode64 iv}"
+      blob = "#{blob}--#{::Base64.strict_encode64 cipher.auth_tag}" if aead_mode?
+      blob
+    end
+
+    def _decrypt(encrypted_message, purpose)
+      cipher = new_cipher
+      encrypted_data, iv, auth_tag = encrypted_message.split('--').map { |v| ::Base64.strict_decode64(v) }
+
+      # Currently the OpenSSL bindings do not raise an error if auth_tag is
+      # truncated, which would allow an attacker to easily forge it. See
+      # https://github.com/ruby/openssl/issues/63
+      raise InvalidMessage if aead_mode? && (auth_tag.nil? || auth_tag.bytes.length != 16)
+
+      cipher.decrypt
+      cipher.key = @secret
+      cipher.iv  = iv
+      if aead_mode?
+        cipher.auth_tag = auth_tag
+        cipher.auth_data = ''
       end
 
-      def _decrypt(encrypted_message, purpose)
-        cipher = new_cipher
-        encrypted_data, iv, auth_tag = encrypted_message.split("--").map { |v| ::Base64.strict_decode64(v) }
+      decrypted_data = cipher.update(encrypted_data)
+      decrypted_data << cipher.final
 
-        # Currently the OpenSSL bindings do not raise an error if auth_tag is
-        # truncated, which would allow an attacker to easily forge it. See
-        # https://github.com/ruby/openssl/issues/63
-        raise InvalidMessage if aead_mode? && (auth_tag.nil? || auth_tag.bytes.length != 16)
+      message = Messages::Metadata.verify(decrypted_data, purpose)
+      @serializer.load(message) if message
+    rescue OpenSSLCipherError, TypeError, ArgumentError
+      raise InvalidMessage
+    end
 
-        cipher.decrypt
-        cipher.key = @secret
-        cipher.iv  = iv
-        if aead_mode?
-          cipher.auth_tag = auth_tag
-          cipher.auth_data = ""
-        end
+    def new_cipher
+      OpenSSL::Cipher.new(@cipher)
+    end
 
-        decrypted_data = cipher.update(encrypted_data)
-        decrypted_data << cipher.final
+    attr_reader :verifier
 
-        message = Messages::Metadata.verify(decrypted_data, purpose)
-        @serializer.load(message) if message
-      rescue OpenSSLCipherError, TypeError, ArgumentError
-        raise InvalidMessage
+    def aead_mode?
+      @aead_mode ||= new_cipher.authenticated?
+    end
+
+    def resolve_verifier
+      if aead_mode?
+        NullVerifier
+      else
+        MessageVerifier.new(@sign_secret || @secret, digest: @digest, serializer: NullSerializer)
       end
-
-      def new_cipher
-        OpenSSL::Cipher.new(@cipher)
-      end
-
-      attr_reader :verifier
-
-      def aead_mode?
-        @aead_mode ||= new_cipher.authenticated?
-      end
-
-      def resolve_verifier
-        if aead_mode?
-          NullVerifier
-        else
-          MessageVerifier.new(@sign_secret || @secret, digest: @digest, serializer: NullSerializer)
-        end
-      end
+    end
   end
 end

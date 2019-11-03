@@ -3,7 +3,6 @@ require 'logger'
 
 module MiniMagick
   module Configuration
-
     ##
     # Set whether you want to use [ImageMagick](http://www.imagemagick.org) or
     # [GraphicsMagick](http://www.graphicsmagick.org).
@@ -93,7 +92,7 @@ module MiniMagick
       base.validate_on_create = true
       base.validate_on_write = true
       base.whiny = true
-      base.shell_api = "open3"
+      base.shell_api = 'open3'
       base.logger = Logger.new($stdout).tap { |l| l.level = Logger::INFO }
     end
 
@@ -110,10 +109,10 @@ module MiniMagick
     end
 
     CLI_DETECTION = {
-      imagemagick:    "mogrify",
-      graphicsmagick: "gm",
-      imagemagick7:   "magick",
-    }
+      imagemagick: 'mogrify',
+      graphicsmagick: 'gm',
+      imagemagick7: 'magick'
+    }.freeze
 
     # @private (for backwards compatibility)
     def processor
@@ -128,8 +127,8 @@ module MiniMagick
 
       unless CLI_DETECTION.value?(@processor)
         raise ArgumentError,
-          "processor has to be set to either \"magick\", \"mogrify\" or \"gm\"" \
-          ", was set to #{@processor.inspect}"
+              'processor has to be set to either "magick", "mogrify" or "gm"' \
+              ", was set to #{@processor.inspect}"
       end
     end
 
@@ -140,13 +139,13 @@ module MiniMagick
     # @return [Symbol] `:imagemagick` or `:graphicsmagick`
     #
     def cli
-      if instance_variable_defined?("@cli")
-        instance_variable_get("@cli")
+      if instance_variable_defined?('@cli')
+        instance_variable_get('@cli')
       else
-        cli = CLI_DETECTION.key(processor) or
-          fail MiniMagick::Error, "You must have ImageMagick or GraphicsMagick installed"
+        (cli = CLI_DETECTION.key(processor)) ||
+          raise(MiniMagick::Error, 'You must have ImageMagick or GraphicsMagick installed')
 
-        instance_variable_set("@cli", cli)
+        instance_variable_set('@cli', cli)
       end
     end
 
@@ -157,10 +156,10 @@ module MiniMagick
     def cli=(value)
       @cli = value
 
-      if not CLI_DETECTION.key?(@cli)
+      unless CLI_DETECTION.key?(@cli)
         raise ArgumentError,
-          "CLI has to be set to either :imagemagick, :imagemagick7 or :graphicsmagick" \
-          ", was set to #{@cli.inspect}"
+              'CLI has to be set to either :imagemagick, :imagemagick7 or :graphicsmagick' \
+              ", was set to #{@cli.inspect}"
       end
     end
 
@@ -171,12 +170,12 @@ module MiniMagick
     # @return [String]
     #
     def cli_path
-      if instance_variable_defined?("@cli_path")
-        instance_variable_get("@cli_path")
+      if instance_variable_defined?('@cli_path')
+        instance_variable_get('@cli_path')
       else
-        processor_path = instance_variable_get("@processor_path") if instance_variable_defined?("@processor_path")
+        processor_path = instance_variable_get('@processor_path') if instance_variable_defined?('@processor_path')
 
-        instance_variable_set("@cli_path", processor_path)
+        instance_variable_set('@cli_path', processor_path)
       end
     end
 
@@ -185,14 +184,13 @@ module MiniMagick
     # version.
     #
     def debug=(value)
-      warn "MiniMagick.debug is deprecated and will be removed in MiniMagick 5. Use `MiniMagick.logger.level = Logger::DEBUG` instead."
+      warn 'MiniMagick.debug is deprecated and will be removed in MiniMagick 5. Use `MiniMagick.logger.level = Logger::DEBUG` instead.'
       logger.level = value ? Logger::DEBUG : Logger::INFO
     end
 
     # Backwards compatibility
     def reload_tools
-      warn "MiniMagick.reload_tools is deprecated because it is no longer necessary"
+      warn 'MiniMagick.reload_tools is deprecated because it is no longer necessary'
     end
-
   end
 end

@@ -1,5 +1,5 @@
-# encoding: utf-8
 # frozen_string_literal: true
+
 require 'mail/multibyte/unicode'
 
 module Mail #:nodoc:
@@ -38,7 +38,7 @@ module Mail #:nodoc:
       alias to_s wrapped_string
       alias to_str wrapped_string
 
-      if RUBY_VERSION >= "1.9"
+      if RUBY_VERSION >= '1.9'
         # Creates a new Chars instance by wrapping _string_.
         def initialize(string)
           @wrapped_string = string.dup
@@ -57,13 +57,13 @@ module Mail #:nodoc:
           self
         else
           result = @wrapped_string.__send__(method, *args, &block)
-          result.kind_of?(String) ? chars(result) : result
+          result.is_a?(String) ? chars(result) : result
         end
       end
 
       # Returns +true+ if _obj_ responds to the given method. Private methods are included in the search
       # only if the optional second parameter evaluates to +true+.
-      def respond_to?(method, include_private=false)
+      def respond_to?(method, include_private = false)
         super || @wrapped_string.respond_to?(method, include_private) || false
       end
 
@@ -94,7 +94,7 @@ module Mail #:nodoc:
         @wrapped_string <=> other.to_s
       end
 
-      if RUBY_VERSION < "1.9"
+      if RUBY_VERSION < '1.9'
         # Returns +true+ if the Chars class can and should act as a proxy for the string _string_. Returns
         # +false+ otherwise.
         def self.wants?(string)
@@ -123,13 +123,14 @@ module Mail #:nodoc:
         #   Mail::Multibyte.mb_chars('Café').insert(4, ' périferôl').to_s # => "Café périferôl"
         def insert(offset, fragment)
           unpacked = Unicode.u_unpack(@wrapped_string)
-          unless offset > unpacked.length
+          if offset > unpacked.length
+            raise IndexError, "index #{offset} out of string"
+          else
             @wrapped_string.replace(
               Unicode.u_unpack(@wrapped_string).insert(offset, *Unicode.u_unpack(fragment)).pack('U*')
             )
-          else
-            raise IndexError, "index #{offset} out of string"
           end
+
           self
         end
 
@@ -147,10 +148,10 @@ module Mail #:nodoc:
         # Example:
         #   Mail::Multibyte.mb_chars('Café périferôl').index('ô')   # => 12
         #   Mail::Multibyte.mb_chars('Café périferôl').index(/\w/u) # => 0
-        def index(needle, offset=0)
+        def index(needle, offset = 0)
           wrapped_offset = first(offset).wrapped_string.length
           index = @wrapped_string.index(needle, wrapped_offset)
-          index ? (Unicode.u_unpack(@wrapped_string.slice(0...index)).size) : nil
+          index ? Unicode.u_unpack(@wrapped_string.slice(0...index)).size : nil
         end
 
         # Returns the position _needle_ in the string, counting in
@@ -160,18 +161,18 @@ module Mail #:nodoc:
         # Example:
         #   Mail::Multibyte.mb_chars('Café périferôl').rindex('é')   # => 6
         #   Mail::Multibyte.mb_chars('Café périferôl').rindex(/\w/u) # => 13
-        def rindex(needle, offset=nil)
+        def rindex(needle, offset = nil)
           offset ||= length
           wrapped_offset = first(offset).wrapped_string.length
           index = @wrapped_string.rindex(needle, wrapped_offset)
-          index ? (Unicode.u_unpack(@wrapped_string.slice(0...index)).size) : nil
+          index ? Unicode.u_unpack(@wrapped_string.slice(0...index)).size : nil
         end
 
         # Returns the number of codepoints in the string
         def size
           Unicode.u_unpack(@wrapped_string).size
         end
-        alias_method :length, :size
+        alias length size
 
         # Strips entire range of Unicode whitespace from the right of the string.
         def rstrip
@@ -185,7 +186,7 @@ module Mail #:nodoc:
 
         # Strips entire range of Unicode whitespace from the right and left of the string.
         def strip
-          rstrip.lstrip
+          strip
         end
 
         # Returns the codepoint of the first character in the string.
@@ -205,7 +206,7 @@ module Mail #:nodoc:
         #
         #   Mail::Multibyte.mb_chars("¾ cup").rjust(8, " ").to_s # Use non-breaking whitespace
         #   # => "   ¾ cup"
-        def rjust(integer, padstr=' ')
+        def rjust(integer, padstr = ' ')
           justify(integer, :right, padstr)
         end
 
@@ -218,7 +219,7 @@ module Mail #:nodoc:
         #
         #   Mail::Multibyte.mb_chars("¾ cup").rjust(8, " ").to_s # Use non-breaking whitespace
         #   # => "¾ cup   "
-        def ljust(integer, padstr=' ')
+        def ljust(integer, padstr = ' ')
           justify(integer, :left, padstr)
         end
 
@@ -231,7 +232,7 @@ module Mail #:nodoc:
         #
         #   Mail::Multibyte.mb_chars("¾ cup").center(8, " ").to_s # Use non-breaking whitespace
         #   # => " ¾ cup  "
-        def center(integer, padstr=' ')
+        def center(integer, padstr = ' ')
           justify(integer, :center, padstr)
         end
 
@@ -247,7 +248,7 @@ module Mail #:nodoc:
       # Example:
       #   Mail::Multibyte.mb_chars('Café périferôl').split(/é/).map { |part| part.upcase.to_s } # => ["CAF", " P", "RIFERÔL"]
       def split(*args)
-        @wrapped_string.split(*args).map { |i| i.mb_chars }
+        @wrapped_string.split(*args).map(&:mb_chars)
       end
 
       # Like <tt>String#[]=</tt>, except instead of byte offsets you specify character offsets.
@@ -272,12 +273,14 @@ module Mail #:nodoc:
           result = Unicode.u_unpack(@wrapped_string)
           if args[0].is_a?(Integer)
             raise IndexError, "index #{args[0]} out of string" if args[0] >= result.length
+
             min = args[0]
             max = args[1].nil? ? min : (min + args[1] - 1)
             range = Range.new(min, max)
             replace_by = [replace_by].pack('U') if replace_by.is_a?(Integer)
           elsif args.first.is_a?(Range)
             raise RangeError, "#{args[0]} out of range" if args[0].min >= result.length
+
             range = args[0]
           else
             needle = args[0].to_s
@@ -306,25 +309,26 @@ module Mail #:nodoc:
       def slice(*args)
         if args.size > 2
           raise ArgumentError, "wrong number of arguments (#{args.size} for 1)" # Do as if we were native
-        elsif (args.size == 2 && !(args.first.is_a?(Numeric) || args.first.is_a?(Regexp)))
+        elsif args.size == 2 && !(args.first.is_a?(Numeric) || args.first.is_a?(Regexp))
           raise TypeError, "cannot convert #{args.first.class} into Integer" # Do as if we were native
-        elsif (args.size == 2 && !args[1].is_a?(Numeric))
+        elsif args.size == 2 && !args[1].is_a?(Numeric)
           raise TypeError, "cannot convert #{args[1].class} into Integer" # Do as if we were native
-        elsif args[0].kind_of? Range
+        elsif args[0].is_a? Range
           cps = Unicode.u_unpack(@wrapped_string).slice(*args)
           result = cps.nil? ? nil : cps.pack('U*')
-        elsif args[0].kind_of? Regexp
+        elsif args[0].is_a? Regexp
           result = @wrapped_string.slice(*args)
-        elsif args.size == 1 && args[0].kind_of?(Numeric)
+        elsif args.size == 1 && args[0].is_a?(Numeric)
           character = Unicode.u_unpack(@wrapped_string)[args[0]]
           result = character && [character].pack('U')
         else
           cps = Unicode.u_unpack(@wrapped_string).slice(*args)
-          result = cps && cps.pack('U*')
+          result = cps&.pack('U*')
         end
+
         result && chars(result)
       end
-      alias_method :[], :slice
+      alias [] slice
 
       # Limit the byte size of the string to a number of bytes without breaking characters. Usable
       # when the storage for a string is limited for some reason.
@@ -366,9 +370,9 @@ module Mail #:nodoc:
       #   Mail::Multibyte.mb_chars("ÉL QUE SE ENTERÓ").titleize    # => "Él Que Se Enteró"
       #   Mail::Multibyte.mb_chars("日本語").titleize                 # => "日本語"
       def titleize
-        chars(downcase.to_s.gsub(/\b('?\S)/u) { Unicode.apply_mapping $1, :uppercase_mapping })
+        chars(downcase.to_s.gsub(/\b('?\S)/u) { Unicode.apply_mapping Regexp.last_match(1), :uppercase_mapping })
       end
-      alias_method :titlecase, :titleize
+      alias titlecase titleize
 
       # Returns the KC normalization of the string by default. NFKC is considered the best normalization form for
       # passing strings to databases and validations.
@@ -414,63 +418,62 @@ module Mail #:nodoc:
         chars(Unicode.tidy_bytes(@wrapped_string, force))
       end
 
-      %w(capitalize downcase lstrip reverse rstrip slice strip tidy_bytes upcase).each do |method|
+      %w[capitalize downcase lstrip reverse rstrip slice strip tidy_bytes upcase].each do |method|
         # Only define a corresponding bang method for methods defined in the proxy; On 1.9 the proxy will
         # exclude lstrip!, rstrip! and strip! because they are already work as expected on multibyte strings.
-        if public_method_defined?(method)
-          define_method("#{method}!") do |*args|
-            @wrapped_string = send(args.nil? ? method : method, *args).to_s
-            self
-          end
+        next unless public_method_defined?(method)
+
+        define_method("#{method}!") do |*args|
+          @wrapped_string = send(args.nil? ? method : method, *args).to_s
+          self
         end
       end
 
       protected
 
-        def translate_offset(byte_offset) #:nodoc:
-          return nil if byte_offset.nil?
-          return 0   if @wrapped_string == ''
+      def translate_offset(byte_offset) #:nodoc:
+        return nil if byte_offset.nil?
+        return 0   if @wrapped_string == ''
 
-          if @wrapped_string.respond_to?(:force_encoding)
-            @wrapped_string = @wrapped_string.dup.force_encoding(Encoding::ASCII_8BIT)
-          end
+        @wrapped_string = @wrapped_string.dup.force_encoding(Encoding::ASCII_8BIT) if @wrapped_string.respond_to?(:force_encoding)
 
-          begin
-            @wrapped_string[0...byte_offset].unpack('U*').length
-          rescue ArgumentError
-            byte_offset -= 1
-            retry
-          end
+        begin
+          @wrapped_string[0...byte_offset].unpack('U*').length
+        rescue ArgumentError
+          byte_offset -= 1
+          retry
         end
+      end
 
-        def justify(integer, way, padstr=' ') #:nodoc:
-          raise ArgumentError, "zero width padding" if padstr.length == 0
-          padsize = integer - size
-          padsize = padsize > 0 ? padsize : 0
-          case way
-          when :right
-            result = @wrapped_string.dup.insert(0, padding(padsize, padstr))
-          when :left
-            result = @wrapped_string.dup.insert(-1, padding(padsize, padstr))
-          when :center
-            lpad = padding((padsize / 2.0).floor, padstr)
-            rpad = padding((padsize / 2.0).ceil, padstr)
-            result = @wrapped_string.dup.insert(0, lpad).insert(-1, rpad)
-          end
-          chars(result)
-        end
+      def justify(integer, way, padstr = ' ') #:nodoc:
+        raise ArgumentError, 'zero width padding' if padstr.empty?
 
-        def padding(padsize, padstr=' ') #:nodoc:
-          if padsize != 0
-            chars(padstr * ((padsize / Unicode.u_unpack(padstr).size) + 1)).slice(0, padsize)
-          else
-            ''
-          end
+        padsize = integer - size
+        padsize = padsize > 0 ? padsize : 0
+        case way
+        when :right
+          result = @wrapped_string.dup.insert(0, padding(padsize, padstr))
+        when :left
+          result = @wrapped_string.dup.insert(-1, padding(padsize, padstr))
+        when :center
+          lpad = padding((padsize / 2.0).floor, padstr)
+          rpad = padding((padsize / 2.0).ceil, padstr)
+          result = @wrapped_string.dup.insert(0, lpad).insert(-1, rpad)
         end
+        chars(result)
+      end
 
-        def chars(string) #:nodoc:
-          self.class.new(string)
+      def padding(padsize, padstr = ' ') #:nodoc:
+        if padsize != 0
+          chars(padstr * ((padsize / Unicode.u_unpack(padstr).size) + 1)).slice(0, padsize)
+        else
+          ''
         end
+      end
+
+      def chars(string) #:nodoc:
+        self.class.new(string)
+      end
     end
   end
 end

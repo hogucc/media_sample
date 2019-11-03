@@ -9,22 +9,22 @@ module Listen
     desc 'start', 'Starts Listen'
 
     class_option :verbose,
-                 type:    :boolean,
+                 type: :boolean,
                  default: false,
                  aliases: '-v',
-                 banner:  'Verbose'
+                 banner: 'Verbose'
 
     class_option :directory,
-                 type:    :array,
+                 type: :array,
                  default: '.',
                  aliases: '-d',
-                 banner:  'The directory to listen to'
+                 banner: 'The directory to listen to'
 
     class_option :relative,
-                 type:    :boolean,
+                 type: :boolean,
                  default: false,
                  aliases: '-r',
-                 banner:  'Convert paths relative to current directory'
+                 banner: 'Convert paths relative to current directory'
 
     def start
       Listen::Forwarder.new(options).start
@@ -55,7 +55,8 @@ module Listen
       listener = Listen.to(
         directory,
         relative: relative,
-        &callback)
+        &callback
+      )
 
       listener.start
 

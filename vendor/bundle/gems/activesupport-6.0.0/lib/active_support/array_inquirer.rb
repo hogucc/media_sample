@@ -33,16 +33,17 @@ module ActiveSupport
     end
 
     private
-      def respond_to_missing?(name, include_private = false)
-        (name[-1] == "?") || super
-      end
 
-      def method_missing(name, *args)
-        if name[-1] == "?"
-          any?(name[0..-2])
-        else
-          super
-        end
+    def respond_to_missing?(name, include_private = false)
+      (name[-1] == '?') || super
+    end
+
+    def method_missing(name, *args)
+      if name[-1] == '?'
+        any?(name[0..-2])
+      else
+        super
       end
+    end
   end
 end

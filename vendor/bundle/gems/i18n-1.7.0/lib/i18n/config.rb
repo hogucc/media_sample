@@ -7,13 +7,13 @@ module I18n
     # The only configuration value that is not global and scoped to thread is :locale.
     # It defaults to the default_locale.
     def locale
-      defined?(@locale) && @locale != nil ? @locale : default_locale
+      defined?(@locale) && !@locale.nil? ? @locale : default_locale
     end
 
     # Sets the current locale pseudo-globally, i.e. in the Thread.current hash.
     def locale=(locale)
       I18n.enforce_available_locales!(locale)
-      @locale = locale && locale.to_sym
+      @locale = locale&.to_sym
     end
 
     # Returns the current backend. Defaults to +Backend::Simple+.
@@ -34,7 +34,7 @@ module I18n
     # Sets the current default locale. Used to set a custom default locale.
     def default_locale=(locale)
       I18n.enforce_available_locales!(locale)
-      @@default_locale = locale && locale.to_sym
+      @@default_locale = locale&.to_sym
     end
 
     # Returns an array of locales for which translations are available.
@@ -55,14 +55,14 @@ module I18n
 
     # Sets the available locales.
     def available_locales=(locales)
-      @@available_locales = Array(locales).map { |locale| locale.to_sym }
+      @@available_locales = Array(locales).map(&:to_sym)
       @@available_locales = nil if @@available_locales.empty?
       @@available_locales_set = nil
     end
 
     # Returns true if the available_locales have been initialized
     def available_locales_initialized?
-      ( !!defined?(@@available_locales) && !!@@available_locales )
+      (!!defined?(@@available_locales) && !!@@available_locales)
     end
 
     # Clears the available locales set so it can be recomputed again after I18n

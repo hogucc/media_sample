@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "action_dispatch/http/request"
+require 'action_dispatch/http/request'
 
 module ActionDispatch
   # This middleware guards from DNS rebinding attacks by explicitly permitting
@@ -22,7 +22,7 @@ module ActionDispatch
       def allows?(host)
         @hosts.any? do |allowed|
           allowed === host
-        rescue
+        rescue StandardError
           # IPAddr#=== raises an error if you give it a hostname instead of
           # IP. Treat similar errors as blocked access.
           false
@@ -31,39 +31,39 @@ module ActionDispatch
 
       private
 
-        def sanitize_hosts(hosts)
-          Array(hosts).map do |host|
-            case host
-            when Regexp then sanitize_regexp(host)
-            when String then sanitize_string(host)
-            else host
-            end
+      def sanitize_hosts(hosts)
+        Array(hosts).map do |host|
+          case host
+          when Regexp then sanitize_regexp(host)
+          when String then sanitize_string(host)
+          else host
           end
         end
+      end
 
-        def sanitize_regexp(host)
-          /\A#{host}\z/
-        end
+      def sanitize_regexp(host)
+        /\A#{host}\z/
+      end
 
-        def sanitize_string(host)
-          if host.start_with?(".")
-            /\A(.+\.)?#{Regexp.escape(host[1..-1])}\z/
-          else
-            host
-          end
+      def sanitize_string(host)
+        if host.start_with?('.')
+          /\A(.+\.)?#{Regexp.escape(host[1..-1])}\z/
+        else
+          host
         end
+      end
     end
 
-    DEFAULT_RESPONSE_APP = -> env do
+    DEFAULT_RESPONSE_APP = lambda do |env|
       request = Request.new(env)
 
-      format = request.xhr? ? "text/plain" : "text/html"
+      format = request.xhr? ? 'text/plain' : 'text/html'
       template = DebugView.new(host: request.host)
-      body = template.render(template: "rescues/blocked_host", layout: "rescues/layout")
+      body = template.render(template: 'rescues/blocked_host', layout: 'rescues/layout')
 
       [403, {
-        "Content-Type" => "#{format}; charset=#{Response.default_charset}",
-        "Content-Length" => body.bytesize.to_s,
+        'Content-Type' => "#{format}; charset=#{Response.default_charset}",
+        'Content-Length' => body.bytesize.to_s
       }, [body]]
     end
 
@@ -88,16 +88,16 @@ module ActionDispatch
 
     private
 
-      def authorized?(request)
-        origin_host = request.get_header("HTTP_HOST").to_s.sub(/:\d+\z/, "")
-        forwarded_host = request.x_forwarded_host.to_s.split(/,\s?/).last.to_s.sub(/:\d+\z/, "")
+    def authorized?(request)
+      origin_host = request.get_header('HTTP_HOST').to_s.sub(/:\d+\z/, '')
+      forwarded_host = request.x_forwarded_host.to_s.split(/,\s?/).last.to_s.sub(/:\d+\z/, '')
 
-        @permissions.allows?(origin_host) &&
-          (forwarded_host.blank? || @permissions.allows?(forwarded_host))
-      end
+      @permissions.allows?(origin_host) &&
+        (forwarded_host.blank? || @permissions.allows?(forwarded_host))
+    end
 
-      def mark_as_authorized(request)
-        request.set_header("action_dispatch.authorized_host", request.host)
-      end
+    def mark_as_authorized(request)
+      request.set_header('action_dispatch.authorized_host', request.host)
+    end
   end
 end

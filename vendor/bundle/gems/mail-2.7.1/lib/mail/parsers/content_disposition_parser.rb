@@ -1,7 +1,7 @@
-
 # frozen_string_literal: true
-require "mail/utilities"
-require "mail/parser_tools"
+
+require 'mail/utilities'
+require 'mail/parser_tools'
 
 module Mail::Parsers
   module ContentDispositionParser
@@ -31,7 +31,7 @@ module Mail::Parsers
       191, 128, 191, 128, 143,
       33, 126, 9, 59, 9, 59,
       9, 126, 9, 59, 9,
-      59, 0, 0, 0,
+      59, 0, 0, 0
     ]
 
     class << self
@@ -44,7 +44,7 @@ module Mail::Parsers
       245, 64, 32, 64, 32, 48, 64, 16,
       32, 1, 24, 118, 244, 244, 1, 24,
       245, 64, 32, 64, 32, 48, 64, 16,
-      94, 51, 51, 118, 51, 51, 0,
+      94, 51, 51, 118, 51, 51, 0
     ]
 
     class << self
@@ -57,7 +57,7 @@ module Mail::Parsers
       1059, 1305, 1370, 1403, 1468, 1501, 1550, 1615,
       1632, 1665, 1667, 1692, 1811, 2056, 2301, 2303,
       2328, 2574, 2639, 2672, 2737, 2770, 2819, 2884,
-      2901, 2996, 3048, 3100, 3219, 3271, 3323,
+      2901, 2996, 3048, 3100, 3219, 3271, 3323
     ]
 
     class << self
@@ -480,7 +480,7 @@ module Mail::Parsers
       1, 1, 1, 1, 1, 1, 97, 1,
       1, 1, 1, 1, 1, 1, 1, 1,
       1, 1, 1, 1, 1, 1, 1, 1,
-      1, 50, 1, 1, 0,
+      1, 50, 1, 1, 0
     ]
 
     class << self
@@ -500,7 +500,7 @@ module Mail::Parsers
       34, 35, 36, 37, 38, 39, 31, 40,
       2, 41, 14, 42, 2, 41, 14, 42,
       2, 44, 25, 43, 45, 25, 45, 44,
-      25, 45,
+      25, 45
     ]
 
     class << self
@@ -520,7 +520,7 @@ module Mail::Parsers
       0, 0, 0, 0, 0, 0, 0, 0,
       17, 18, 18, 19, 18, 20, 20, 21,
       20, 18, 18, 0, 22, 0, 3, 10,
-      10, 11,
+      10, 11
     ]
 
     class << self
@@ -533,7 +533,7 @@ module Mail::Parsers
       0, 0, 0, 0, 0, 0, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 0,
-      17, 18, 20, 18, 0, 10, 0,
+      17, 18, 20, 18, 0, 10, 0
     ]
 
     class << self
@@ -561,7 +561,7 @@ module Mail::Parsers
     def self.parse(data)
       data = data.dup.force_encoding(Encoding::ASCII_8BIT) if data.respond_to?(:force_encoding)
 
-      content_disposition = ContentDispositionStruct.new("", [])
+      content_disposition = ContentDispositionStruct.new('', [])
       return content_disposition if Mail::Utilities.blank?(data)
 
       # Parser state
@@ -588,7 +588,7 @@ module Mail::Parsers
         _again = 20
         _test_eof = 30
         _out = 40
-        while true
+        loop do
           if _goto_level <= 0
             if p == pe
               _goto_level = _test_eof
@@ -604,9 +604,9 @@ module Mail::Parsers
             _inds = _index_offsets[cs]
             _slen = _key_spans[cs]
             _wide = data[p].ord
-            _trans = if (_slen > 0 &&
-                         _trans_keys[_keys] <= _wide &&
-                         _wide <= _trans_keys[_keys + 1])
+            _trans = if _slen > 0 &&
+                        _trans_keys[_keys] <= _wide &&
+                        _wide <= _trans_keys[_keys + 1]
                        _indicies[_inds + _wide - _trans_keys[_keys]]
                      else
                        _indicies[_inds + _slen]
@@ -644,14 +644,12 @@ module Mail::Parsers
                 end
               when 18
                 begin
-                  if param_attr.nil?
-                    raise Mail::Field::ParseError.new(Mail::ContentDispositionElement, data, "no attribute for value")
-                  end
+                  raise Mail::Field::ParseError.new(Mail::ContentDispositionElement, data, 'no attribute for value') if param_attr.nil?
 
                   # Use quoted string value if one exists, otherwise use parameter value
                   value = qstr || chars(data, param_val_s, p - 1)
 
-                  content_disposition.parameters << {param_attr => value}
+                  content_disposition.parameters << { param_attr => value }
                   param_attr = nil
                   qstr = nil
                 end
@@ -702,14 +700,12 @@ module Mail::Parsers
                 end
               when 22
                 begin
-                  if param_attr.nil?
-                    raise Mail::Field::ParseError.new(Mail::ContentDispositionElement, data, "no attribute for value")
-                  end
+                  raise Mail::Field::ParseError.new(Mail::ContentDispositionElement, data, 'no attribute for value') if param_attr.nil?
 
                   # Use quoted string value if one exists, otherwise use parameter value
                   value = qstr || chars(data, param_val_s, p - 1)
 
-                  content_disposition.parameters << {param_attr => value}
+                  content_disposition.parameters << { param_attr => value }
                   param_attr = nil
                   qstr = nil
                 end
@@ -732,14 +728,12 @@ module Mail::Parsers
                 begin
                 end
                 begin
-                  if param_attr.nil?
-                    raise Mail::Field::ParseError.new(Mail::ContentDispositionElement, data, "no attribute for value")
-                  end
+                  raise Mail::Field::ParseError.new(Mail::ContentDispositionElement, data, 'no attribute for value') if param_attr.nil?
 
                   # Use quoted string value if one exists, otherwise use parameter value
                   value = qstr || chars(data, param_val_s, p - 1)
 
-                  content_disposition.parameters << {param_attr => value}
+                  content_disposition.parameters << { param_attr => value }
                   param_attr = nil
                   qstr = nil
                 end
@@ -789,14 +783,12 @@ module Mail::Parsers
                   end
                 end
                 begin
-                  if param_attr.nil?
-                    raise Mail::Field::ParseError.new(Mail::ContentDispositionElement, data, "no attribute for value")
-                  end
+                  raise Mail::Field::ParseError.new(Mail::ContentDispositionElement, data, 'no attribute for value') if param_attr.nil?
 
                   # Use quoted string value if one exists, otherwise use parameter value
                   value = qstr || chars(data, param_val_s, p - 1)
 
-                  content_disposition.parameters << {param_attr => value}
+                  content_disposition.parameters << { param_attr => value }
                   param_attr = nil
                   qstr = nil
                 end
@@ -813,14 +805,12 @@ module Mail::Parsers
                   end
                 end
                 begin
-                  if param_attr.nil?
-                    raise Mail::Field::ParseError.new(Mail::ContentDispositionElement, data, "no attribute for value")
-                  end
+                  raise Mail::Field::ParseError.new(Mail::ContentDispositionElement, data, 'no attribute for value') if param_attr.nil?
 
                   # Use quoted string value if one exists, otherwise use parameter value
                   value = qstr || chars(data, param_val_s, p - 1)
 
-                  content_disposition.parameters << {param_attr => value}
+                  content_disposition.parameters << { param_attr => value }
                   param_attr = nil
                   qstr = nil
                 end
@@ -847,14 +837,12 @@ module Mail::Parsers
                 end
               when 18
                 begin
-                  if param_attr.nil?
-                    raise Mail::Field::ParseError.new(Mail::ContentDispositionElement, data, "no attribute for value")
-                  end
+                  raise Mail::Field::ParseError.new(Mail::ContentDispositionElement, data, 'no attribute for value') if param_attr.nil?
 
                   # Use quoted string value if one exists, otherwise use parameter value
                   value = qstr || chars(data, param_val_s, p - 1)
 
-                  content_disposition.parameters << {param_attr => value}
+                  content_disposition.parameters << { param_attr => value }
                   param_attr = nil
                   qstr = nil
                 end
@@ -865,29 +853,23 @@ module Mail::Parsers
                 begin
                 end
                 begin
-                  if param_attr.nil?
-                    raise Mail::Field::ParseError.new(Mail::ContentDispositionElement, data, "no attribute for value")
-                  end
+                  raise Mail::Field::ParseError.new(Mail::ContentDispositionElement, data, 'no attribute for value') if param_attr.nil?
 
                   # Use quoted string value if one exists, otherwise use parameter value
                   value = qstr || chars(data, param_val_s, p - 1)
 
-                  content_disposition.parameters << {param_attr => value}
+                  content_disposition.parameters << { param_attr => value }
                   param_attr = nil
                   qstr = nil
                 end
               end
             end
           end
-          if _goto_level <= _out
-            break
-          end
+          break if _goto_level <= _out
         end
       end
 
-      if p != eof || cs < 40
-        raise Mail::Field::IncompleteParseError.new(Mail::ContentDispositionElement, data, p)
-      end
+      raise Mail::Field::IncompleteParseError.new(Mail::ContentDispositionElement, data, p) if p != eof || cs < 40
 
       content_disposition
     end

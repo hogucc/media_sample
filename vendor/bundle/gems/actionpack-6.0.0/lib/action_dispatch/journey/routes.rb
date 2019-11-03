@@ -24,7 +24,7 @@ module ActionDispatch
       def length
         routes.length
       end
-      alias :size :length
+      alias size length
 
       def last
         routes.last
@@ -72,10 +72,10 @@ module ActionDispatch
 
       private
 
-        def clear_cache!
-          @ast                = nil
-          @simulator          = nil
-        end
+      def clear_cache!
+        @ast                = nil
+        @simulator          = nil
+      end
     end
   end
 end

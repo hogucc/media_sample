@@ -20,8 +20,8 @@ module CarrierWave
       # [remote_headers (Hash)] Request headers
       #
       def download(url, remote_headers = {})
-        headers = remote_headers.
-          reverse_merge('User-Agent' => "CarrierWave/#{CarrierWave::VERSION}")
+        headers = remote_headers
+                  .reverse_merge('User-Agent' => "CarrierWave/#{CarrierWave::VERSION}")
         begin
           file = OpenURI.open_uri(process_uri(url.to_s), headers)
         rescue StandardError => e

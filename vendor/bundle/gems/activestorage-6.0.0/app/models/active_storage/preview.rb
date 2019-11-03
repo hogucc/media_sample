@@ -33,7 +33,8 @@ class ActiveStorage::Preview
   attr_reader :blob, :variation
 
   def initialize(blob, variation_or_variation_key)
-    @blob, @variation = blob, ActiveStorage::Variation.wrap(variation_or_variation_key)
+    @blob = blob
+    @variation = ActiveStorage::Variation.wrap(variation_or_variation_key)
   end
 
   # Processes the preview if it has not been processed yet. Returns the receiving Preview instance for convenience:
@@ -66,24 +67,24 @@ class ActiveStorage::Preview
   end
 
   private
-    def processed?
-      image.attached?
-    end
 
-    def process
-      previewer.preview { |attachable| image.attach(attachable) }
-    end
+  def processed?
+    image.attached?
+  end
 
-    def variant
-      ActiveStorage::Variant.new(image, variation).processed
-    end
+  def process
+    previewer.preview { |attachable| image.attach(attachable) }
+  end
 
+  def variant
+    ActiveStorage::Variant.new(image, variation).processed
+  end
 
-    def previewer
-      previewer_class.new(blob)
-    end
+  def previewer
+    previewer_class.new(blob)
+  end
 
-    def previewer_class
-      ActiveStorage.previewers.detect { |klass| klass.accept?(blob) }
-    end
+  def previewer_class
+    ActiveStorage.previewers.detect { |klass| klass.accept?(blob) }
+  end
 end

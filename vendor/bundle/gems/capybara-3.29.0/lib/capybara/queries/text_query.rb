@@ -44,7 +44,7 @@ module Capybara
         end
       end
 
-    private
+      private
 
       def exact?
         options.fetch(:exact, session_options.exact_text)
@@ -52,9 +52,7 @@ module Capybara
 
       def build_message(report_on_invisible)
         message = +''
-        unless (COUNT_KEYS & @options.keys).empty?
-          message << " but found #{@count} #{Capybara::Helpers.declension('time', 'times', @count)}"
-        end
+        message << " but found #{@count} #{Capybara::Helpers.declension('time', 'times', @count)}" unless (COUNT_KEYS & @options.keys).empty?
         message << " in #{@actual_text.inspect}"
 
         details_message = []
@@ -86,7 +84,7 @@ module Capybara
       end
 
       def valid_keys
-        COUNT_KEYS + %i[wait exact normalize_ws]
+        COUNT_KEYS + [:wait, :exact, :normalize_ws]
       end
 
       def check_visible_text?

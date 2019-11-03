@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "active_support/inflector/methods"
-require "active_support/inflector/transliterate"
+require 'active_support/inflector/methods'
+require 'active_support/inflector/transliterate'
 
 # String inflections define new methods on the String class to transform names for different purposes.
 # For instance, you can figure out the name of a table from the name of a class.
@@ -95,10 +95,10 @@ class String
     when :lower
       ActiveSupport::Inflector.camelize(self, false)
     else
-      raise ArgumentError, "Invalid option, use either :upper or :lower."
+      raise ArgumentError, 'Invalid option, use either :upper or :lower.'
     end
   end
-  alias_method :camelcase, :camelize
+  alias camelcase camelize
 
   # Capitalizes all the words and replaces some characters in the string to create
   # a nicer looking title. +titleize+ is meant for creating pretty output. It is not
@@ -116,7 +116,7 @@ class String
   def titleize(keep_id_suffix: false)
     ActiveSupport::Inflector.titleize(self, keep_id_suffix: keep_id_suffix)
   end
-  alias_method :titlecase, :titleize
+  alias titlecase titleize
 
   # The reverse of +camelize+. Makes an underscored, lowercase form from the expression in the string.
   #
@@ -192,7 +192,7 @@ class String
   #
   #   <%= link_to(@person.name, person_path) %>
   #   # => <a href="/person/1-Donald-E-Knuth">Donald E. Knuth</a>
-  def parameterize(separator: "-", preserve_case: false, locale: nil)
+  def parameterize(separator: '-', preserve_case: false, locale: nil)
     ActiveSupport::Inflector.parameterize(self, separator: separator, preserve_case: preserve_case, locale: locale)
   end
 

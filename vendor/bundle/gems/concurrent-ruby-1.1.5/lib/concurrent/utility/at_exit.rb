@@ -2,7 +2,6 @@ require 'logger'
 require 'concurrent/synchronization'
 
 module Concurrent
-
   # Provides ability to add and remove handlers to be run at `Kernel#at_exit`, order is undefined.
   # Each handler is executed at most once.
   #
@@ -66,13 +65,14 @@ module Concurrent
     # run the handlers manually
     # @return ids of the handlers
     def run
-      handlers, _ = synchronize { handlers, @handlers = @handlers, {} }
+      handlers, = synchronize do
+        handlers = @handlers
+        @handlers = {}
+      end
       handlers.each do |_, handler|
-        begin
-          handler.call
-        rescue => error
-          Concurrent.global_logger.call(ERROR, error)
-        end
+        handler.call
+      rescue StandardError => e
+        Concurrent.global_logger.call(ERROR, e)
       end
       handlers.keys
     end

@@ -27,15 +27,13 @@ module ActiveRecord::Associations::Builder # :nodoc:
 
     def self.define_validations(model, reflection)
       super
-      if reflection.options[:required]
-        model.validates_presence_of reflection.name, message: :required
-      end
+      model.validates_presence_of reflection.name, message: :required if reflection.options[:required]
     end
 
     def self.touch_record(o, name, touch)
       record = o.send name
 
-      return unless record && record.persisted?
+      return unless record&.persisted?
 
       if touch != true
         record.touch(touch)
@@ -59,6 +57,6 @@ module ActiveRecord::Associations::Builder # :nodoc:
     end
 
     private_class_method :macro, :valid_options, :valid_dependent_options, :add_destroy_callbacks,
-      :define_callbacks, :define_validations, :add_touch_callbacks
+                         :define_callbacks, :define_validations, :add_touch_callbacks
   end
 end

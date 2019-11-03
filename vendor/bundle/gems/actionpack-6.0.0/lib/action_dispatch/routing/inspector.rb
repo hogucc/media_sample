@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "delegate"
-require "io/console/size"
+require 'delegate'
+require 'io/console/size'
 
 module ActionDispatch
   module Routing
@@ -35,11 +35,11 @@ module ActionDispatch
       end
 
       def controller
-        parts.include?(:controller) ? ":controller" : requirements[:controller]
+        parts.include?(:controller) ? ':controller' : requirements[:controller]
       end
 
       def action
-        parts.include?(:action) ? ":action" : requirements[:action]
+        parts.include?(:action) ? ':action' : requirements[:action]
       end
 
       def internal?
@@ -81,49 +81,48 @@ module ActionDispatch
       end
 
       private
-        def normalize_filter(filter)
-          if filter[:controller]
-            { controller: /#{filter[:controller].underscore.sub(/_?controller\z/, "")}/ }
-          elsif filter[:grep]
-            { controller: /#{filter[:grep]}/, action: /#{filter[:grep]}/,
-              verb: /#{filter[:grep]}/, name: /#{filter[:grep]}/, path: /#{filter[:grep]}/ }
-          end
+
+      def normalize_filter(filter)
+        if filter[:controller]
+          { controller: /#{filter[:controller].underscore.sub(/_?controller\z/, "")}/ }
+        elsif filter[:grep]
+          { controller: /#{filter[:grep]}/, action: /#{filter[:grep]}/,
+            verb: /#{filter[:grep]}/, name: /#{filter[:grep]}/, path: /#{filter[:grep]}/ }
         end
+      end
 
-        def filter_routes(filter)
-          if filter
-            @routes.select do |route|
-              route_wrapper = RouteWrapper.new(route)
-              filter.any? { |default, value| route_wrapper.send(default) =~ value }
-            end
-          else
-            @routes
+      def filter_routes(filter)
+        if filter
+          @routes.select do |route|
+            route_wrapper = RouteWrapper.new(route)
+            filter.any? { |default, value| route_wrapper.send(default) =~ value }
           end
+        else
+          @routes
         end
+      end
 
-        def collect_routes(routes)
-          routes.collect do |route|
-            RouteWrapper.new(route)
-          end.reject(&:internal?).collect do |route|
-            collect_engine_routes(route)
+      def collect_routes(routes)
+        routes.collect do |route|
+          RouteWrapper.new(route)
+        end.reject(&:internal?).collect do |route|
+          collect_engine_routes(route)
 
-            { name: route.name,
-              verb: route.verb,
-              path: route.path,
-              reqs: route.reqs }
-          end
+          { name: route.name,
+            verb: route.verb,
+            path: route.path,
+            reqs: route.reqs }
         end
+      end
 
-        def collect_engine_routes(route)
-          name = route.endpoint
-          return unless route.engine?
-          return if @engines[name]
+      def collect_engine_routes(route)
+        name = route.endpoint
+        return unless route.engine?
+        return if @engines[name]
 
-          routes = route.rack_app.routes
-          if routes.is_a?(ActionDispatch::Routing::RouteSet)
-            @engines[name] = collect_routes(routes.routes)
-          end
-        end
+        routes = route.rack_app.routes
+        @engines[name] = collect_routes(routes.routes) if routes.is_a?(ActionDispatch::Routing::RouteSet)
+      end
     end
 
     module ConsoleFormatter
@@ -136,14 +135,11 @@ module ActionDispatch
           @buffer.join("\n")
         end
 
-        def section_title(title)
-        end
+        def section_title(title); end
 
-        def section(routes)
-        end
+        def section(routes); end
 
-        def header(routes)
-        end
+        def header(routes); end
 
         def no_routes(routes, filter)
           @buffer <<
@@ -154,12 +150,12 @@ module ActionDispatch
                 Please add some routes in config/routes.rb.
               MESSAGE
             elsif filter.key?(:controller)
-              "No routes were found for this controller."
+              'No routes were found for this controller.'
             elsif filter.key?(:grep)
-              "No routes were found for this grep pattern."
+              'No routes were found for this grep pattern.'
             end
 
-          @buffer << "For more information about routes, see the Rails guide: https://guides.rubyonrails.org/routing.html."
+          @buffer << 'For more information about routes, see the Rails guide: https://guides.rubyonrails.org/routing.html.'
         end
       end
 
@@ -178,26 +174,26 @@ module ActionDispatch
 
         private
 
-          def draw_section(routes)
-            header_lengths = ["Prefix", "Verb", "URI Pattern"].map(&:length)
-            name_width, verb_width, path_width = widths(routes).zip(header_lengths).map(&:max)
+        def draw_section(routes)
+          header_lengths = ['Prefix', 'Verb', 'URI Pattern'].map(&:length)
+          name_width, verb_width, path_width = widths(routes).zip(header_lengths).map(&:max)
 
-            routes.map do |r|
-              "#{r[:name].rjust(name_width)} #{r[:verb].ljust(verb_width)} #{r[:path].ljust(path_width)} #{r[:reqs]}"
-            end
+          routes.map do |r|
+            "#{r[:name].rjust(name_width)} #{r[:verb].ljust(verb_width)} #{r[:path].ljust(path_width)} #{r[:reqs]}"
           end
+        end
 
-          def draw_header(routes)
-            name_width, verb_width, path_width = widths(routes)
+        def draw_header(routes)
+          name_width, verb_width, path_width = widths(routes)
 
-            "#{"Prefix".rjust(name_width)} #{"Verb".ljust(verb_width)} #{"URI Pattern".ljust(path_width)} Controller#Action"
-          end
+          "#{'Prefix'.rjust(name_width)} #{'Verb'.ljust(verb_width)} #{'URI Pattern'.ljust(path_width)} Controller#Action"
+        end
 
-          def widths(routes)
-            [routes.map { |r| r[:name].length }.max || 0,
-             routes.map { |r| r[:verb].length }.max || 0,
-             routes.map { |r| r[:path].length }.max || 0]
-          end
+        def widths(routes)
+          [routes.map { |r| r[:name].length }.max || 0,
+           routes.map { |r| r[:verb].length }.max || 0,
+           routes.map { |r| r[:path].length }.max || 0]
+        end
       end
 
       class Expanded < Base
@@ -211,25 +207,25 @@ module ActionDispatch
 
         private
 
-          def draw_expanded_section(routes)
-            routes.map.each_with_index do |r, i|
-              <<~MESSAGE.chomp
-                #{route_header(index: i + 1)}
-                Prefix            | #{r[:name]}
-                Verb              | #{r[:verb]}
-                URI               | #{r[:path]}
-                Controller#Action | #{r[:reqs]}
-              MESSAGE
-            end
+        def draw_expanded_section(routes)
+          routes.map.each_with_index do |r, i|
+            <<~MESSAGE.chomp
+              #{route_header(index: i + 1)}
+              Prefix            | #{r[:name]}
+              Verb              | #{r[:verb]}
+              URI               | #{r[:path]}
+              Controller#Action | #{r[:reqs]}
+            MESSAGE
           end
+        end
 
-          def route_header(index:)
-            console_width = IO.console_size.second
-            header_prefix = "--[ Route #{index} ]"
-            dash_remainder = [console_width - header_prefix.size, 0].max
+        def route_header(index:)
+          console_width = IO.console_size.second
+          header_prefix = "--[ Route #{index} ]"
+          dash_remainder = [console_width - header_prefix.size, 0].max
 
-            "#{header_prefix}#{'-' * dash_remainder}"
-          end
+          "#{header_prefix}#{'-' * dash_remainder}"
+        end
       end
     end
 
@@ -244,12 +240,11 @@ module ActionDispatch
       end
 
       def section(routes)
-        @buffer << @view.render(partial: "routes/route", collection: routes)
+        @buffer << @view.render(partial: 'routes/route', collection: routes)
       end
 
       # The header is part of the HTML page, so we don't construct it here.
-      def header(routes)
-      end
+      def header(routes); end
 
       def no_routes(*)
         @buffer << <<~MESSAGE
@@ -265,7 +260,7 @@ module ActionDispatch
       end
 
       def result
-        @view.raw @view.render(layout: "routes/table") {
+        @view.raw @view.render(layout: 'routes/table') {
           @view.raw @buffer.join("\n")
         }
       end

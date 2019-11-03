@@ -5,9 +5,9 @@ module ActiveRecord
     module PostgreSQL
       module OID # :nodoc:
         class Uuid < Type::Value # :nodoc:
-          ACCEPTABLE_UUID = %r{\A(\{)?([a-fA-F0-9]{4}-?){8}(?(1)\}|)\z}
+          ACCEPTABLE_UUID = /\A(\{)?([a-fA-F0-9]{4}-?){8}(?(1)\}|)\z/.freeze
 
-          alias_method :serialize, :deserialize
+          alias serialize deserialize
 
           def type
             :uuid
@@ -15,10 +15,10 @@ module ActiveRecord
 
           private
 
-            def cast_value(value)
-              casted = value.to_s
-              casted if casted.match?(ACCEPTABLE_UUID)
-            end
+          def cast_value(value)
+            casted = value.to_s
+            casted if casted.match?(ACCEPTABLE_UUID)
+          end
         end
       end
     end

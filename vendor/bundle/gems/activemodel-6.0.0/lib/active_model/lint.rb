@@ -30,8 +30,10 @@ module ActiveModel
       # of the model, and is used to a generate unique DOM id for the object.
       def test_to_key
         assert_respond_to model, :to_key
-        def model.persisted?() false end
-        assert model.to_key.nil?, "to_key should return nil when `persisted?` returns false"
+        def model.persisted?
+          false
+        end
+        assert model.to_key.nil?, 'to_key should return nil when `persisted?` returns false'
       end
 
       # Passes if the object's model responds to <tt>to_param</tt> and if
@@ -45,9 +47,14 @@ module ActiveModel
       # any of the possible implementation strategies on the implementer.
       def test_to_param
         assert_respond_to model, :to_param
-        def model.to_key() [1] end
-        def model.persisted?() false end
-        assert model.to_param.nil?, "to_param should return nil when `persisted?` returns false"
+        def model.to_key
+          [1]
+        end
+
+        def model.persisted?
+          false
+        end
+        assert model.to_param.nil?, 'to_param should return nil when `persisted?` returns false'
       end
 
       # Passes if the object's model responds to <tt>to_partial_path</tt> and if
@@ -69,7 +76,7 @@ module ActiveModel
       # object will route to the update action.
       def test_persisted?
         assert_respond_to model, :persisted?
-        assert_boolean model.persisted?, "persisted?"
+        assert_boolean model.persisted?, 'persisted?'
       end
 
       # Passes if the object's model responds to <tt>model_name</tt> both as
@@ -101,18 +108,19 @@ module ActiveModel
       # locale. If no error is present, the method should return an empty array.
       def test_errors_aref
         assert_respond_to model, :errors
-        assert model.errors[:hello].is_a?(Array), "errors#[] should return an Array"
+        assert model.errors[:hello].is_a?(Array), 'errors#[] should return an Array'
       end
 
       private
-        def model
-          assert_respond_to @model, :to_model
-          @model.to_model
-        end
 
-        def assert_boolean(result, name)
-          assert result == true || result == false, "#{name} should be a boolean"
-        end
+      def model
+        assert_respond_to @model, :to_model
+        @model.to_model
+      end
+
+      def assert_boolean(result, name)
+        assert result == true || result == false, "#{name} should be a boolean"
+      end
     end
   end
 end

@@ -19,8 +19,8 @@ Capybara::SpecHelper.spec '#has_select?' do
       expect(@session).to have_select('form_locale', selected: 'English')
       expect(@session).to have_select('Region', selected: 'Norway')
       expect(@session).to have_select('Underwear', selected: [
-        'Boxerbriefs', 'Briefs', 'Commando', "Frenchman's Pantalons", 'Long Johns'
-      ])
+                                        'Boxerbriefs', 'Briefs', 'Commando', "Frenchman's Pantalons", 'Long Johns'
+                                      ])
     end
 
     it 'should be false if the given field is not on the page' do
@@ -28,14 +28,14 @@ Capybara::SpecHelper.spec '#has_select?' do
       expect(@session).not_to have_select('Does not exist', selected: 'John')
       expect(@session).not_to have_select('City', selected: 'Not there')
       expect(@session).not_to have_select('Underwear', selected: [
-        'Boxerbriefs', 'Briefs', 'Commando', "Frenchman's Pantalons", 'Long Johns', 'Nonexistent'
-      ])
+                                            'Boxerbriefs', 'Briefs', 'Commando', "Frenchman's Pantalons", 'Long Johns', 'Nonexistent'
+                                          ])
       expect(@session).not_to have_select('Underwear', selected: [
-        'Boxerbriefs', 'Briefs', 'Boxers', 'Commando', "Frenchman's Pantalons", 'Long Johns'
-      ])
+                                            'Boxerbriefs', 'Briefs', 'Boxers', 'Commando', "Frenchman's Pantalons", 'Long Johns'
+                                          ])
       expect(@session).not_to have_select('Underwear', selected: [
-        'Boxerbriefs', 'Briefs', 'Commando', "Frenchman's Pantalons"
-      ])
+                                            'Boxerbriefs', 'Briefs', 'Commando', "Frenchman's Pantalons"
+                                          ])
     end
 
     it 'should be true after the given value is selected' do
@@ -51,15 +51,15 @@ Capybara::SpecHelper.spec '#has_select?' do
     it 'should be true after the given values are selected' do
       @session.select('Boxers', from: 'Underwear')
       expect(@session).to have_select('Underwear', selected: [
-        'Boxerbriefs', 'Briefs', 'Boxers', 'Commando', "Frenchman's Pantalons", 'Long Johns'
-      ])
+                                        'Boxerbriefs', 'Briefs', 'Boxers', 'Commando', "Frenchman's Pantalons", 'Long Johns'
+                                      ])
     end
 
     it 'should be false after one of the values is unselected' do
       @session.unselect('Briefs', from: 'Underwear')
       expect(@session).not_to have_select('Underwear', selected: [
-        'Boxerbriefs', 'Briefs', 'Commando', "Frenchman's Pantalons", 'Long Johns'
-      ])
+                                            'Boxerbriefs', 'Briefs', 'Commando', "Frenchman's Pantalons", 'Long Johns'
+                                          ])
     end
 
     it "should be true even when the selected option invisible, regardless of the select's visibility" do
@@ -177,8 +177,8 @@ Capybara::SpecHelper.spec '#has_no_select?' do
       expect(@session).not_to have_no_select('form_locale', selected: 'English')
       expect(@session).not_to have_no_select('Region', selected: 'Norway')
       expect(@session).not_to have_no_select('Underwear', selected: [
-        'Boxerbriefs', 'Briefs', 'Commando', "Frenchman's Pantalons", 'Long Johns'
-      ])
+                                               'Boxerbriefs', 'Briefs', 'Commando', "Frenchman's Pantalons", 'Long Johns'
+                                             ])
     end
 
     it 'should be true if the given field is not on the page' do
@@ -186,14 +186,14 @@ Capybara::SpecHelper.spec '#has_no_select?' do
       expect(@session).to have_no_select('Does not exist', selected: 'John')
       expect(@session).to have_no_select('City', selected: 'Not there')
       expect(@session).to have_no_select('Underwear', selected: [
-        'Boxerbriefs', 'Briefs', 'Commando', "Frenchman's Pantalons", 'Long Johns', 'Nonexistent'
-      ])
+                                           'Boxerbriefs', 'Briefs', 'Commando', "Frenchman's Pantalons", 'Long Johns', 'Nonexistent'
+                                         ])
       expect(@session).to have_no_select('Underwear', selected: [
-        'Boxerbriefs', 'Briefs', 'Boxers', 'Commando', "Frenchman's Pantalons", 'Long Johns'
-      ])
+                                           'Boxerbriefs', 'Briefs', 'Boxers', 'Commando', "Frenchman's Pantalons", 'Long Johns'
+                                         ])
       expect(@session).to have_no_select('Underwear', selected: [
-        'Boxerbriefs', 'Briefs', 'Commando', "Frenchman's Pantalons"
-      ])
+                                           'Boxerbriefs', 'Briefs', 'Commando', "Frenchman's Pantalons"
+                                         ])
     end
 
     it 'should be false after the given value is selected' do
@@ -209,15 +209,15 @@ Capybara::SpecHelper.spec '#has_no_select?' do
     it 'should be false after the given values are selected' do
       @session.select('Boxers', from: 'Underwear')
       expect(@session).not_to have_no_select('Underwear', selected: [
-        'Boxerbriefs', 'Briefs', 'Boxers', 'Commando', "Frenchman's Pantalons", 'Long Johns'
-      ])
+                                               'Boxerbriefs', 'Briefs', 'Boxers', 'Commando', "Frenchman's Pantalons", 'Long Johns'
+                                             ])
     end
 
     it 'should be true after one of the values is unselected' do
       @session.unselect('Briefs', from: 'Underwear')
       expect(@session).to have_no_select('Underwear', selected: [
-        'Boxerbriefs', 'Briefs', 'Commando', "Frenchman's Pantalons", 'Long Johns'
-      ])
+                                           'Boxerbriefs', 'Briefs', 'Commando', "Frenchman's Pantalons", 'Long Johns'
+                                         ])
     end
   end
 

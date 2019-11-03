@@ -34,6 +34,7 @@ module FFI
   def self.errno
     FFI::LastError.error
   end
+
   # @param error (see FFI::LastError.error=)
   # @return (see FFI::LastError.error=)
   # @see FFI::LastError.error=

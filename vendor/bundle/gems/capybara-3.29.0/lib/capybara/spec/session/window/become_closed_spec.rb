@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-Capybara::SpecHelper.spec '#become_closed', requires: %i[windows js] do
+Capybara::SpecHelper.spec '#become_closed', requires: [:windows, :js] do
   let!(:window) { @session.current_window }
   let(:other_window) do
     @session.window_opened_by do

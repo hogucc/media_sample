@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "active_support/core_ext/object/try"
+require 'active_support/core_ext/object/try'
 
 module DateAndTime
   module Calculations
@@ -12,8 +12,8 @@ module DateAndTime
       thursday: 4,
       friday: 5,
       saturday: 6
-    }
-    WEEKEND_DAYS = [ 6, 0 ]
+    }.freeze
+    WEEKEND_DAYS = [6, 0].freeze
 
     # Returns a new date/time representing yesterday.
     def yesterday
@@ -112,7 +112,7 @@ module DateAndTime
     def beginning_of_month
       first_hour(change(day: 1))
     end
-    alias :at_beginning_of_month :beginning_of_month
+    alias at_beginning_of_month beginning_of_month
 
     # Returns a new date/time at the start of the quarter.
     #
@@ -127,7 +127,7 @@ module DateAndTime
       first_quarter_month = month - (2 + month) % 3
       beginning_of_month.change(month: first_quarter_month)
     end
-    alias :at_beginning_of_quarter :beginning_of_quarter
+    alias at_beginning_of_quarter beginning_of_quarter
 
     # Returns a new date/time at the end of the quarter.
     #
@@ -142,7 +142,7 @@ module DateAndTime
       last_quarter_month = month + (12 - month) % 3
       beginning_of_month.change(month: last_quarter_month).end_of_month
     end
-    alias :at_end_of_quarter :end_of_quarter
+    alias at_end_of_quarter end_of_quarter
 
     # Returns a new date/time at the beginning of the year.
     #
@@ -156,7 +156,7 @@ module DateAndTime
     def beginning_of_year
       change(month: 1).beginning_of_month
     end
-    alias :at_beginning_of_year :beginning_of_year
+    alias at_beginning_of_year beginning_of_year
 
     # Returns a new date/time representing the given day in the next week.
     #
@@ -201,7 +201,7 @@ module DateAndTime
       result = first_hour(weeks_ago(1).beginning_of_week.days_since(days_span(start_day)))
       same_time ? copy_time_to(result) : result
     end
-    alias_method :last_week, :prev_week
+    alias last_week prev_week
 
     # Returns a new date/time representing the previous weekday.
     def prev_weekday
@@ -211,7 +211,7 @@ module DateAndTime
         prev_day
       end
     end
-    alias_method :last_weekday, :prev_weekday
+    alias last_weekday prev_weekday
 
     # Short-hand for months_ago(1).
     def last_month
@@ -222,7 +222,7 @@ module DateAndTime
     def prev_quarter
       months_ago(3)
     end
-    alias_method :last_quarter, :prev_quarter
+    alias last_quarter prev_quarter
 
     # Short-hand for years_ago(1).
     def last_year
@@ -245,7 +245,7 @@ module DateAndTime
       result = days_ago(days_to_week_start(start_day))
       acts_like?(:time) ? result.midnight : result
     end
-    alias :at_beginning_of_week :beginning_of_week
+    alias at_beginning_of_week beginning_of_week
 
     # Returns Monday of this week assuming that week starts on Monday.
     # +DateTime+ objects have their time set to 0:00.
@@ -260,7 +260,7 @@ module DateAndTime
     def end_of_week(start_day = Date.beginning_of_week)
       last_hour(days_since(6 - days_to_week_start(start_day)))
     end
-    alias :at_end_of_week :end_of_week
+    alias at_end_of_week end_of_week
 
     # Returns Sunday of this week assuming that week starts on Monday.
     # +DateTime+ objects have their time set to 23:59:59.
@@ -274,14 +274,14 @@ module DateAndTime
       last_day = ::Time.days_in_month(month, year)
       last_hour(days_since(last_day - day))
     end
-    alias :at_end_of_month :end_of_month
+    alias at_end_of_month end_of_month
 
     # Returns a new date/time representing the end of the year.
     # DateTime objects will have a time set to 23:59:59.
     def end_of_year
       change(month: 12).end_of_month
     end
-    alias :at_end_of_year :end_of_year
+    alias at_end_of_year end_of_year
 
     # Returns a Range representing the whole day of the current date/time.
     def all_day
@@ -332,20 +332,21 @@ module DateAndTime
     end
 
     private
-      def first_hour(date_or_time)
-        date_or_time.acts_like?(:time) ? date_or_time.beginning_of_day : date_or_time
-      end
 
-      def last_hour(date_or_time)
-        date_or_time.acts_like?(:time) ? date_or_time.end_of_day : date_or_time
-      end
+    def first_hour(date_or_time)
+      date_or_time.acts_like?(:time) ? date_or_time.beginning_of_day : date_or_time
+    end
 
-      def days_span(day)
-        (DAYS_INTO_WEEK.fetch(day) - DAYS_INTO_WEEK.fetch(Date.beginning_of_week)) % 7
-      end
+    def last_hour(date_or_time)
+      date_or_time.acts_like?(:time) ? date_or_time.end_of_day : date_or_time
+    end
 
-      def copy_time_to(other)
-        other.change(hour: hour, min: min, sec: sec, nsec: try(:nsec))
-      end
+    def days_span(day)
+      (DAYS_INTO_WEEK.fetch(day) - DAYS_INTO_WEEK.fetch(Date.beginning_of_week)) % 7
+    end
+
+    def copy_time_to(other)
+      other.change(hour: hour, min: min, sec: sec, nsec: try(:nsec))
+    end
   end
 end

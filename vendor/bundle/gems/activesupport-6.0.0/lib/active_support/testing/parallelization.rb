@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require "drb"
-require "drb/unix" unless Gem.win_platform?
-require "active_support/core_ext/module/attribute_accessors"
+require 'drb'
+require 'drb/unix' unless Gem.win_platform?
+require 'active_support/core_ext/module/attribute_accessors'
 
 module ActiveSupport
   module Testing
@@ -31,7 +31,9 @@ module ActiveSupport
           @queue.length
         end
 
-        def pop; @queue.pop; end
+        def pop
+          @queue.pop
+        end
       end
 
       @@after_fork_hooks = []
@@ -55,7 +57,7 @@ module ActiveSupport
         @queue      = Server.new
         @pool       = []
 
-        @url = DRb.start_service("drbunix:", @queue).uri
+        @url = DRb.start_service('drbunix:', @queue).uri
       end
 
       def after_fork(worker)
@@ -77,8 +79,7 @@ module ActiveSupport
 
             begin
               after_fork(worker)
-            rescue => setup_exception; end
-
+            rescue StandardError => e; end
             queue = DRbObject.new_with_uri(@url)
 
             while job = queue.pop
@@ -114,15 +115,14 @@ module ActiveSupport
         @queue_size.times { @queue << nil }
         @pool.each { |pid| Process.waitpid pid }
 
-        if @queue.length > 0
-          raise "Queue not empty, but all workers have finished. This probably means that a worker crashed and #{@queue.length} tests were missed."
-        end
+        raise "Queue not empty, but all workers have finished. This probably means that a worker crashed and #{@queue.length} tests were missed." unless @queue.empty?
       end
 
       private
-        def add_setup_exception(result, setup_exception)
-          result.failures.prepend Minitest::UnexpectedError.new(setup_exception)
-        end
+
+      def add_setup_exception(result, setup_exception)
+        result.failures.prepend Minitest::UnexpectedError.new(setup_exception)
+      end
     end
   end
 end

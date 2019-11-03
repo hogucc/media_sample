@@ -1,5 +1,5 @@
-# encoding: utf-8
 # frozen_string_literal: true
+
 module Mail
   module CommonField # :nodoc:
     include Mail::Constants
@@ -34,13 +34,13 @@ module Mail
       @length ||= "#{name}: #{encode(decoded)}".length
     end
 
-    def responsible_for?( val )
+    def responsible_for?(val)
       name.to_s.casecmp(val.to_s) == 0
     end
 
     private
 
-    FILENAME_RE = /\b(filename|name)=([^;"\r\n]+\s[^;"\r\n]+)/
+    FILENAME_RE = /\b(filename|name)=([^;"\r\n]+\s[^;"\r\n]+)/.freeze
     def ensure_filename_quoted(value)
       if value.is_a?(String)
         value.sub FILENAME_RE, '\1="\2"'

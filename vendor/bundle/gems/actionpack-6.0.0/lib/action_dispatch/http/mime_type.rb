@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "singleton"
-require "active_support/core_ext/string/starts_ends_with"
+require 'singleton'
+require 'active_support/core_ext/string/starts_ends_with'
 
 module Mime
   class Mimes
@@ -31,17 +31,19 @@ module Mime
   end
 
   SET              = Mimes.new
-  EXTENSION_LOOKUP = {}
-  LOOKUP           = {}
+  EXTENSION_LOOKUP = {}.freeze
+  LOOKUP           = {}.freeze
 
   class << self
     def [](type)
       return type if type.is_a?(Type)
+
       Type.lookup_by_extension(type)
     end
 
     def fetch(type)
       return type if type.is_a?(Type)
+
       EXTENSION_LOOKUP.fetch(type.to_s) { |k| yield k }
     end
   end
@@ -67,12 +69,12 @@ module Mime
     # A simple helper class used in parsing the accept header.
     class AcceptItem #:nodoc:
       attr_accessor :index, :name, :q
-      alias :to_s :name
+      alias to_s name
 
       def initialize(index, name, q = nil)
         @index = index
         @name = name
-        q ||= 0.0 if @name == "*/*" # Default wildcard match to end of list.
+        q ||= 0.0 if @name == '*/*' # Default wildcard match to end of list.
         @q = ((q || 1.0).to_f * 100).to_i
       end
 
@@ -87,7 +89,7 @@ module Mime
       def self.sort!(list)
         list.sort!
 
-        text_xml_idx = find_item_by_name list, "text/xml"
+        text_xml_idx = find_item_by_name list, 'text/xml'
         app_xml_idx = find_item_by_name list, Mime[:xml].to_s
 
         # Take care of the broken text/xml entry by renaming or deleting it.
@@ -96,11 +98,12 @@ module Mime
           text_xml = list[text_xml_idx]
 
           app_xml.q = [text_xml.q, app_xml.q].max # Set the q value to the max of the two.
-          if app_xml_idx > text_xml_idx  # Make sure app_xml is ahead of text_xml in the list.
-            list[app_xml_idx], list[text_xml_idx] = text_xml, app_xml
+          if app_xml_idx > text_xml_idx # Make sure app_xml is ahead of text_xml in the list.
+            list[app_xml_idx] = text_xml
+            list[text_xml_idx] = app_xml
             app_xml_idx, text_xml_idx = text_xml_idx, app_xml_idx
           end
-          list.delete_at(text_xml_idx)  # Delete text_xml from the list.
+          list.delete_at(text_xml_idx) # Delete text_xml from the list.
         elsif text_xml_idx
           list[text_xml_idx].name = Mime[:xml].to_s
         end
@@ -114,8 +117,9 @@ module Mime
             type = list[idx]
             break if type.q < app_xml.q
 
-            if type.name.ends_with? "+xml"
-              list[app_xml_idx], list[idx] = list[idx], app_xml
+            if type.name.ends_with? '+xml'
+              list[app_xml_idx] = list[idx]
+              list[idx] = app_xml
               app_xml_idx = idx
             end
             idx += 1
@@ -132,8 +136,8 @@ module Mime
     end
 
     class << self
-      TRAILING_STAR_REGEXP = /^(text|application)\/\*/
-      PARAMETER_SEPARATOR_REGEXP = /;\s*\w+="?\w+"?/
+      TRAILING_STAR_REGEXP = %r{^(text|application)/\*}.freeze
+      PARAMETER_SEPARATOR_REGEXP = /;\s*\w+="?\w+"?/.freeze
 
       def register_callback(&block)
         @register_callbacks << block
@@ -168,16 +172,19 @@ module Mime
       end
 
       def parse(accept_header)
-        if !accept_header.include?(",")
+        if !accept_header.include?(',')
           accept_header = accept_header.split(PARAMETER_SEPARATOR_REGEXP).first
           return [] unless accept_header
+
           parse_trailing_star(accept_header) || [Mime::Type.lookup(accept_header)].compact
         else
-          list, index = [], 0
-          accept_header.split(",").each do |header|
+          list = []
+          index = 0
+          accept_header.split(',').each do |header|
             params, q = header.split(PARAMETER_SEPARATOR_REGEXP)
 
             next unless params
+
             params.strip!
             next if params.empty?
 
@@ -193,7 +200,7 @@ module Mime
       end
 
       def parse_trailing_star(accept_header)
-        parse_data_with_trailing_star($1) if accept_header =~ TRAILING_STAR_REGEXP
+        parse_data_with_trailing_star(Regexp.last_match(1)) if accept_header =~ TRAILING_STAR_REGEXP
       end
 
       # For an input of <tt>'text'</tt>, returns <tt>[Mime[:json], Mime[:xml], Mime[:ics],
@@ -226,15 +233,15 @@ module Mime
     MIME_PARAMETER_KEY = "[a-zA-Z0-9][a-zA-Z0-9#{Regexp.escape('!#$&-^_.+')}]{0,126}"
     MIME_PARAMETER_VALUE = "#{Regexp.escape('"')}?[a-zA-Z0-9][a-zA-Z0-9#{Regexp.escape('!#$&-^_.+')}]{0,126}#{Regexp.escape('"')}?"
     MIME_PARAMETER = "\s*\;\s+#{MIME_PARAMETER_KEY}(?:\=#{MIME_PARAMETER_VALUE})?"
-    MIME_REGEXP = /\A(?:\*\/\*|#{MIME_NAME}\/(?:\*|#{MIME_NAME})(?:\s*#{MIME_PARAMETER}\s*)*)\z/
+    MIME_REGEXP = %r{\A(?:\*/\*|#{MIME_NAME}/(?:\*|#{MIME_NAME})(?:\s*#{MIME_PARAMETER}\s*)*)\z}.freeze
 
     class InvalidMimeType < StandardError; end
 
     def initialize(string, symbol = nil, synonyms = [])
-      unless MIME_REGEXP.match?(string)
-        raise InvalidMimeType, "#{string.inspect} is not a valid MIME type"
-      end
-      @symbol, @synonyms = symbol, synonyms
+      raise InvalidMimeType, "#{string.inspect} is not a valid MIME type" unless MIME_REGEXP.match?(string)
+
+      @symbol = symbol
+      @synonyms = synonyms
       @string = string
       @hash = [@string, @synonyms, @symbol].hash
     end
@@ -257,7 +264,7 @@ module Mime
 
     def ===(list)
       if list.is_a?(Array)
-        (@synonyms + [ self ]).any? { |synonym| list.include?(synonym) }
+        (@synonyms + [self]).any? { |synonym| list.include?(synonym) }
       else
         super
       end
@@ -265,7 +272,8 @@ module Mime
 
     def ==(mime_type)
       return false unless mime_type
-      (@synonyms + [ self ]).any? do |synonym|
+
+      (@synonyms + [self]).any? do |synonym|
         synonym.to_s == mime_type.to_s || synonym.to_sym == mime_type.to_sym
       end
     end
@@ -279,6 +287,7 @@ module Mime
 
     def =~(mime_type)
       return false unless mime_type
+
       regexp = Regexp.new(Regexp.quote(mime_type.to_s))
       @synonyms.any? { |synonym| synonym.to_s =~ regexp } || @string =~ regexp
     end
@@ -287,39 +296,47 @@ module Mime
       symbol == :html || @string =~ /html/
     end
 
-    def all?; false; end
+    def all?
+      false
+    end
 
     protected
 
-      attr_reader :string, :synonyms
+    attr_reader :string, :synonyms
 
     private
 
-      def to_ary; end
-      def to_a; end
+    def to_ary; end
 
-      def method_missing(method, *args)
-        if method.to_s.ends_with? "?"
-          method[0..-2].downcase.to_sym == to_sym
-        else
-          super
-        end
-      end
+    def to_a; end
 
-      def respond_to_missing?(method, include_private = false)
-        (method.to_s.ends_with? "?") || super
+    def method_missing(method, *args)
+      if method.to_s.ends_with? '?'
+        method[0..-2].downcase.to_sym == to_sym
+      else
+        super
       end
+    end
+
+    def respond_to_missing?(method, include_private = false)
+      (method.to_s.ends_with? '?') || super
+    end
   end
 
   class AllType < Type
     include Singleton
 
     def initialize
-      super "*/*", nil
+      super '*/*', nil
     end
 
-    def all?; true; end
-    def html?; true; end
+    def all?
+      true
+    end
+
+    def html?
+      true
+    end
   end
 
   # ALL isn't a real MIME type, so we don't register it for lookup with the
@@ -337,14 +354,15 @@ module Mime
     def ref; end
 
     private
-      def respond_to_missing?(method, _)
-        method.to_s.ends_with? "?"
-      end
 
-      def method_missing(method, *args)
-        false if method.to_s.ends_with? "?"
-      end
+    def respond_to_missing?(method, _)
+      method.to_s.ends_with? '?'
+    end
+
+    def method_missing(method, *_args)
+      false if method.to_s.ends_with? '?'
+    end
   end
 end
 
-require "action_dispatch/http/mime_types"
+require 'action_dispatch/http/mime_types'

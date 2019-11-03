@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "active_support/core_ext/hash/indifferent_access"
-require "active_support/core_ext/object/duplicable"
+require 'active_support/core_ext/hash/indifferent_access'
+require 'active_support/core_ext/object/duplicable'
 
 module ActiveModel
   class AttributeMutationTracker # :nodoc:
@@ -18,9 +18,7 @@ module ActiveModel
 
     def changed_values
       attr_names.each_with_object({}.with_indifferent_access) do |attr_name, result|
-        if changed?(attr_name)
-          result[attr_name] = original_value(attr_name)
-        end
+        result[attr_name] = original_value(attr_name) if changed?(attr_name)
       end
     end
 
@@ -33,9 +31,7 @@ module ActiveModel
     end
 
     def change_to_attribute(attr_name)
-      if changed?(attr_name)
-        [original_value(attr_name), fetch_value(attr_name)]
-      end
+      [original_value(attr_name), fetch_value(attr_name)] if changed?(attr_name)
     end
 
     def any_changes?
@@ -66,19 +62,20 @@ module ActiveModel
     end
 
     private
-      attr_reader :attributes, :forced_changes
 
-      def attr_names
-        attributes.keys
-      end
+    attr_reader :attributes, :forced_changes
 
-      def attribute_changed?(attr_name)
-        forced_changes.include?(attr_name) || !!attributes[attr_name].changed?
-      end
+    def attr_names
+      attributes.keys
+    end
 
-      def fetch_value(attr_name)
-        attributes.fetch_value(attr_name)
-      end
+    def attribute_changed?(attr_name)
+      forced_changes.include?(attr_name) || !!attributes[attr_name].changed?
+    end
+
+    def fetch_value(attr_name)
+      attributes.fetch_value(attr_name)
+    end
   end
 
   class ForcedMutationTracker < AttributeMutationTracker # :nodoc:
@@ -87,7 +84,7 @@ module ActiveModel
       @finalized_changes = nil
     end
 
-    def changed_in_place?(attr_name)
+    def changed_in_place?(_attr_name)
       false
     end
 
@@ -120,26 +117,27 @@ module ActiveModel
     end
 
     private
-      attr_reader :finalized_changes
 
-      def attr_names
-        forced_changes.keys
-      end
+    attr_reader :finalized_changes
 
-      def attribute_changed?(attr_name)
-        forced_changes.include?(attr_name)
-      end
+    def attr_names
+      forced_changes.keys
+    end
 
-      def fetch_value(attr_name)
-        attributes.send(:_read_attribute, attr_name)
-      end
+    def attribute_changed?(attr_name)
+      forced_changes.include?(attr_name)
+    end
 
-      def clone_value(attr_name)
-        value = fetch_value(attr_name)
-        value.duplicable? ? value.clone : value
-      rescue TypeError, NoMethodError
-        value
-      end
+    def fetch_value(attr_name)
+      attributes.send(:_read_attribute, attr_name)
+    end
+
+    def clone_value(attr_name)
+      value = fetch_value(attr_name)
+      value.duplicable? ? value.clone : value
+    rescue TypeError, NoMethodError
+      value
+    end
   end
 
   class NullMutationTracker # :nodoc:
@@ -157,22 +155,20 @@ module ActiveModel
       {}
     end
 
-    def change_to_attribute(attr_name)
-    end
+    def change_to_attribute(attr_name); end
 
     def any_changes?
       false
     end
 
-    def changed?(attr_name, **)
+    def changed?(_attr_name, **)
       false
     end
 
-    def changed_in_place?(attr_name)
+    def changed_in_place?(_attr_name)
       false
     end
 
-    def original_value(attr_name)
-    end
+    def original_value(attr_name); end
   end
 end

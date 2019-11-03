@@ -32,11 +32,11 @@ module Byebug
       end
 
       def search_paths
-        ENV["PATH"].split(File::PATH_SEPARATOR)
+        ENV['PATH'].split(File::PATH_SEPARATOR)
       end
 
       def executable_file_extensions
-        ENV["PATHEXT"] ? ENV["PATHEXT"].split(";") : [""]
+        ENV['PATHEXT'] ? ENV['PATHEXT'].split(';') : ['']
       end
 
       def real_executable?(file)

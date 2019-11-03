@@ -1,7 +1,6 @@
 require 'securerandom'
 
 module CarrierWave
-
   class FormNotMultipart < UploadError
     def message
       "You tried to assign a String or a Pathname to an uploader, for security reasons, this is not allowed.\n\n If this is a file upload, please check that your upload form is multipart encoded."
@@ -25,10 +24,9 @@ module CarrierWave
   #
   def self.generate_cache_id
     [Time.now.utc.to_i,
-      SecureRandom.random_number(1_000_000_000_000_000),
-      '%04d' % (CarrierWave::CacheCounter.increment % 10_000),
-      '%04d' % SecureRandom.random_number(10_000)
-    ].map(&:to_s).join('-')
+     SecureRandom.random_number(1_000_000_000_000_000),
+     format('%04d', (CarrierWave::CacheCounter.increment % 10_000)),
+     '%04d' % SecureRandom.random_number(10_000)].map(&:to_s).join('-')
   end
 
   module Uploader
@@ -49,7 +47,6 @@ module CarrierWave
       end
 
       module ClassMethods
-
         ##
         # Removes cached files which are older than one day. You could call this method
         # from a rake task to clean out old cached files.
@@ -63,7 +60,7 @@ module CarrierWave
         # This only works as long as you haven't done anything funky with your cache_dir.
         # It's recommended that you keep cache files in one place only.
         #
-        def clean_cached_files!(seconds=60*60*24)
+        def clean_cached_files!(seconds = 60 * 60 * 24)
           (cache_storage || storage).new(CarrierWave::Uploader::Base.new).clean_cache!(seconds)
         end
       end
@@ -135,11 +132,11 @@ module CarrierWave
 
         begin
           # first, create a workfile on which we perform processings
-          if move_to_cache
-            @file = new_file.move_to(File.expand_path(workfile_path, root), permissions, directory_permissions)
-          else
-            @file = new_file.copy_to(File.expand_path(workfile_path, root), permissions, directory_permissions)
-          end
+          @file = if move_to_cache
+                    new_file.move_to(File.expand_path(workfile_path, root), permissions, directory_permissions)
+                  else
+                    new_file.copy_to(File.expand_path(workfile_path, root), permissions, directory_permissions)
+                  end
 
           with_callbacks(:cache, @file) do
             @file = cache_storage.cache!(@file)
@@ -180,30 +177,32 @@ module CarrierWave
       #
       # [String] the cache path
       #
-      def cache_path(for_file=full_filename(original_filename))
+      def cache_path(for_file = full_filename(original_filename))
         File.join(*[cache_dir, @cache_id, for_file].compact)
       end
 
-    private
+      private
 
-      def workfile_path(for_file=original_filename)
+      def workfile_path(for_file = original_filename)
         File.join(CarrierWave.tmp_path, @cache_id, version_name.to_s, for_file)
       end
 
       attr_reader :cache_id, :original_filename
 
       # We can override the full_original_filename method in other modules
-      alias_method :full_original_filename, :original_filename
+      alias full_original_filename original_filename
 
       def cache_id=(cache_id)
         # Earlier version used 3 part cache_id. Thus we should allow for
         # the cache_id to have both 3 part and 4 part formats.
-        raise CarrierWave::InvalidParameter, "invalid cache id" unless cache_id =~ /\A(-)?[\d]+\-[\d]+(\-[\d]{4})?\-[\d]{4}\z/
+        raise CarrierWave::InvalidParameter, 'invalid cache id' unless cache_id =~ /\A(-)?[\d]+\-[\d]+(\-[\d]{4})?\-[\d]{4}\z/
+
         @cache_id = cache_id
       end
 
       def original_filename=(filename)
-        raise CarrierWave::InvalidParameter, "invalid filename" if filename =~ CarrierWave::SanitizedFile.sanitize_regexp
+        raise CarrierWave::InvalidParameter, 'invalid filename' if filename =~ CarrierWave::SanitizedFile.sanitize_regexp
+
         @original_filename = filename
       end
 

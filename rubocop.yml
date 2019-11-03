@@ -1,6 +1,0 @@
-Rails:
- Enabled: true
-
-# 日本語のコメントを許可する
-Style/AsciiComments:
-  Enabled: false

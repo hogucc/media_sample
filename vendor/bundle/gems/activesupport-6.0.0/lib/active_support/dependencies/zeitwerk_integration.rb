@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "set"
-require "active_support/core_ext/string/inflections"
+require 'set'
+require 'active_support/core_ext/string/inflections'
 
 module ActiveSupport
   module Dependencies
@@ -11,7 +11,7 @@ module ActiveSupport
           Dependencies.unload_interlock do
             Rails.autoloaders.main.reload
           rescue Zeitwerk::ReloadingDisabledError
-            raise "reloading is disabled because config.cache_classes is true"
+            raise 'reloading is disabled because config.cache_classes is true'
           end
         end
 
@@ -68,42 +68,42 @@ module ActiveSupport
 
         private
 
-          def setup_autoloaders(enable_reloading)
-            Dependencies.autoload_paths.each do |autoload_path|
-              # Zeitwerk only accepts existing directories in `push_dir` to
-              # prevent misconfigurations.
-              next unless File.directory?(autoload_path)
+        def setup_autoloaders(enable_reloading)
+          Dependencies.autoload_paths.each do |autoload_path|
+            # Zeitwerk only accepts existing directories in `push_dir` to
+            # prevent misconfigurations.
+            next unless File.directory?(autoload_path)
 
-              autoloader = \
-                autoload_once?(autoload_path) ? Rails.autoloaders.once : Rails.autoloaders.main
+            autoloader = \
+              autoload_once?(autoload_path) ? Rails.autoloaders.once : Rails.autoloaders.main
 
-              autoloader.push_dir(autoload_path)
-              autoloader.do_not_eager_load(autoload_path) unless eager_load?(autoload_path)
-            end
-
-            Rails.autoloaders.main.enable_reloading if enable_reloading
-            Rails.autoloaders.each(&:setup)
+            autoloader.push_dir(autoload_path)
+            autoloader.do_not_eager_load(autoload_path) unless eager_load?(autoload_path)
           end
 
-          def autoload_once?(autoload_path)
-            Dependencies.autoload_once_paths.include?(autoload_path)
-          end
+          Rails.autoloaders.main.enable_reloading if enable_reloading
+          Rails.autoloaders.each(&:setup)
+        end
 
-          def eager_load?(autoload_path)
-            Dependencies._eager_load_paths.member?(autoload_path)
-          end
+        def autoload_once?(autoload_path)
+          Dependencies.autoload_once_paths.include?(autoload_path)
+        end
 
-          def freeze_paths
-            Dependencies.autoload_paths.freeze
-            Dependencies.autoload_once_paths.freeze
-            Dependencies._eager_load_paths.freeze
-          end
+        def eager_load?(autoload_path)
+          Dependencies._eager_load_paths.member?(autoload_path)
+        end
 
-          def decorate_dependencies
-            Dependencies.unhook!
-            Dependencies.singleton_class.prepend(Decorations)
-            Object.prepend(RequireDependency)
-          end
+        def freeze_paths
+          Dependencies.autoload_paths.freeze
+          Dependencies.autoload_once_paths.freeze
+          Dependencies._eager_load_paths.freeze
+        end
+
+        def decorate_dependencies
+          Dependencies.unhook!
+          Dependencies.singleton_class.prepend(Decorations)
+          Object.prepend(RequireDependency)
+        end
       end
     end
   end

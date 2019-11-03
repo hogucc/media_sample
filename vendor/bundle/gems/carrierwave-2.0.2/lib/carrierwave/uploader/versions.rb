@@ -6,7 +6,7 @@ module CarrierWave
       include CarrierWave::Uploader::Callbacks
 
       included do
-        class_attribute :versions, :version_names, :version_options, :instance_reader => false, :instance_writer => false
+        class_attribute :versions, :version_names, :version_options, instance_reader: false, instance_writer: false
 
         self.versions = {}
         self.version_names = []
@@ -29,7 +29,6 @@ module CarrierWave
       end
 
       module ClassMethods
-
         ##
         # Adds a new version to this uploader
         #
@@ -62,16 +61,16 @@ module CarrierWave
         end
 
         def recursively_apply_block_to_versions(&block)
-          versions.each do |name, version|
+          versions.each do |_name, version|
             version.class_eval(&block)
             version.recursively_apply_block_to_versions(&block)
           end
         end
 
-      private
+        private
 
         def build_version(name, options)
-          if !versions.has_key?(name)
+          if !versions.key?(name)
             uploader = Class.new(self)
             const_set("Uploader#{uploader.object_id}".tr('-', '_'), uploader)
             uploader.version_names += [name]
@@ -124,7 +123,6 @@ module CarrierWave
           # Add the current version hash to class attribute :versions
           self.versions = versions.merge(name => uploader)
         end
-
       end # ClassMethods
 
       ##
@@ -136,6 +134,7 @@ module CarrierWave
       #
       def versions
         return @versions if @versions
+
         @versions = {}
         self.class.versions.each do |name, version|
           @versions[name] = version.new(model, mounted_as)
@@ -166,12 +165,12 @@ module CarrierWave
       def version_exists?(name)
         name = name.to_sym
 
-        return false unless self.class.versions.has_key?(name)
+        return false unless self.class.versions.key?(name)
 
         condition = self.class.versions[name].version_options[:if]
-        if(condition)
-          if(condition.respond_to?(:call))
-            condition.call(self, :version => name, :file => file)
+        if condition
+          if condition.respond_to?(:call)
+            condition.call(self, version: name, file: file)
           else
             send(condition, file)
           end
@@ -207,6 +206,7 @@ module CarrierWave
       def url(*args)
         if (version = args.first) && version.respond_to?(:to_sym)
           raise ArgumentError, "Version #{version} doesn't exist!" if versions[version.to_sym].nil?
+
           # recursively proxy to version
           versions[version.to_sym].url(*args[1..-1])
         elsif args.first
@@ -233,12 +233,12 @@ module CarrierWave
           store!(file)
           reset_versions_to_cache_and_store
         else
-          cache! if !cached?
+          cache! unless cached?
           store!
         end
       end
 
-    private
+      private
 
       def set_versions_to_cache_and_store(names)
         @versions_to_cache = source_versions_of(names)
@@ -246,7 +246,8 @@ module CarrierWave
       end
 
       def reset_versions_to_cache_and_store
-        @versions_to_cache, @versions_to_store = nil, nil
+        @versions_to_cache = nil
+        @versions_to_store = nil
       end
 
       def versions_to_cache
@@ -267,27 +268,27 @@ module CarrierWave
       end
 
       def active_versions_with_names_in(names)
-        active_versions.select do |pretendent_name, uploader|
+        active_versions.select do |pretendent_name, _uploader|
           names.include?(pretendent_name)
         end
       end
 
-      def assign_parent_cache_id(file)
-        active_versions.each do |name, uploader|
+      def assign_parent_cache_id(_file)
+        active_versions.each do |_name, uploader|
           uploader.parent_cache_id = @cache_id
         end
       end
 
       def active_versions
-        versions.select do |name, uploader|
+        versions.select do |name, _uploader|
           version_exists?(name)
         end
       end
 
       def dependent_versions
-        active_versions.reject do |name, v|
+        active_versions.reject do |_name, v|
           v.class.version_options[:from_version]
-        end.to_a + sibling_versions.select do |name, v|
+        end.to_a + sibling_versions.select do |_name, v|
           v.class.version_options[:from_version] == self.class.version_names.last
         end.to_a
       end
@@ -305,28 +306,27 @@ module CarrierWave
       end
 
       def cache_versions!(new_file)
-        versions_to_cache.each do |name, v|
+        versions_to_cache.each do |_name, v|
           v.send(:cache_id=, @cache_id)
           v.cache!(new_file)
         end
       end
 
       def store_versions!(new_file)
-        versions_to_store.each { |name, v| v.store!(new_file) }
+        versions_to_store.each { |_name, v| v.store!(new_file) }
       end
 
       def remove_versions!
-        versions.each { |name, v| v.remove! }
+        versions.each { |_name, v| v.remove! }
       end
 
       def retrieve_versions_from_cache!(cache_name)
-        active_versions.each { |name, v| v.retrieve_from_cache!(cache_name) }
+        active_versions.each { |_name, v| v.retrieve_from_cache!(cache_name) }
       end
 
       def retrieve_versions_from_store!(identifier)
-        active_versions.each { |name, v| v.retrieve_from_store!(identifier) }
+        active_versions.each { |_name, v| v.retrieve_from_store!(identifier) }
       end
-
     end # Versions
   end # Uploader
 end # CarrierWave

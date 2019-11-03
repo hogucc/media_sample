@@ -31,14 +31,14 @@ module Capybara
          "Actual styles were #{@actual_styles.inspect}"
       end
 
-    private
+      private
 
       def stringify_keys(hsh)
         hsh.each_with_object({}) { |(k, v), str_keys| str_keys[k.to_s] = v }
       end
 
       def valid_keys
-        %i[wait]
+        [:wait]
       end
     end
   end

@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require "active_support/core_ext/array/conversions"
-require "active_support/core_ext/string/inflections"
-require "active_support/core_ext/object/deep_dup"
-require "active_support/core_ext/string/filters"
+require 'active_support/core_ext/array/conversions'
+require 'active_support/core_ext/string/inflections'
+require 'active_support/core_ext/object/deep_dup'
+require 'active_support/core_ext/string/filters'
 
 module ActiveModel
   # == Active \Model \Errors
@@ -59,8 +59,8 @@ module ActiveModel
   class Errors
     include Enumerable
 
-    CALLBACKS_OPTIONS = [:if, :unless, :on, :allow_nil, :allow_blank, :strict]
-    MESSAGE_OPTIONS = [:message]
+    CALLBACKS_OPTIONS = [:if, :unless, :on, :allow_nil, :allow_blank, :strict].freeze
+    MESSAGE_OPTIONS = [:message].freeze
 
     class << self
       attr_accessor :i18n_customize_full_message # :nodoc:
@@ -143,8 +143,8 @@ module ActiveModel
       attribute = attribute.to_sym
       messages.key?(attribute) && messages[attribute].present?
     end
-    alias :has_key? :include?
-    alias :key? :include?
+    alias has_key? include?
+    alias key? include?
 
     # Delete messages for +key+. Returns the deleted messages.
     #
@@ -195,15 +195,15 @@ module ActiveModel
     def size
       values.flatten.size
     end
-    alias :count :size
+    alias count size
 
     # Returns all message values.
     #
     #   person.errors.messages # => {:name=>["cannot be nil", "must be specified"]}
     #   person.errors.values   # => [["cannot be nil", "must be specified"]]
     def values
-      messages.select do |key, value|
-        !value.empty?
+      messages.reject do |_key, value|
+        value.empty?
       end.values
     end
 
@@ -212,8 +212,8 @@ module ActiveModel
     #   person.errors.messages # => {:name=>["cannot be nil", "must be specified"]}
     #   person.errors.keys     # => [:name]
     def keys
-      messages.select do |key, value|
-        !value.empty?
+      messages.reject do |_key, value|
+        value.empty?
       end.keys
     end
 
@@ -225,7 +225,7 @@ module ActiveModel
     def empty?
       size.zero?
     end
-    alias :blank? :empty?
+    alias blank? empty?
 
     # Returns an xml formatted representation of the Errors hash.
     #
@@ -239,7 +239,7 @@ module ActiveModel
     #   #    <error>name must be specified</error>
     #   #  </errors>
     def to_xml(options = {})
-      to_a.to_xml({ root: "errors", skip_types: true }.merge!(options))
+      to_a.to_xml({ root: 'errors', skip_types: true }.merge!(options))
     end
 
     # Returns a Hash that can be used as the JSON representation for this
@@ -381,7 +381,7 @@ module ActiveModel
     def full_messages
       map { |attribute, message| full_message(attribute, message) }
     end
-    alias :to_a :full_messages
+    alias to_a full_messages
 
     # Returns all the full error messages for a given attribute in an array.
     #
@@ -411,30 +411,31 @@ module ActiveModel
     # * <tt>errors.format</tt>
     def full_message(attribute, message)
       return message if attribute == :base
+
       attribute = attribute.to_s
 
       if self.class.i18n_customize_full_message && @base.class.respond_to?(:i18n_scope)
         attribute = attribute.remove(/\[\d\]/)
-        parts = attribute.split(".")
+        parts = attribute.split('.')
         attribute_name = parts.pop
-        namespace = parts.join("/") unless parts.empty?
+        namespace = parts.join('/') unless parts.empty?
         attributes_scope = "#{@base.class.i18n_scope}.errors.models"
 
-        if namespace
-          defaults = @base.class.lookup_ancestors.map do |klass|
-            [
-              :"#{attributes_scope}.#{klass.model_name.i18n_key}/#{namespace}.attributes.#{attribute_name}.format",
-              :"#{attributes_scope}.#{klass.model_name.i18n_key}/#{namespace}.format",
-            ]
-          end
-        else
-          defaults = @base.class.lookup_ancestors.map do |klass|
-            [
-              :"#{attributes_scope}.#{klass.model_name.i18n_key}.attributes.#{attribute_name}.format",
-              :"#{attributes_scope}.#{klass.model_name.i18n_key}.format",
-            ]
-          end
-        end
+        defaults = if namespace
+                     @base.class.lookup_ancestors.map do |klass|
+                       [
+                         :"#{attributes_scope}.#{klass.model_name.i18n_key}/#{namespace}.attributes.#{attribute_name}.format",
+                         :"#{attributes_scope}.#{klass.model_name.i18n_key}/#{namespace}.format"
+                       ]
+                     end
+                   else
+                     @base.class.lookup_ancestors.map do |klass|
+                       [
+                         :"#{attributes_scope}.#{klass.model_name.i18n_key}.attributes.#{attribute_name}.format",
+                         :"#{attributes_scope}.#{klass.model_name.i18n_key}.format"
+                       ]
+                     end
+                   end
 
         defaults.flatten!
       else
@@ -442,15 +443,15 @@ module ActiveModel
       end
 
       defaults << :"errors.format"
-      defaults << "%{attribute} %{message}"
+      defaults << '%{attribute} %{message}'
 
-      attr_name = attribute.tr(".", "_").humanize
+      attr_name = attribute.tr('.', '_').humanize
       attr_name = @base.class.human_attribute_name(attribute, default: attr_name)
 
       I18n.t(defaults.shift,
-        default:  defaults,
-        attribute: attr_name,
-        message:   message)
+             default: defaults,
+             attribute: attr_name,
+             message: message)
     end
 
     # Translates an error message in its default scope
@@ -491,15 +492,17 @@ module ActiveModel
       if @base.class.respond_to?(:i18n_scope)
         i18n_scope = @base.class.i18n_scope.to_s
         defaults = @base.class.lookup_ancestors.flat_map do |klass|
-          [ :"#{i18n_scope}.errors.models.#{klass.model_name.i18n_key}.attributes.#{attribute}.#{type}",
-            :"#{i18n_scope}.errors.models.#{klass.model_name.i18n_key}.#{type}" ]
+          [:"#{i18n_scope}.errors.models.#{klass.model_name.i18n_key}.attributes.#{attribute}.#{type}",
+           :"#{i18n_scope}.errors.models.#{klass.model_name.i18n_key}.#{type}"]
         end
         defaults << :"#{i18n_scope}.errors.messages.#{type}"
 
-        catch(:exception) do
-          translation = I18n.translate(defaults.first, options.merge(default: defaults.drop(1), throw: true))
-          return translation unless translation.nil?
-        end unless options[:message]
+        unless options[:message]
+          catch(:exception) do
+            translation = I18n.translate(defaults.first, options.merge(default: defaults.drop(1), throw: true))
+            return translation unless translation.nil?
+          end
+        end
       else
         defaults = []
       end
@@ -531,7 +534,8 @@ module ActiveModel
       apply_default_array(@details)
     end
 
-  private
+    private
+
     def normalize_message(attribute, message, options)
       case message
       when Symbol

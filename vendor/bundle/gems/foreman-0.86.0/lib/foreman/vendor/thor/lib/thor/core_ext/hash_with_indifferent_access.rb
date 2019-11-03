@@ -56,7 +56,7 @@ class Foreman::Thor
         Hash.new(default).merge!(self)
       end
 
-    protected
+      protected
 
       def convert_key(key)
         key.is_a?(Symbol) ? key.to_s : key
@@ -72,9 +72,9 @@ class Foreman::Thor
         method = method.to_s
         if method =~ /^(\w+)\?$/
           if args.empty?
-            !!self[$1]
+            !!self[Regexp.last_match(1)]
           else
-            self[$1] == args.first
+            self[Regexp.last_match(1)] == args.first
           end
         else
           self[method]

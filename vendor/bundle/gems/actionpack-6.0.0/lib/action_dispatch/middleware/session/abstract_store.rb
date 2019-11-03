@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require "rack/utils"
-require "rack/request"
-require "rack/session/abstract/id"
-require "action_dispatch/middleware/cookies"
-require "action_dispatch/request/session"
+require 'rack/utils'
+require 'rack/request'
+require 'rack/session/abstract/id'
+require 'action_dispatch/middleware/cookies'
+require 'action_dispatch/request/session'
 
 module ActionDispatch
   module Session
@@ -19,7 +19,7 @@ module ActionDispatch
 
     module Compatibility
       def initialize(app, options = {})
-        options[:key] ||= "_session_id"
+        options[:key] ||= '_session_id'
         super
       end
 
@@ -29,7 +29,7 @@ module ActionDispatch
         sid
       end
 
-    private
+      private
 
       def initialize_sid # :doc:
         @default_options.delete(:sidbits)
@@ -52,11 +52,11 @@ module ActionDispatch
 
       def stale_session_check!
         yield
-      rescue ArgumentError => argument_error
-        if argument_error.message =~ %r{undefined class/module ([\w:]*\w)}
+      rescue ArgumentError => e
+        if e.message =~ %r{undefined class/module ([\w:]*\w)}
           begin
             # Note that the regexp does not allow $1 to end with a ':'.
-            $1.constantize
+            Regexp.last_match(1).constantize
           rescue LoadError, NameError
             raise ActionDispatch::Session::SessionRestoreError
           end
@@ -84,9 +84,9 @@ module ActionDispatch
 
       private
 
-        def set_cookie(request, session_id, cookie)
-          request.cookie_jar[key] = cookie
-        end
+      def set_cookie(request, _session_id, cookie)
+        request.cookie_jar[key] = cookie
+      end
     end
   end
 end

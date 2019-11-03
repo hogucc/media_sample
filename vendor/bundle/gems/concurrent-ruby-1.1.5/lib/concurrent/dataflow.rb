@@ -2,19 +2,15 @@ require 'concurrent/future'
 require 'concurrent/atomic/atomic_fixnum'
 
 module Concurrent
-
   # @!visibility private
   class DependencyCounter # :nodoc:
-
     def initialize(count, &block)
       @counter = AtomicFixnum.new(count)
       @block = block
     end
 
-    def update(time, value, reason)
-      if @counter.decrement == 0
-        @block.call
-      end
+    def update(_time, _value, _reason)
+      @block.call if @counter.decrement == 0
     end
   end
 
@@ -54,11 +50,9 @@ module Concurrent
   private
 
   def call_dataflow(method, executor, *inputs, &block)
-    raise ArgumentError.new('an executor must be provided') if executor.nil?
-    raise ArgumentError.new('no block given') unless block_given?
-    unless inputs.all? { |input| input.is_a? IVar }
-      raise ArgumentError.new("Not all dependencies are IVars.\nDependencies: #{ inputs.inspect }")
-    end
+    raise ArgumentError, 'an executor must be provided' if executor.nil?
+    raise ArgumentError, 'no block given' unless block_given?
+    raise ArgumentError, "Not all dependencies are IVars.\nDependencies: #{inputs.inspect}" unless inputs.all? { |input| input.is_a? IVar }
 
     result = Future.new(executor: executor) do
       values = inputs.map { |input| input.send(method) }

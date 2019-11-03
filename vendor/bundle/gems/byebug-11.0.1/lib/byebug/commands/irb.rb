@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require "byebug/command"
-require "irb"
-require "English"
+require 'byebug/command'
+require 'irb'
+require 'English'
 
 module Byebug
   #
@@ -24,11 +24,11 @@ module Byebug
     end
 
     def self.short_description
-      "Starts an IRB session"
+      'Starts an IRB session'
     end
 
     def execute
-      return errmsg(pr("base.errors.only_local")) unless processor.interface.instance_of?(LocalInterface)
+      return errmsg(pr('base.errors.only_local')) unless processor.interface.instance_of?(LocalInterface)
 
       # @todo IRB tries to parse $ARGV so we must clear it (see #197). Add a
       #   test case for it so we can remove this comment.
@@ -38,12 +38,12 @@ module Byebug
     private
 
     def with_clean_argv
-      saved_argv = $ARGV.dup
-      $ARGV.clear
+      saved_argv = $*.dup
+      $*.clear
       begin
         yield
       ensure
-        $ARGV.concat(saved_argv)
+        $*.concat(saved_argv)
       end
     end
   end

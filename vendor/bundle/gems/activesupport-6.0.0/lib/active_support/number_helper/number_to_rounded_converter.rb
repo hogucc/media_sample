@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "active_support/number_helper/number_converter"
+require 'active_support/number_helper/number_converter'
 
 module ActiveSupport
   module NumberHelper
@@ -21,10 +21,10 @@ module ActiveSupport
 
           formatted_string =
             if BigDecimal === rounded_number && rounded_number.finite?
-              s = rounded_number.to_s("F")
-              s << "0" * precision
-              a, b = s.split(".", 2)
-              a << "."
+              s = rounded_number.to_s('F')
+              s << '0' * precision
+              a, b = s.split('.', 2)
+              a << '.'
               a << b[0, precision]
             else
               "%00.#{precision}f" % rounded_number
@@ -39,18 +39,18 @@ module ActiveSupport
 
       private
 
-        def strip_insignificant_zeros
-          options[:strip_insignificant_zeros]
-        end
+      def strip_insignificant_zeros
+        options[:strip_insignificant_zeros]
+      end
 
-        def format_number(number)
-          if strip_insignificant_zeros
-            escaped_separator = Regexp.escape(options[:separator])
-            number.sub(/(#{escaped_separator})(\d*[1-9])?0+\z/, '\1\2').sub(/#{escaped_separator}\z/, "")
-          else
-            number
-          end
+      def format_number(number)
+        if strip_insignificant_zeros
+          escaped_separator = Regexp.escape(options[:separator])
+          number.sub(/(#{escaped_separator})(\d*[1-9])?0+\z/, '\1\2').sub(/#{escaped_separator}\z/, '')
+        else
+          number
         end
+      end
     end
   end
 end

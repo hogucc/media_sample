@@ -53,7 +53,8 @@ module Listen
         queue,
         QueueOptimizer.new(optimizer_config),
         @backend.min_delay_between_events,
-        &block)
+        &block
+      )
 
       @processor = Event::Loop.new(pconfig)
 

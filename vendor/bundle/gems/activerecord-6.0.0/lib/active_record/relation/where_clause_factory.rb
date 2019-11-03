@@ -27,7 +27,8 @@ module ActiveRecord
       end
 
       private
-        attr_reader :klass, :predicate_builder
+
+      attr_reader :klass, :predicate_builder
     end
   end
 end

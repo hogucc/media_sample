@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "byebug/setting"
-require "byebug/commands/irb"
+require 'byebug/setting'
+require 'byebug/commands/irb'
 
 module Byebug
   #
@@ -15,7 +15,7 @@ module Byebug
     end
 
     def banner
-      "Invoke IRB on every stop"
+      'Invoke IRB on every stop'
     end
 
     def value=(val)

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "byebug/helpers/thread"
+require 'byebug/helpers/thread'
 
 module Byebug
   #
@@ -26,7 +26,7 @@ module Byebug
       end
 
       def self.short_description
-        "Resumes execution of the specified thread"
+        'Resumes execution of the specified thread'
       end
 
       def execute
@@ -35,7 +35,7 @@ module Byebug
         context, err = context_from_thread(@match[1])
         return errmsg(err) if err
 
-        return errmsg(pr("thread.errors.already_running")) unless context.suspended?
+        return errmsg(pr('thread.errors.already_running')) unless context.suspended?
 
         context.resume
         display_context(context)

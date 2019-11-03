@@ -3,7 +3,7 @@ module Listen
     # Adapter implementation for Windows `wdm`.
     #
     class Windows < Base
-      OS_REGEXP = /mswin|mingw|cygwin/i
+      OS_REGEXP = /mswin|mingw|cygwin/i.freeze
 
       BUNDLER_DECLARE_GEM = <<-EOS.gsub(/^ {6}/, '')
         Please add the following to your Gemfile to avoid polling for changes:
@@ -12,11 +12,12 @@ module Listen
 
       def self.usable?
         return false unless super
+
         require 'wdm'
         true
       rescue LoadError
-        _log :debug, format('wdm - load failed: %s:%s', $ERROR_INFO,
-                            $ERROR_POSITION * "\n")
+        _log :debug, format('wdm - load failed: %s:%s', $!,
+                            $@ * "\n")
 
         Kernel.warn BUNDLER_DECLARE_GEM
         false
@@ -61,9 +62,7 @@ module Listen
         when :file
           _queue_change(:file, dir, rel_path, options)
         when :attr
-          unless full_path.directory?
-            _queue_change(:file, dir, rel_path, options)
-          end
+          _queue_change(:file, dir, rel_path, options) unless full_path.directory?
         when :dir
           if change.type == :removed
             # TODO: check if watched dir?
@@ -78,17 +77,17 @@ module Listen
             # so what's left?
           end
         end
-      rescue
+      rescue StandardError
         details = event.inspect
-        _log :error, format('wdm - callback (%s): %s:%s', details, $ERROR_INFO,
-                            $ERROR_POSITION * "\n")
+        _log :error, format('wdm - callback (%s): %s:%s', details, $!,
+                            $@ * "\n")
         raise
       end
 
       def _change(type)
         { modified: [:modified, :attrib], # TODO: is attrib really passed?
-          added:    [:added, :renamed_new_file],
-          removed:  [:removed, :renamed_old_file] }.each do |change, types|
+          added: [:added, :renamed_new_file],
+          removed: [:removed, :renamed_old_file] }.each do |change, types|
           return change if types.include?(type)
         end
         nil

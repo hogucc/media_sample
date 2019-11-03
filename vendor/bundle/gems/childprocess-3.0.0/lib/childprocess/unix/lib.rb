@@ -7,7 +7,7 @@ module ChildProcess
       if ChildProcess.os == :macosx
         attach_function :_NSGetEnviron, [], :pointer
         def self.environ
-          _NSGetEnviron().read_pointer
+          _NSGetEnviron.read_pointer
         end
       elsif respond_to? :attach_variable
         attach_variable :environ, :pointer
@@ -91,9 +91,7 @@ module ChildProcess
       attach_function :posix_spawnattr_getsigmask, [:pointer, :pointer], :int
 
       def self.check(errno)
-        if errno != 0
-          raise Error, Lib.strerror(FFI.errno)
-        end
+        raise Error, Lib.strerror(FFI.errno) if errno != 0
       end
 
       class FileActions
@@ -168,7 +166,6 @@ module ChildProcess
           @ptr
         end
       end # Attrs
-
     end
   end
 end

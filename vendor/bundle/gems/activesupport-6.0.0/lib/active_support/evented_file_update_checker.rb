@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require "set"
-require "pathname"
-require "concurrent/atomic/atomic_boolean"
+require 'set'
+require 'pathname'
+require 'concurrent/atomic/atomic_boolean'
 
 module ActiveSupport
   # Allows you to "listen" to changes in a file system.
@@ -34,9 +34,7 @@ module ActiveSupport
   #
   class EventedFileUpdateChecker #:nodoc: all
     def initialize(files, dirs = {}, &block)
-      unless block
-        raise ArgumentError, "A block is required to initialize an EventedFileUpdateChecker"
-      end
+      raise ArgumentError, 'A block is required to initialize an EventedFileUpdateChecker' unless block
 
       @ph    = PathHelper.new
       @files = files.map { |f| @ph.xpath(f) }.to_set
@@ -60,7 +58,7 @@ module ActiveSupport
         # usage of attr_* macros for private attributes, but adds a lot of noise
         # to our test suite. Thus, we lazy load it and disable warnings locally.
         silence_warnings do
-          require "listen"
+          require 'listen'
         rescue LoadError => e
           raise LoadError, "Could not load the 'listen' gem. Add `gem 'listen'` to the development group of your Gemfile", e.backtrace
         end
@@ -106,130 +104,129 @@ module ActiveSupport
     end
 
     private
-      def boot!
-        normalize_dirs!
 
-        unless @dtw.empty?
-          Listen.to(*@dtw, &method(:changed)).start
+    def boot!
+      normalize_dirs!
+
+      Listen.to(*@dtw, &method(:changed)).start unless @dtw.empty?
+    end
+
+    def shutdown!
+      Listen.stop
+    end
+
+    def normalize_dirs!
+      @dirs.transform_keys! do |dir|
+        dir.exist? ? dir.realpath : dir
+      end
+    end
+
+    def changed(modified, added, removed)
+      unless updated?
+        @updated.make_true if (modified + added + removed).any? { |f| watching?(f) }
+      end
+    end
+
+    def watching?(file)
+      file = @ph.xpath(file)
+
+      if @files.member?(file)
+        true
+      elsif file.directory?
+        false
+      else
+        ext = @ph.normalize_extension(file.extname)
+
+        file.dirname.ascend do |dir|
+          matching = @dirs[dir]
+
+          if matching && (matching.empty? || matching.include?(ext))
+            break true
+          elsif dir == @lcsp || dir.root?
+            break false
+          end
         end
       end
+    end
 
-      def shutdown!
-        Listen.stop
+    def directories_to_watch
+      dtw = @files.map(&:dirname) + @dirs.keys
+      dtw.compact!
+      dtw.uniq!
+
+      normalized_gem_paths = Gem.path.map { |path| File.join path, '' }
+      dtw = dtw.reject do |path|
+        normalized_gem_paths.any? { |gem_path| path.to_s.start_with?(gem_path) }
       end
 
-      def normalize_dirs!
-        @dirs.transform_keys! do |dir|
-          dir.exist? ? dir.realpath : dir
-        end
+      @ph.filter_out_descendants(dtw)
+    end
+
+    class PathHelper
+      def xpath(path)
+        Pathname.new(path).expand_path
       end
 
-      def changed(modified, added, removed)
-        unless updated?
-          @updated.make_true if (modified + added + removed).any? { |f| watching?(f) }
-        end
+      def normalize_extension(ext)
+        ext.to_s.sub(/\A\./, '')
       end
 
-      def watching?(file)
-        file = @ph.xpath(file)
+      # Given a collection of Pathname objects returns the longest subpath
+      # common to all of them, or +nil+ if there is none.
+      def longest_common_subpath(paths)
+        return if paths.empty?
 
-        if @files.member?(file)
-          true
-        elsif file.directory?
-          false
-        else
-          ext = @ph.normalize_extension(file.extname)
+        lcsp = Pathname.new(paths[0])
 
-          file.dirname.ascend do |dir|
-            matching = @dirs[dir]
-
-            if matching && (matching.empty? || matching.include?(ext))
-              break true
-            elsif dir == @lcsp || dir.root?
-              break false
+        paths[1..-1].each do |path|
+          until ascendant_of?(lcsp, path)
+            if lcsp.root?
+              # If we get here a root directory is not an ascendant of path.
+              # This may happen if there are paths in different drives on
+              # Windows.
+              return
+            else
+              lcsp = lcsp.parent
             end
           end
         end
+
+        lcsp
       end
 
-      def directories_to_watch
-        dtw = @files.map(&:dirname) + @dirs.keys
-        dtw.compact!
-        dtw.uniq!
-
-        normalized_gem_paths = Gem.path.map { |path| File.join path, "" }
-        dtw = dtw.reject do |path|
-          normalized_gem_paths.any? { |gem_path| path.to_s.start_with?(gem_path) }
+      # Returns the deepest existing ascendant, which could be the argument itself.
+      def existing_parent(dir)
+        dir.ascend do |ascendant|
+          break ascendant if ascendant.directory?
         end
-
-        @ph.filter_out_descendants(dtw)
       end
 
-      class PathHelper
-        def xpath(path)
-          Pathname.new(path).expand_path
-        end
+      # Filters out directories which are descendants of others in the collection (stable).
+      def filter_out_descendants(dirs)
+        return dirs if dirs.length < 2
 
-        def normalize_extension(ext)
-          ext.to_s.sub(/\A\./, "")
-        end
+        dirs_sorted_by_nparts = dirs.sort_by { |dir| dir.each_filename.to_a.length }
+        descendants = []
 
-        # Given a collection of Pathname objects returns the longest subpath
-        # common to all of them, or +nil+ if there is none.
-        def longest_common_subpath(paths)
-          return if paths.empty?
+        until dirs_sorted_by_nparts.empty?
+          dir = dirs_sorted_by_nparts.shift
 
-          lcsp = Pathname.new(paths[0])
-
-          paths[1..-1].each do |path|
-            until ascendant_of?(lcsp, path)
-              if lcsp.root?
-                # If we get here a root directory is not an ascendant of path.
-                # This may happen if there are paths in different drives on
-                # Windows.
-                return
-              else
-                lcsp = lcsp.parent
-              end
-            end
-          end
-
-          lcsp
-        end
-
-        # Returns the deepest existing ascendant, which could be the argument itself.
-        def existing_parent(dir)
-          dir.ascend do |ascendant|
-            break ascendant if ascendant.directory?
+          dirs_sorted_by_nparts.reject! do |possible_descendant|
+            ascendant_of?(dir, possible_descendant) && descendants << possible_descendant
           end
         end
 
-        # Filters out directories which are descendants of others in the collection (stable).
-        def filter_out_descendants(dirs)
-          return dirs if dirs.length < 2
-
-          dirs_sorted_by_nparts = dirs.sort_by { |dir| dir.each_filename.to_a.length }
-          descendants = []
-
-          until dirs_sorted_by_nparts.empty?
-            dir = dirs_sorted_by_nparts.shift
-
-            dirs_sorted_by_nparts.reject! do |possible_descendant|
-              ascendant_of?(dir, possible_descendant) && descendants << possible_descendant
-            end
-          end
-
-          # Array#- preserves order.
-          dirs - descendants
-        end
-
-        private
-
-          def ascendant_of?(base, other)
-            base != other && other.ascend do |ascendant|
-              break true if base == ascendant
-            end
-          end
+        # Array#- preserves order.
+        dirs - descendants
       end
+
+      private
+
+      def ascendant_of?(base, other)
+        base != other && other.ascend do |ascendant|
+          break true if base == ascendant
+        end
+      end
+    end
   end
 end
