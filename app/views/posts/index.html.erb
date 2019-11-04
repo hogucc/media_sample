@@ -1,4 +1,4 @@
-<div class="container">
+<div class="container js-postsIndex">
   <h1 class="purple lighten-5 center">ペットたち</h1>
   <div class="row">
     <% @posts.each do |post| %>
@@ -6,16 +6,31 @@
         <div class="card">
           <div class="card-image">
             <%= image_tag post.image.to_s %>
-            <span class="card-title">
-              <%= post.title %>
-            </span>
-            <div class="card-contents">
-              <%= post.content %>
-            </div>
+          </div>
+          <span class="card-title btn" v-on:click="setPostInfo(<%= post.id %>)">
+            <%= post.title %>
+          </span>
+          <div class="card-contents">
+            <%= post.content %>
           </div>
         </div>
       </div>
     <% end %>
   </div>
+  <div class="row" v-show="postInfoBool">
+    <div class="col s12 m12">
+      <div class="card blue-grey darken-1">
+        <div class="card-content white-text">
+          <div class="card-title">
+            {{ postInfo.title }}
+          </div>
+          <div class="detail">
+            {{ postInfo.content }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
+<%= javascript_pack_tag 'post' %>
