@@ -12,9 +12,7 @@ module ActiveRecord
         end
 
         def execute(sql, name = nil) #:nodoc:
-          if preventing_writes? && write_query?(sql)
-            raise ActiveRecord::ReadOnlyError, "Write query attempted while in readonly mode: #{sql}"
-          end
+          raise ActiveRecord::ReadOnlyError, "Write query attempted while in readonly mode: #{sql}" if preventing_writes? && write_query?(sql)
 
           materialize_transactions
 
@@ -26,9 +24,7 @@ module ActiveRecord
         end
 
         def exec_query(sql, name = nil, binds = [], prepare: false)
-          if preventing_writes? && write_query?(sql)
-            raise ActiveRecord::ReadOnlyError, "Write query attempted while in readonly mode: #{sql}"
-          end
+          raise ActiveRecord::ReadOnlyError, "Write query attempted while in readonly mode: #{sql}" if preventing_writes? && write_query?(sql)
 
           materialize_transactions
 
@@ -37,23 +33,21 @@ module ActiveRecord
           log(sql, name, binds, type_casted_binds) do
             ActiveSupport::Dependencies.interlock.permit_concurrent_loads do
               # Don't cache statements if they are not prepared
-              unless prepare
-                stmt = @connection.prepare(sql)
-                begin
-                  cols = stmt.columns
-                  unless without_prepared_statement?(binds)
-                    stmt.bind_params(type_casted_binds)
-                  end
-                  records = stmt.to_a
-                ensure
-                  stmt.close
-                end
-              else
+              if prepare
                 stmt = @statements[sql] ||= @connection.prepare(sql)
                 cols = stmt.columns
                 stmt.reset!
                 stmt.bind_params(type_casted_binds)
                 records = stmt.to_a
+              else
+                stmt = @connection.prepare(sql)
+                begin
+                  cols = stmt.columns
+                  stmt.bind_params(type_casted_binds) unless without_prepared_statement?(binds)
+                  records = stmt.to_a
+                ensure
+                  stmt.close
+                end
               end
 
               ActiveRecord::Result.new(cols, records)
@@ -61,57 +55,56 @@ module ActiveRecord
           end
         end
 
-        def exec_delete(sql, name = "SQL", binds = [])
+        def exec_delete(sql, name = 'SQL', binds = [])
           exec_query(sql, name, binds)
           @connection.changes
         end
-        alias :exec_update :exec_delete
+        alias exec_update exec_delete
 
         def begin_db_transaction #:nodoc:
-          log("begin transaction", nil) { @connection.transaction }
+          log('begin transaction', nil) { @connection.transaction }
         end
 
         def commit_db_transaction #:nodoc:
-          log("commit transaction", nil) { @connection.commit }
+          log('commit transaction', nil) { @connection.commit }
         end
 
         def exec_rollback_db_transaction #:nodoc:
-          log("rollback transaction", nil) { @connection.rollback }
+          log('rollback transaction', nil) { @connection.rollback }
         end
 
-
         private
-          def execute_batch(sql, name = nil)
-            if preventing_writes? && write_query?(sql)
-              raise ActiveRecord::ReadOnlyError, "Write query attempted while in readonly mode: #{sql}"
-            end
 
-            materialize_transactions
+        def execute_batch(sql, name = nil)
+          raise ActiveRecord::ReadOnlyError, "Write query attempted while in readonly mode: #{sql}" if preventing_writes? && write_query?(sql)
 
-            log(sql, name) do
-              ActiveSupport::Dependencies.interlock.permit_concurrent_loads do
-                @connection.execute_batch2(sql)
-              end
+          materialize_transactions
+
+          log(sql, name) do
+            ActiveSupport::Dependencies.interlock.permit_concurrent_loads do
+              @connection.execute_batch2(sql)
             end
           end
+        end
 
-          def last_inserted_id(result)
-            @connection.last_insert_row_id
-          end
+        def last_inserted_id(_result)
+          @connection.last_insert_row_id
+        end
 
-          def build_fixture_statements(fixture_set)
-            fixture_set.flat_map do |table_name, fixtures|
-              next if fixtures.empty?
-              fixtures.map { |fixture| build_fixture_sql([fixture], table_name) }
-            end.compact
-          end
+        def build_fixture_statements(fixture_set)
+          fixture_set.flat_map do |table_name, fixtures|
+            next if fixtures.empty?
 
-          def build_truncate_statements(*table_names)
-            truncate_tables = table_names.map do |table_name|
-              "DELETE FROM #{quote_table_name(table_name)}"
-            end
-            combine_multi_statements(truncate_tables)
+            fixtures.map { |fixture| build_fixture_sql([fixture], table_name) }
+          end.compact
+        end
+
+        def build_truncate_statements(*table_names)
+          truncate_tables = table_names.map do |table_name|
+            "DELETE FROM #{quote_table_name(table_name)}"
           end
+          combine_multi_statements(truncate_tables)
+        end
       end
     end
   end

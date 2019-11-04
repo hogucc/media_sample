@@ -11,16 +11,16 @@ module ActionView #:nodoc:
       end
 
       def identifier
-        "text template"
+        'text template'
       end
 
-      alias_method :inspect, :identifier
+      alias inspect identifier
 
       def to_str
         @string
       end
 
-      def render(*args)
+      def render(*_args)
         to_str
       end
 
@@ -28,7 +28,9 @@ module ActionView #:nodoc:
         :text
       end
 
-      def formats; Array(format); end
+      def formats
+        Array(format)
+      end
       deprecate :formats
     end
   end

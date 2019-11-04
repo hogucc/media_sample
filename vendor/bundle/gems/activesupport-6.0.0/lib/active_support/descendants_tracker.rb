@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "weakref"
+require 'weakref'
 
 module ActiveSupport
   # This module provides an internal implementation to track descendants
@@ -42,14 +42,14 @@ module ActiveSupport
 
       private
 
-        def accumulate_descendants(klass, acc)
-          if direct_descendants = @@direct_descendants[klass]
-            direct_descendants.each do |direct_descendant|
-              acc << direct_descendant
-              accumulate_descendants(direct_descendant, acc)
-            end
+      def accumulate_descendants(klass, acc)
+        if direct_descendants = @@direct_descendants[klass]
+          direct_descendants.each do |direct_descendant|
+            acc << direct_descendant
+            accumulate_descendants(direct_descendant, acc)
           end
         end
+      end
     end
 
     def inherited(base)
@@ -73,7 +73,7 @@ module ActiveSupport
         @refs = []
       end
 
-      def initialize_copy(orig)
+      def initialize_copy(_orig)
         @refs = @refs.dup
       end
 

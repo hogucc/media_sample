@@ -2,11 +2,13 @@
 
 module ActionText
   class Attachment
-    include Attachments::TrixConversion, Attachments::Minification, Attachments::Caching
+    include Attachments::Caching
+    include Attachments::Minification
+    include Attachments::TrixConversion
 
-    TAG_NAME = "action-text-attachment"
+    TAG_NAME = 'action-text-attachment'
     SELECTOR = TAG_NAME
-    ATTRIBUTES = %w( sgid content-type url href filename filesize width height previewable presentation caption )
+    ATTRIBUTES = %w[sgid content-type url href filename filesize width height previewable presentation caption].freeze
 
     class << self
       def fragment_by_canonicalizing_attachments(content)
@@ -34,15 +36,16 @@ module ActionText
       end
 
       private
-        def node_from_attributes(attributes)
-          if attributes = process_attributes(attributes).presence
-            ActionText::HtmlConversion.create_element(TAG_NAME, attributes)
-          end
-        end
 
-        def process_attributes(attributes)
-          attributes.transform_keys { |key| key.to_s.underscore.dasherize }.slice(*ATTRIBUTES)
+      def node_from_attributes(attributes)
+        if attributes = process_attributes(attributes).presence
+          ActionText::HtmlConversion.create_element(TAG_NAME, attributes)
         end
+      end
+
+      def process_attributes(attributes)
+        attributes.transform_keys { |key| key.to_s.underscore.dasherize }.slice(*ATTRIBUTES)
+      end
     end
 
     attr_reader :node, :attachable
@@ -56,7 +59,7 @@ module ActionText
     end
 
     def caption
-      node_attributes["caption"].presence
+      node_attributes['caption'].presence
     end
 
     def full_attributes
@@ -88,16 +91,17 @@ module ActionText
     end
 
     private
-      def node_attributes
-        @node_attributes ||= ATTRIBUTES.map { |name| [ name.underscore, node[name] ] }.to_h.compact
-      end
 
-      def attachable_attributes
-        @attachable_attributes ||= (attachable.try(:to_rich_text_attributes) || {}).stringify_keys
-      end
+    def node_attributes
+      @node_attributes ||= ATTRIBUTES.map { |name| [name.underscore, node[name]] }.to_h.compact
+    end
 
-      def sgid_attributes
-        @sgid_attributes ||= node_attributes.slice("sgid").presence || attachable_attributes.slice("sgid")
-      end
+    def attachable_attributes
+      @attachable_attributes ||= (attachable.try(:to_rich_text_attributes) || {}).stringify_keys
+    end
+
+    def sgid_attributes
+      @sgid_attributes ||= node_attributes.slice('sgid').presence || attachable_attributes.slice('sgid')
+    end
   end
 end

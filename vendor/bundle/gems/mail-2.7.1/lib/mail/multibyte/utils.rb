@@ -1,9 +1,8 @@
-# encoding: utf-8
 # frozen_string_literal: true
 
 module Mail #:nodoc:
   module Multibyte #:nodoc:
-    if RUBY_VERSION >= "1.9"
+    if RUBY_VERSION >= '1.9'
       # Returns a regular expression that matches valid characters in the current encoding
       def self.valid_character
         VALID_CHARACTER[Encoding.default_external.to_s]
@@ -37,7 +36,7 @@ module Mail #:nodoc:
 
     # Verifies the encoding of the string and raises an exception when it's not valid
     def self.verify!(string)
-      raise EncodingError.new("Found characters with invalid encoding") unless verify(string)
+      raise EncodingError, 'Found characters with invalid encoding' unless verify(string)
     end
 
     if 'string'.respond_to?(:force_encoding)

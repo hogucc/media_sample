@@ -10,11 +10,11 @@ if !defined?(RUBY_ENGINE) || RUBY_ENGINE == 'ruby' || RUBY_ENGINE == 'rbx'
 
 elsif defined?(RUBY_ENGINE)
   # Remove the ffi gem dir from the load path, then reload the internal ffi implementation
-  $LOAD_PATH.delete(File.dirname(__FILE__))
-  $LOAD_PATH.delete(File.join(File.dirname(__FILE__), 'ffi'))
-  unless $LOADED_FEATURES.nil?
-    $LOADED_FEATURES.delete(__FILE__)
-    $LOADED_FEATURES.delete('ffi.rb')
+  $:.delete(File.dirname(__FILE__))
+  $:.delete(File.join(File.dirname(__FILE__), 'ffi'))
+  unless $".nil?
+    $".delete(__FILE__)
+    $".delete('ffi.rb')
   end
   require 'ffi.rb'
 end

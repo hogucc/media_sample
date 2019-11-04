@@ -3,7 +3,7 @@
 Capybara.add_selector(:link_or_button, locator_type: [String, Symbol]) do
   label 'link or button'
   xpath do |locator, **options|
-    %i[link button].map do |selector|
+    [:link, :button].map do |selector|
       expression_for(selector, locator, **options)
     end.reduce(:union)
   end

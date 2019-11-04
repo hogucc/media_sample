@@ -18,16 +18,16 @@ module Arel # :nodoc: all
     end
 
     def set(values)
-      if String === values
-        @ast.values = [values]
-      else
-        @ast.values = values.map { |column, value|
-          Nodes::Assignment.new(
-            Nodes::UnqualifiedColumn.new(column),
-            value
-          )
-        }
-      end
+      @ast.values = if String === values
+                      [values]
+                    else
+                      values.map do |column, value|
+                        Nodes::Assignment.new(
+                          Nodes::UnqualifiedColumn.new(column),
+                          value
+                        )
+                      end
+                    end
       self
     end
   end

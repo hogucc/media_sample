@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
-require "active_support/log_subscriber"
+require 'active_support/log_subscriber'
 
 module ActionView
   # = Action View Log Subscriber
   #
   # Provides functionality so that Rails can output logs from Action View.
   class LogSubscriber < ActiveSupport::LogSubscriber
-    VIEWS_PATTERN = /^app\/views\//
+    VIEWS_PATTERN = %r{^app/views/}.freeze
 
     def initialize
       @root = nil
@@ -33,7 +33,7 @@ module ActionView
     end
 
     def render_collection(event)
-      identifier = event.payload[:identifier] || "templates"
+      identifier = event.payload[:identifier] || 'templates'
 
       info do
         "  Rendered collection of #{from_rails_root(identifier)}" \
@@ -42,9 +42,7 @@ module ActionView
     end
 
     def start(name, id, payload)
-      if name == "render_template.action_view"
-        log_rendering_start(payload)
-      end
+      log_rendering_start(payload) if name == 'render_template.action_view'
 
       super
     end
@@ -53,9 +51,9 @@ module ActionView
       ActionView::Base.logger
     end
 
-  private
+    private
 
-    EMPTY = ""
+    EMPTY = ''
     def from_rails_root(string) # :doc:
       string = string.sub(rails_root, EMPTY)
       string.sub!(VIEWS_PATTERN, EMPTY)
@@ -77,9 +75,9 @@ module ActionView
     def cache_message(payload) # :doc:
       case payload[:cache_hit]
       when :hit
-        "[cache hit]"
+        '[cache hit]'
       when :miss
-        "[cache miss]"
+        '[cache miss]'
       end
     end
 

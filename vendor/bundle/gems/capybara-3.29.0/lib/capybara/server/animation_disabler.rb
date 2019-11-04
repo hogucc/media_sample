@@ -31,7 +31,7 @@ module Capybara
         response.finish
       end
 
-    private
+      private
 
       attr_reader :disable_markup
 

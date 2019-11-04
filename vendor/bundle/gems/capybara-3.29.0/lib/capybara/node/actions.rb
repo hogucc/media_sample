@@ -25,7 +25,7 @@ module Capybara
       def click_link_or_button(locator = nil, **options)
         find(:link_or_button, locator, options).click
       end
-      alias_method :click_on, :click_link_or_button
+      alias click_on click_link_or_button
 
       ##
       #
@@ -302,20 +302,18 @@ module Capybara
         end
       end
 
-    private
+      private
 
       def find_select_or_datalist_input(from, options)
         synchronize(Capybara::Queries::BaseQuery.wait(options, session_options.default_max_wait_time)) do
-          begin
-            find(:select, from, options)
-          rescue Capybara::ElementNotFound => select_error # rubocop:disable Naming/RescuedExceptionsVariableName
-            raise if %i[selected with_selected multiple].any? { |option| options.key?(option) }
+          find(:select, from, options)
+        rescue Capybara::ElementNotFound => select_error # rubocop:disable Naming/RescuedExceptionsVariableName
+          raise if [:selected, :with_selected, :multiple].any? { |option| options.key?(option) }
 
-            begin
-              find(:datalist_input, from, options)
-            rescue Capybara::ElementNotFound => dlinput_error # rubocop:disable Naming/RescuedExceptionsVariableName
-              raise Capybara::ElementNotFound, "#{select_error.message} and #{dlinput_error.message}"
-            end
+          begin
+            find(:datalist_input, from, options)
+          rescue Capybara::ElementNotFound => dlinput_error # rubocop:disable Naming/RescuedExceptionsVariableName
+            raise Capybara::ElementNotFound, "#{select_error.message} and #{dlinput_error.message}"
           end
         end
       end
@@ -334,9 +332,7 @@ module Capybara
       end
 
       def while_visible(element, visible_css)
-        if visible_css == true
-          visible_css = { opacity: 1, display: 'block', visibility: 'visible', width: 'auto', height: 'auto' }
-        end
+        visible_css = { opacity: 1, display: 'block', visibility: 'visible', width: 'auto', height: 'auto' } if visible_css == true
         _update_style(element, visible_css)
         raise ExpectationNotMet, 'The style changes in :make_visible did not make the file input visible' unless element.visible?
 
@@ -363,18 +359,16 @@ module Capybara
         options[:allow_self] = true if locator.nil?
 
         synchronize(Capybara::Queries::BaseQuery.wait(options, session_options.default_max_wait_time)) do
-          begin
-            el = find(selector, locator, options)
-            el.set(checked)
-          rescue StandardError => e
-            raise unless allow_label_click && catch_error?(e)
+          el = find(selector, locator, options)
+          el.set(checked)
+        rescue StandardError => e
+          raise unless allow_label_click && catch_error?(e)
 
-            begin
-              el ||= find(selector, locator, options.merge(visible: :all))
-              el.session.find(:label, for: el, visible: true).click unless el.checked? == checked
-            rescue StandardError # swallow extra errors - raise original
-              raise e
-            end
+          begin
+            el ||= find(selector, locator, options.merge(visible: :all))
+            el.session.find(:label, for: el, visible: true).click unless el.checked? == checked
+          rescue StandardError # swallow extra errors - raise original
+            raise e
           end
         end
       end

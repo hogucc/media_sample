@@ -7,7 +7,7 @@ module I18n
 
     autoload :Helpers, 'i18n/gettext/helpers'
 
-    @@plural_keys = { :en => [:one, :other] }
+    @@plural_keys = { en: [:one, :other] }
 
     class << self
       # returns an array of plural keys for the given locale or the whole hash

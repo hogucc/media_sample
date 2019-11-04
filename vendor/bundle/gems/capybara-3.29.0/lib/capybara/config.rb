@@ -7,7 +7,7 @@ module Capybara
   class Config
     extend Forwardable
 
-    OPTIONS = %i[app reuse_server threadsafe server default_driver javascript_driver allow_gumbo].freeze
+    OPTIONS = [:app, :reuse_server, :threadsafe, :server, :default_driver, :javascript_driver, :allow_gumbo].freeze
 
     attr_accessor :app
     attr_reader :reuse_server, :threadsafe
@@ -57,11 +57,11 @@ module Capybara
     def server=(name)
       name, options = *name if name.is_a? Array
       @server = if name.respond_to? :call
-        name
-      elsif options
-        proc { |app, port, host| Capybara.servers[name.to_sym].call(app, port, host, options) }
-      else
-        Capybara.servers[name.to_sym]
+                  name
+                elsif options
+                  proc { |app, port, host| Capybara.servers[name.to_sym].call(app, port, host, options) }
+                else
+                  Capybara.servers[name.to_sym]
       end
     end
 

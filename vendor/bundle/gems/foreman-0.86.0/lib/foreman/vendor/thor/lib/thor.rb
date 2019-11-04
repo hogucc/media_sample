@@ -1,5 +1,5 @@
-require "set"
-require "foreman/vendor/thor/lib/thor/base"
+require 'set'
+require 'foreman/vendor/thor/lib/thor/base'
 
 class Foreman::Thor
   class << self
@@ -10,7 +10,7 @@ class Foreman::Thor
     # options<Hash>
     #
     def package_name(name, _ = {})
-      @package_name = name.nil? || name == "" ? nil : name
+      @package_name = name.nil? || name == '' ? nil : name
     end
 
     # Sets the default command when thor is executed without an explicit command to be called.
@@ -20,12 +20,12 @@ class Foreman::Thor
     #
     def default_command(meth = nil)
       if meth
-        @default_command = meth == :none ? "help" : meth.to_s
+        @default_command = meth == :none ? 'help' : meth.to_s
       else
-        @default_command ||= from_superclass(:default_command, "help")
+        @default_command ||= from_superclass(:default_command, 'help')
       end
     end
-    alias_method :default_task, :default_command
+    alias default_task default_command
 
     # Registers another Foreman::Thor subclass as a command.
     #
@@ -93,13 +93,11 @@ class Foreman::Thor
     def map(mappings = nil)
       @map ||= from_superclass(:map, {})
 
-      if mappings
-        mappings.each do |key, value|
-          if key.respond_to?(:each)
-            key.each { |subkey| @map[subkey] = value }
-          else
-            @map[key] = value
-          end
+      mappings&.each do |key, value|
+        if key.respond_to?(:each)
+          key.each { |subkey| @map[subkey] = value }
+        else
+          @map[key] = value
         end
       end
 
@@ -119,7 +117,7 @@ class Foreman::Thor
       @method_options
     end
 
-    alias_method :options, :method_options
+    alias options method_options
 
     # Adds an option to the set of method options. If :for is given as option,
     # it allows you to change the options from a previous defined command.
@@ -149,14 +147,14 @@ class Foreman::Thor
     #
     def method_option(name, options = {})
       scope = if options[:for]
-        find_and_refresh_command(options[:for]).options
-      else
-        method_options
+                find_and_refresh_command(options[:for]).options
+              else
+                method_options
       end
 
       build_option(name, options, scope)
     end
-    alias_method :option, :method_option
+    alias option method_option
 
     def disable_class_options
       @disable_class_options = true
@@ -173,18 +171,18 @@ class Foreman::Thor
       command = all_commands[meth]
       handle_no_command_error(meth) unless command
 
-      shell.say "Usage:"
+      shell.say 'Usage:'
       shell.say "  #{banner(command)}"
       shell.say
       class_options_help(shell, nil => command.options.values)
       if command.long_description
-        shell.say "Description:"
-        shell.print_wrapped(command.long_description, :indent => 2)
+        shell.say 'Description:'
+        shell.print_wrapped(command.long_description, indent: 2)
       else
         shell.say command.description
       end
     end
-    alias_method :task_help, :command_help
+    alias task_help command_help
 
     # Prints help information for this class.
     #
@@ -201,10 +199,10 @@ class Foreman::Thor
       if defined?(@package_name) && @package_name
         shell.say "#{@package_name} commands:"
       else
-        shell.say "Commands:"
+        shell.say 'Commands:'
       end
 
-      shell.print_table(list, :indent => 2, :truncate => true)
+      shell.print_table(list, indent: 2, truncate: true)
       shell.say
       class_options_help(shell)
     end
@@ -213,18 +211,19 @@ class Foreman::Thor
     def printable_commands(all = true, subcommand = false)
       (all ? all_commands : commands).map do |_, command|
         next if command.hidden?
+
         item = []
         item << banner(command, false, subcommand)
-        item << (command.description ? "# #{command.description.gsub(/\s+/m, ' ')}" : "")
+        item << (command.description ? "# #{command.description.gsub(/\s+/m, ' ')}" : '')
         item
       end.compact
     end
-    alias_method :printable_tasks, :printable_commands
+    alias printable_tasks printable_commands
 
     def subcommands
       @subcommands ||= from_superclass(:subcommands, [])
     end
-    alias_method :subtasks, :subcommands
+    alias subtasks subcommands
 
     def subcommand_classes
       @subcommand_classes ||= {}
@@ -237,12 +236,12 @@ class Foreman::Thor
 
       define_method(subcommand) do |*args|
         args, opts = Foreman::Thor::Arguments.split(args)
-        invoke_args = [args, opts, {:invoked_via_subcommand => true, :class_options => options}]
-        invoke_args.unshift "help" if opts.delete("--help") || opts.delete("-h")
+        invoke_args = [args, opts, { invoked_via_subcommand: true, class_options: options }]
+        invoke_args.unshift 'help' if opts.delete('--help') || opts.delete('-h')
         invoke subcommand_class, *invoke_args
       end
     end
-    alias_method :subtask, :subcommand
+    alias subtask subcommand
 
     # Extend check unknown options to accept a hash of conditions.
     #
@@ -326,7 +325,7 @@ class Foreman::Thor
       command && stop_on_unknown_option.include?(command.name.to_sym)
     end
 
-  protected
+    protected
 
     def stop_on_unknown_option #:nodoc:
       @stop_on_unknown_option ||= Set.new
@@ -374,7 +373,7 @@ class Foreman::Thor
     # the command that is going to be invoked and a boolean which indicates if
     # the namespace should be displayed as arguments.
     #
-    def banner(command, namespace = nil, subcommand = false)
+    def banner(command, _namespace = nil, subcommand = false)
       "#{basename} #{command.formatted_usage(self, $thor_runner, subcommand)}"
     end
 
@@ -397,16 +396,16 @@ class Foreman::Thor
         commands[meth] = base_class.new(meth, @desc, @long_desc, @usage, method_options, @disable_class_options)
         @usage, @desc, @long_desc, @method_options, @hide, @disable_class_options = nil
         true
-      elsif all_commands[meth] || meth == "method_missing"
+      elsif all_commands[meth] || meth == 'method_missing'
         true
       else
         puts "[WARNING] Attempted to create command #{meth.inspect} without usage or description. " \
-             "Call desc if you want this method to be available as command or declare it inside a " \
+             'Call desc if you want this method to be available as command or declare it inside a ' \
              "no_commands{} block. Invoked from #{caller[1].inspect}."
         false
       end
     end
-    alias_method :create_task, :create_command
+    alias create_task create_command
 
     def initialize_added #:nodoc:
       class_options.merge!(method_options)
@@ -418,7 +417,7 @@ class Foreman::Thor
       meth = args.first.to_s unless args.empty?
       args.shift if meth && (map[meth] || meth !~ /^\-/)
     end
-    alias_method :retrieve_task_name, :retrieve_command_name
+    alias retrieve_task_name retrieve_command_name
 
     # receives a (possibly nil) command name and returns a name that is in
     # the commands hash. In addition to normalizing aliases, this logic
@@ -428,7 +427,7 @@ class Foreman::Thor
     # +normalize_command_name+ also converts names like +animal-prison+
     # into +animal_prison+.
     def normalize_command_name(meth) #:nodoc:
-      return default_command.to_s.tr("-", "_") unless meth
+      return default_command.to_s.tr('-', '_') unless meth
 
       possibilities = find_command_possibilities(meth)
       raise AmbiguousTaskError, "Ambiguous command #{meth} matches [#{possibilities.join(', ')}]" if possibilities.size > 1
@@ -441,9 +440,9 @@ class Foreman::Thor
         meth = possibilities.first
       end
 
-      meth.to_s.tr("-", "_") # treat foo-bar as foo_bar
+      meth.to_s.tr('-', '_') # treat foo-bar as foo_bar
     end
-    alias_method :normalize_task_name, :normalize_command_name
+    alias normalize_task_name normalize_command_name
 
     # this is the logic that takes the command name passed in by the user
     # and determines whether it is an unambiguous substrings of a command or
@@ -461,22 +460,22 @@ class Foreman::Thor
         possibilities
       end
     end
-    alias_method :find_task_possibilities, :find_command_possibilities
+    alias find_task_possibilities find_command_possibilities
 
-    def subcommand_help(cmd)
-      desc "help [COMMAND]", "Describe subcommands or one specific subcommand"
+    def subcommand_help(_cmd)
+      desc 'help [COMMAND]', 'Describe subcommands or one specific subcommand'
       class_eval "
         def help(command = nil, subcommand = true); super; end
 "
     end
-    alias_method :subtask_help, :subcommand_help
+    alias subtask_help subcommand_help
   end
 
   include Foreman::Thor::Base
 
   map HELP_MAPPINGS => :help
 
-  desc "help [COMMAND]", "Describe available commands or one specific command"
+  desc 'help [COMMAND]', 'Describe available commands or one specific command'
   disable_class_options
   def help(command = nil, subcommand = false)
     if command

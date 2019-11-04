@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "arel/attributes/attribute"
+require 'arel/attributes/attribute'
 
 module Arel # :nodoc: all
   module Attributes

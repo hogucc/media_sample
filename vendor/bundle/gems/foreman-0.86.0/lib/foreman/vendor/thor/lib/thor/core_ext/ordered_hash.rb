@@ -1,7 +1,7 @@
 class Foreman::Thor
   module CoreExt
     class OrderedHash < ::Hash
-      if RUBY_VERSION < "1.9"
+      if RUBY_VERSION < '1.9'
         def initialize(*args, &block)
           super
           @keys = []
@@ -32,7 +32,7 @@ class Foreman::Thor
           self
         end
 
-        alias_method :reject!, :delete_if
+        alias reject! delete_if
 
         def reject(&block)
           dup.reject!(&block)
@@ -56,29 +56,33 @@ class Foreman::Thor
 
         def each_key
           return to_enum(:each_key) unless block_given?
+
           @keys.each { |key| yield(key) }
           self
         end
 
         def each_value
           return to_enum(:each_value) unless block_given?
+
           @keys.each { |key| yield(self[key]) }
           self
         end
 
         def each
           return to_enum(:each) unless block_given?
+
           @keys.each { |key| yield([key, self[key]]) }
           self
         end
 
         def each_pair
           return to_enum(:each_pair) unless block_given?
+
           @keys.each { |key| yield(key, self[key]) }
           self
         end
 
-        alias_method :select, :find_all
+        alias select find_all
 
         def clear
           super
@@ -101,7 +105,7 @@ class Foreman::Thor
           self
         end
 
-        alias_method :update, :merge!
+        alias update merge!
 
         def merge(other_hash, &block)
           dup.merge!(other_hash, &block)

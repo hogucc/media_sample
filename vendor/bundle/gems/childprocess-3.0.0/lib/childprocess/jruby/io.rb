@@ -4,13 +4,8 @@ module ChildProcess
       private
 
       def check_type(output)
-        unless output.respond_to?(:to_outputstream) && output.respond_to?(:write)
-          raise ArgumentError, "expected #{output.inspect} to respond to :to_outputstream"
-        end
+        raise ArgumentError, "expected #{output.inspect} to respond to :to_outputstream" unless output.respond_to?(:to_outputstream) && output.respond_to?(:write)
       end
-
     end # IO
   end # Unix
 end # ChildProcess
-
-

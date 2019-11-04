@@ -52,14 +52,12 @@ module Capybara
     def [](*args)
       idx, length = args
       max_idx = case idx
-      when Integer
-        if !idx.negative?
-          length.nil? ? idx : idx + length - 1
-        else
-          nil
-        end
-      when Range
-        idx.end && idx.max # endless range will have end == nil
+                when Integer
+                  unless idx.negative?
+                    length.nil? ? idx : idx + length - 1
+                  end
+                when Range
+                  idx.end && idx.max # endless range will have end == nil
       end
 
       if max_idx.nil?
@@ -69,7 +67,7 @@ module Capybara
         @result_cache[*args]
       end
     end
-    alias :at :[]
+    alias at []
 
     def empty?
       !any?
@@ -94,7 +92,8 @@ module Capybara
       end
 
       if between
-        min, max = between.min, (between.end && between.max)
+        min = between.min
+        max = (between.end && between.max)
         size = load_up_to(max ? max + 1 : min)
         return size <=> min unless between.include?(size)
       end
@@ -130,7 +129,7 @@ module Capybara
       @elements.length
     end
 
-  private
+    private
 
     def load_up_to(num)
       loop do

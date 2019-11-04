@@ -42,7 +42,7 @@ module TestSessions
   SeleniumFirefox = Capybara::Session.new(:selenium_firefox, TestApp)
 end
 
-skipped_tests = %i[response_headers status_code trigger]
+skipped_tests = [:response_headers, :status_code, :trigger]
 
 Capybara::SpecHelper.log_selenium_driver_version(Selenium::WebDriver::Firefox) if ENV['CI']
 
@@ -67,7 +67,7 @@ Capybara::SpecHelper.run_specs TestSessions::SeleniumFirefox, 'selenium', capyba
   end
 end
 
-RSpec.describe 'Capybara::Session with firefox' do # rubocop:disable RSpec/MultipleDescribes
+RSpec.describe 'Capybara::Session with firefox' do
   include Capybara::SpecHelper
   ['Capybara::Session', 'Capybara::Node', Capybara::RSpecMatchers].each do |examples|
     include_examples examples, TestSessions::SeleniumFirefox, :selenium_firefox

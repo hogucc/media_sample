@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "byebug/command"
-require "byebug/helpers/parse"
+require 'byebug/command'
+require 'byebug/helpers/parse'
 
 module Byebug
   #
@@ -20,7 +20,7 @@ module Byebug
       end
 
       def file_path
-        @file_path ||= ""
+        @file_path ||= ''
       end
 
       def setup_autolist(value)
@@ -47,7 +47,7 @@ module Byebug
     end
 
     def self.short_description
-      "Runs until the next breakpoint as long as it is different from the current one"
+      'Runs until the next breakpoint as long as it is different from the current one'
     end
 
     def initialize_attributes

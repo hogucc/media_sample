@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "active_support/duration"
-require "active_support/core_ext/numeric/time"
+require 'active_support/duration'
+require 'active_support/core_ext/numeric/time'
 
 class Integer
   # Returns a Duration instance matching the number of months provided.
@@ -10,7 +10,7 @@ class Integer
   def months
     ActiveSupport::Duration.months(self)
   end
-  alias :month :months
+  alias month months
 
   # Returns a Duration instance matching the number of years provided.
   #
@@ -18,5 +18,5 @@ class Integer
   def years
     ActiveSupport::Duration.years(self)
   end
-  alias :year :years
+  alias year years
 end

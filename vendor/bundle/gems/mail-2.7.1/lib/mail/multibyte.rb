@@ -1,5 +1,5 @@
-# encoding: utf-8
 # frozen_string_literal: true
+
 require 'mail/multibyte/chars'
 
 module Mail #:nodoc:
@@ -19,7 +19,7 @@ module Mail #:nodoc:
 
     self.proxy_class = Mail::Multibyte::Chars
 
-    if RUBY_VERSION >= "1.9"
+    if RUBY_VERSION >= '1.9'
       # == Multibyte proxy
       #
       # +mb_chars+ is a multibyte safe proxy for string methods.
@@ -85,7 +85,7 @@ module Mail #:nodoc:
       'Shift_JIS' => /\A(?:
                   [\x00-\x7e\xa1-\xdf]                                     |
                   [\x81-\x9f\xe0-\xef] [\x40-\x7e\x80-\x9e\x9f-\xfc])\z /xn
-    }
+    }.freeze
   end
 end
 

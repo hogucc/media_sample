@@ -11,19 +11,19 @@ module ActiveRecord
 
       def +(other)
         WhereClause.new(
-          predicates + other.predicates,
+          predicates + other.predicates
         )
       end
 
       def -(other)
         WhereClause.new(
-          predicates - other.predicates,
+          predicates - other.predicates
         )
       end
 
       def merge(other)
         WhereClause.new(
-          predicates_unreferenced_by(other) + other.predicates,
+          predicates_unreferenced_by(other) + other.predicates
         )
       end
 
@@ -40,7 +40,7 @@ module ActiveRecord
           common
         else
           or_clause = WhereClause.new(
-            [left.ast.or(right.ast)],
+            [left.ast.or(right.ast)]
           )
           common + or_clause
         end
@@ -54,11 +54,11 @@ module ActiveRecord
           end
         end
 
-        equalities.map { |node|
+        equalities.map do |node|
           name = node.left.name.to_s
           value = extract_node_value(node.right)
           [name, value]
-        }.to_h
+        end.to_h
       end
 
       def ast
@@ -71,13 +71,13 @@ module ActiveRecord
       end
 
       def invert(as = :nand)
-        if predicates.size == 1
-          inverted_predicates = [ invert_predicate(predicates.first) ]
-        elsif as == :nor
-          inverted_predicates = predicates.map { |node| invert_predicate(node) }
-        else
-          inverted_predicates = [ Arel::Nodes::Not.new(ast) ]
-        end
+        inverted_predicates = if predicates.size == 1
+                                [invert_predicate(predicates.first)]
+                              elsif as == :nor
+                                predicates.map { |node| invert_predicate(node) }
+                              else
+                                [Arel::Nodes::Not.new(ast)]
+                              end
 
         WhereClause.new(inverted_predicates)
       end
@@ -88,103 +88,102 @@ module ActiveRecord
 
       protected
 
-        attr_reader :predicates
+      attr_reader :predicates
 
-        def referenced_columns
-          @referenced_columns ||= begin
-            equality_nodes = predicates.select { |n| equality_node?(n) }
-            Set.new(equality_nodes, &:left)
-          end
+      def referenced_columns
+        @referenced_columns ||= begin
+          equality_nodes = predicates.select { |n| equality_node?(n) }
+          Set.new(equality_nodes, &:left)
         end
+      end
 
       private
-        def equalities(predicates)
-          equalities = []
 
-          predicates.each do |node|
-            case node
-            when Arel::Nodes::Equality
-              equalities << node
-            when Arel::Nodes::And
-              equalities.concat equalities(node.children)
-            end
-          end
+      def equalities(predicates)
+        equalities = []
 
-          equalities
-        end
-
-        def predicates_unreferenced_by(other)
-          predicates.reject do |n|
-            equality_node?(n) && other.referenced_columns.include?(n.left)
-          end
-        end
-
-        def equality_node?(node)
-          node.respond_to?(:operator) && node.operator == :==
-        end
-
-        def invert_predicate(node)
+        predicates.each do |node|
           case node
-          when NilClass
-            raise ArgumentError, "Invalid argument for .where.not(), got nil."
-          when Arel::Nodes::In
-            Arel::Nodes::NotIn.new(node.left, node.right)
-          when Arel::Nodes::IsNotDistinctFrom
-            Arel::Nodes::IsDistinctFrom.new(node.left, node.right)
-          when Arel::Nodes::IsDistinctFrom
-            Arel::Nodes::IsNotDistinctFrom.new(node.left, node.right)
           when Arel::Nodes::Equality
-            Arel::Nodes::NotEqual.new(node.left, node.right)
-          when String
-            Arel::Nodes::Not.new(Arel::Nodes::SqlLiteral.new(node))
-          else
-            Arel::Nodes::Not.new(node)
+            equalities << node
+          when Arel::Nodes::And
+            equalities.concat equalities(node.children)
           end
         end
 
-        def except_predicates(columns)
-          predicates.reject do |node|
-            Arel.fetch_attribute(node) { |attr| columns.include?(attr.name.to_s) }
-          end
-        end
+        equalities
+      end
 
-        def predicates_with_wrapped_sql_literals
-          non_empty_predicates.map do |node|
-            case node
-            when Arel::Nodes::SqlLiteral, ::String
-              wrap_sql_literal(node)
-            else node
-            end
-          end
+      def predicates_unreferenced_by(other)
+        predicates.reject do |n|
+          equality_node?(n) && other.referenced_columns.include?(n.left)
         end
+      end
 
-        ARRAY_WITH_EMPTY_STRING = [""]
-        def non_empty_predicates
-          predicates - ARRAY_WITH_EMPTY_STRING
+      def equality_node?(node)
+        node.respond_to?(:operator) && node.operator == :==
+      end
+
+      def invert_predicate(node)
+        case node
+        when NilClass
+          raise ArgumentError, 'Invalid argument for .where.not(), got nil.'
+        when Arel::Nodes::In
+          Arel::Nodes::NotIn.new(node.left, node.right)
+        when Arel::Nodes::IsNotDistinctFrom
+          Arel::Nodes::IsDistinctFrom.new(node.left, node.right)
+        when Arel::Nodes::IsDistinctFrom
+          Arel::Nodes::IsNotDistinctFrom.new(node.left, node.right)
+        when Arel::Nodes::Equality
+          Arel::Nodes::NotEqual.new(node.left, node.right)
+        when String
+          Arel::Nodes::Not.new(Arel::Nodes::SqlLiteral.new(node))
+        else
+          Arel::Nodes::Not.new(node)
         end
+      end
 
-        def wrap_sql_literal(node)
-          if ::String === node
-            node = Arel.sql(node)
-          end
-          Arel::Nodes::Grouping.new(node)
+      def except_predicates(columns)
+        predicates.reject do |node|
+          Arel.fetch_attribute(node) { |attr| columns.include?(attr.name.to_s) }
         end
+      end
 
-        def extract_node_value(node)
+      def predicates_with_wrapped_sql_literals
+        non_empty_predicates.map do |node|
           case node
-          when Array
-            node.map { |v| extract_node_value(v) }
-          when Arel::Nodes::Casted, Arel::Nodes::Quoted
-            node.val
-          when Arel::Nodes::BindParam
-            value = node.value
-            if value.respond_to?(:value_before_type_cast)
-              value.value_before_type_cast
-            else
-              value
-            end
+          when Arel::Nodes::SqlLiteral, ::String
+            wrap_sql_literal(node)
+          else node
           end
         end
+      end
+
+      ARRAY_WITH_EMPTY_STRING = [''].freeze
+      def non_empty_predicates
+        predicates - ARRAY_WITH_EMPTY_STRING
+      end
+
+      def wrap_sql_literal(node)
+        node = Arel.sql(node) if ::String === node
+        Arel::Nodes::Grouping.new(node)
+      end
+
+      def extract_node_value(node)
+        case node
+        when Array
+          node.map { |v| extract_node_value(v) }
+        when Arel::Nodes::Casted, Arel::Nodes::Quoted
+          node.val
+        when Arel::Nodes::BindParam
+          value = node.value
+          if value.respond_to?(:value_before_type_cast)
+            value.value_before_type_cast
+          else
+            value
+          end
+        end
+      end
     end
   end
 end

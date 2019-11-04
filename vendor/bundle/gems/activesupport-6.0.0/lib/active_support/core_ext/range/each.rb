@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "active_support/time_with_zone"
+require 'active_support/time_with_zone'
 
 module ActiveSupport
   module EachTimeWithZone #:nodoc:
@@ -16,9 +16,9 @@ module ActiveSupport
 
     private
 
-      def ensure_iteration_allowed
-        raise TypeError, "can't iterate from #{first.class}" if first.is_a?(TimeWithZone)
-      end
+    def ensure_iteration_allowed
+      raise TypeError, "can't iterate from #{first.class}" if first.is_a?(TimeWithZone)
+    end
   end
 end
 

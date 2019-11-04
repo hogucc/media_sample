@@ -14,7 +14,6 @@
 require 'builder/xmlbase'
 
 module Builder
-
   # Create XML markup easily.  All (well, almost all) methods sent to
   # an XmlMarkup object will be translated to the equivalent XML
   # markup.  Any method with a block will be treated as an XML markup
@@ -158,7 +157,6 @@ module Builder
   #     }
   #
   class XmlMarkup < XmlBase
-
     # Create an XML markup builder.  Parameters are specified by an
     # option hash.
     #
@@ -186,13 +184,13 @@ module Builder
     #    values), then give the value as a Symbol.  This allows much
     #    finer control over escaping attribute values.
     #
-    def initialize(options={})
+    def initialize(options = {})
       indent = options[:indent] || 0
       margin = options[:margin] || 0
-      @quote = (options[:quote] == :single) ? "'" : '"'
+      @quote = options[:quote] == :single ? "'" : '"'
       @explicit_nil_handling = options[:explicit_nil_handling]
       super(indent, margin)
-      @target = options[:target] || ""
+      @target = options[:target] || ''
     end
 
     # Return the target of the builder.
@@ -201,8 +199,8 @@ module Builder
     end
 
     def comment!(comment_text)
-      _ensure_no_block ::Kernel::block_given?
-      _special("<!-- ", " -->", comment_text, nil)
+      _ensure_no_block ::Kernel.block_given?
+      _special('<!-- ', ' -->', comment_text, nil)
     end
 
     # Insert an XML declaration into the XML markup.
@@ -217,18 +215,18 @@ module Builder
       args.each do |arg|
         case arg
         when ::String
-          @target << %{ "#{arg}"} # " WART
+          @target << %( "#{arg}") # " WART
         when ::Symbol
           @target << " #{arg}"
         end
       end
-      if ::Kernel::block_given?
-        @target << " ["
+      if ::Kernel.block_given?
+        @target << ' ['
         _newline
         _nested_structures(block)
-        @target << "]"
+        @target << ']'
       end
-      @target << ">"
+      @target << '>'
       _newline
     end
 
@@ -244,19 +242,20 @@ module Builder
     # Note: If the encoding is setup to "UTF-8" and the value of
     # $KCODE is "UTF8", then builder will emit UTF-8 encoded strings
     # rather than the entity encoding normally used.
-    def instruct!(directive_tag=:xml, attrs={})
-      _ensure_no_block ::Kernel::block_given?
+    def instruct!(directive_tag = :xml, attrs = {})
+      _ensure_no_block ::Kernel.block_given?
       if directive_tag == :xml
-        a = { :version=>"1.0", :encoding=>"UTF-8" }
+        a = { version: '1.0', encoding: 'UTF-8' }
         attrs = a.merge attrs
-	@encoding = attrs[:encoding].downcase
+        @encoding = attrs[:encoding].downcase
       end
       _special(
         "<?#{directive_tag}",
-        "?>",
+        '?>',
         nil,
         attrs,
-        [:version, :encoding, :standalone])
+        [:version, :encoding, :standalone]
+      )
     end
 
     # Insert a CDATA section into the XML markup.
@@ -267,8 +266,8 @@ module Builder
     #        #=> <![CDATA[text to be included in cdata]]>
     #
     def cdata!(text)
-      _ensure_no_block ::Kernel::block_given?
-      _special("<![CDATA[", "]]>", text.gsub(']]>', ']]]]><![CDATA[>'), nil)
+      _ensure_no_block ::Kernel.block_given?
+      _special('<![CDATA[', ']]>', text.gsub(']]>', ']]]]><![CDATA[>'), nil)
     end
 
     private
@@ -282,7 +281,7 @@ module Builder
     end
 
     # Insert special instruction.
-    def _special(open, close, data=nil, attrs=nil, order=[])
+    def _special(open, close, data = nil, attrs = nil, order = [])
       _indent
       @target << open
       @target << data if data
@@ -293,11 +292,11 @@ module Builder
 
     # Start an XML tag.  If <tt>end_too</tt> is true, then the start
     # tag is also the end tag (e.g.  <br/>
-    def _start_tag(sym, attrs, end_too=false)
+    def _start_tag(sym, attrs, end_too = false)
       @target << "<#{sym}"
       _insert_attributes(attrs)
-      @target << "/" if end_too
-      @target << ">"
+      @target << '/' if end_too
+      @target << '>'
     end
 
     # Insert an ending tag.
@@ -306,14 +305,15 @@ module Builder
     end
 
     # Insert the attributes (given in the hash).
-    def _insert_attributes(attrs, order=[])
+    def _insert_attributes(attrs, order = [])
       return if attrs.nil?
+
       order.each do |k|
         v = attrs[k]
-        @target << %{ #{k}=#{@quote}#{_attr_value(v)}#{@quote}} if v
+        @target << %( #{k}=#{@quote}#{_attr_value(v)}#{@quote}) if v
       end
       attrs.each do |k, v|
-        @target << %{ #{k}=#{@quote}#{_attr_value(v)}#{@quote}} unless order.member?(k) # " WART
+        @target << %( #{k}=#{@quote}#{_attr_value(v)}#{@quote}) unless order.member?(k) # " WART
       end
     end
 
@@ -328,12 +328,10 @@ module Builder
 
     def _ensure_no_block(got_block)
       if got_block
-        ::Kernel::raise IllegalBlockError.new(
-          "Blocks are not allowed on XML instructions"
+        ::Kernel.raise IllegalBlockError.new(
+          'Blocks are not allowed on XML instructions'
         )
       end
     end
-
   end
-
 end

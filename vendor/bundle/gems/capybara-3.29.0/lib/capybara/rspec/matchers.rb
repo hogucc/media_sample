@@ -47,7 +47,7 @@ module Capybara
       Matchers::MatchSelector.new(*args, &optional_filter_block)
     end
 
-    %i[css xpath].each do |selector|
+    [:css, :xpath].each do |selector|
       define_method "have_#{selector}" do |expr, **options, &optional_filter_block|
         Matchers::HaveSelector.new(selector, expr, options, &optional_filter_block)
       end
@@ -77,7 +77,7 @@ module Capybara
     #
     #   @see Capybara::Node::Matchers#matches_css?
 
-    %i[link button field select table].each do |selector|
+    [:link, :button, :field, :select, :table].each do |selector|
       define_method "have_#{selector}" do |locator = nil, **options, &optional_filter_block|
         Matchers::HaveSelector.new(selector, locator, options, &optional_filter_block)
       end
@@ -108,7 +108,7 @@ module Capybara
     #
     #   @see Capybara::Node::Matchers#has_table?
 
-    %i[checked unchecked].each do |state|
+    [:checked, :unchecked].each do |state|
       define_method "have_#{state}_field" do |locator = nil, **options, &optional_filter_block|
         Matchers::HaveSelector.new(:field, locator, options.merge(state => true), &optional_filter_block)
       end
@@ -130,7 +130,7 @@ module Capybara
     def have_text(*args)
       Matchers::HaveText.new(*args)
     end
-    alias_method :have_content, :have_text
+    alias have_content have_text
 
     def have_title(title, **options)
       Matchers::HaveTitle.new(title, options)
@@ -165,7 +165,7 @@ module Capybara
         Matchers::NegatedMatcher.new(send("have_#{matcher_type}", *args, &optional_filter_block))
       end
     end
-    alias_method :have_no_content, :have_no_text
+    alias have_no_content have_no_text
 
     %w[selector css xpath].each do |matcher_type|
       define_method "not_match_#{matcher_type}" do |*args, &optional_filter_block|

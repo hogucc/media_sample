@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require "action_view/helpers/tag_helper"
-require "active_support/core_ext/string/access"
-require "i18n/exceptions"
+require 'action_view/helpers/tag_helper'
+require 'active_support/core_ext/string/access'
+require 'i18n/exceptions'
 
 module ActionView
   # = Action View Translation Helpers
@@ -59,9 +59,9 @@ module ActionView
       # they can provide HTML values for.
       def translate(key, options = {})
         options = options.dup
-        if options.has_key?(:default)
+        if options.key?(:default)
           remaining_defaults = Array.wrap(options.delete(:default)).compact
-          options[:default] = remaining_defaults unless remaining_defaults.first.kind_of?(Symbol)
+          options[:default] = remaining_defaults unless remaining_defaults.first.is_a?(Symbol)
         end
 
         # If the user has explicitly decided to NOT raise errors, pass that option to I18n.
@@ -78,9 +78,7 @@ module ActionView
         if html_safe_translation_key?(key)
           html_safe_options = options.dup
           options.except(*I18n::RESERVED_KEYS).each do |name, value|
-            unless name == :count && value.is_a?(Numeric)
-              html_safe_options[name] = ERB::Util.html_escape(value.to_s)
-            end
+            html_safe_options[name] = ERB::Util.html_escape(value.to_s) unless name == :count && value.is_a?(Numeric)
           end
           translation = I18n.translate(scope_key_by_partial(key), html_safe_options.merge(raise: i18n_raise))
           if translation.respond_to?(:map)
@@ -101,16 +99,14 @@ module ActionView
           title = +"translation missing: #{keys.join('.')}"
 
           interpolations = options.except(:default, :scope)
-          if interpolations.any?
-            title << ", " << interpolations.map { |k, v| "#{k}: #{ERB::Util.html_escape(v)}" }.join(", ")
-          end
+          title << ', ' << interpolations.map { |k, v| "#{k}: #{ERB::Util.html_escape(v)}" }.join(', ') if interpolations.any?
 
           return title unless ActionView::Base.debug_missing_translation
 
-          content_tag("span", keys.last.to_s.titleize, class: "translation_missing", title: title)
+          content_tag('span', keys.last.to_s.titleize, class: 'translation_missing', title: title)
         end
       end
-      alias :t :translate
+      alias t translate
 
       # Delegates to <tt>I18n.localize</tt> with no additional functionality.
       #
@@ -119,27 +115,28 @@ module ActionView
       def localize(*args)
         I18n.localize(*args)
       end
-      alias :l :localize
+      alias l localize
 
       private
-        def scope_key_by_partial(key)
-          stringified_key = key.to_s
-          if stringified_key.first == "."
-            if @virtual_path
-              @_scope_key_by_partial_cache ||= {}
-              @_scope_key_by_partial_cache[@virtual_path] ||= @virtual_path.gsub(%r{/_?}, ".")
-              "#{@_scope_key_by_partial_cache[@virtual_path]}#{stringified_key}"
-            else
-              raise "Cannot use t(#{key.inspect}) shortcut because path is not available"
-            end
-          else
-            key
-          end
-        end
 
-        def html_safe_translation_key?(key)
-          /(?:_|\b)html\z/.match?(key.to_s)
+      def scope_key_by_partial(key)
+        stringified_key = key.to_s
+        if stringified_key.first == '.'
+          if @virtual_path
+            @_scope_key_by_partial_cache ||= {}
+            @_scope_key_by_partial_cache[@virtual_path] ||= @virtual_path.gsub(%r{/_?}, '.')
+            "#{@_scope_key_by_partial_cache[@virtual_path]}#{stringified_key}"
+          else
+            raise "Cannot use t(#{key.inspect}) shortcut because path is not available"
+          end
+        else
+          key
         end
+      end
+
+      def html_safe_translation_key?(key)
+        /(?:_|\b)html\z/.match?(key.to_s)
+      end
     end
   end
 end

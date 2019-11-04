@@ -30,28 +30,28 @@
 
 require 'rbconfig'
 module FFI
-  class PlatformError < LoadError; end
+  class PlatformError < RuntimeError; end
 
   # This module defines different constants and class methods to play with
   # various platforms.
   module Platform
     OS = case RbConfig::CONFIG['host_os'].downcase
-    when /linux/
-      "linux"
-    when /darwin/
-      "darwin"
-    when /freebsd/
-      "freebsd"
-    when /netbsd/
-      "netbsd"
-    when /openbsd/
-      "openbsd"
-    when /sunos|solaris/
-      "solaris"
-    when /mingw|mswin/
-      "windows"
-    else
-      RbConfig::CONFIG['host_os'].downcase
+         when /linux/
+           'linux'
+         when /darwin/
+           'darwin'
+         when /freebsd/
+           'freebsd'
+         when /netbsd/
+           'netbsd'
+         when /openbsd/
+           'openbsd'
+         when /sunos|solaris/
+           'solaris'
+         when /mingw|mswin/
+           'windows'
+         else
+           RbConfig::CONFIG['host_os'].downcase
     end
 
     OSVERSION = RbConfig::CONFIG['host_os'].gsub(/[^\d]/, '').to_i
@@ -59,26 +59,27 @@ module FFI
     CPU = RbConfig::CONFIG['host_cpu']
 
     ARCH = case CPU.downcase
-    when /amd64|x86_64/
-      "x86_64"
-    when /i?86|x86|i86pc/
-      "i386"
-    when /ppc64|powerpc64/
-      "powerpc64"
-    when /ppc|powerpc/
-      "powerpc"
-    when /sparcv9|sparc64/
-      "sparcv9"
-    else
-      case RbConfig::CONFIG['host_cpu']
-      when /^arm/
-        "arm"
-      else
-        RbConfig::CONFIG['host_cpu']
-      end
+           when /amd64|x86_64/
+             'x86_64'
+           when /i?86|x86|i86pc/
+             'i386'
+           when /ppc64|powerpc64/
+             'powerpc64'
+           when /ppc|powerpc/
+             'powerpc'
+           when /sparcv9|sparc64/
+             'sparcv9'
+           else
+             case RbConfig::CONFIG['host_cpu']
+             when /^arm/
+               'arm'
+             else
+               RbConfig::CONFIG['host_cpu']
+             end
     end
 
     private
+
     # @param [String) os
     # @return [Boolean]
     # Test if current OS is +os+.
@@ -87,55 +88,55 @@ module FFI
     end
 
     IS_GNU = defined?(GNU_LIBC)
-    IS_LINUX = is_os("linux")
-    IS_MAC = is_os("darwin")
-    IS_FREEBSD = is_os("freebsd")
-    IS_NETBSD = is_os("netbsd")
-    IS_OPENBSD = is_os("openbsd")
-    IS_SOLARIS = is_os("solaris")
-    IS_WINDOWS = is_os("windows")
+    IS_LINUX = is_os('linux')
+    IS_MAC = is_os('darwin')
+    IS_FREEBSD = is_os('freebsd')
+    IS_NETBSD = is_os('netbsd')
+    IS_OPENBSD = is_os('openbsd')
+    IS_SOLARIS = is_os('solaris')
+    IS_WINDOWS = is_os('windows')
     IS_BSD = IS_MAC || IS_FREEBSD || IS_NETBSD || IS_OPENBSD
 
     # Add the version for known ABI breaks
-    name_version = "12" if IS_FREEBSD && OSVERSION >= 12 # 64-bit inodes
+    name_version = '12' if IS_FREEBSD && OSVERSION >= 12 # 64-bit inodes
 
-    NAME = "#{ARCH}-#{OS}#{name_version}"
+    NAME = "#{ARCH}-#{OS}#{name_version}".freeze
     CONF_DIR = File.join(File.dirname(__FILE__), 'platform', NAME)
 
     public
 
     LIBPREFIX = case OS
-    when /windows|msys/
-      ''
-    when /cygwin/
-      'cyg'
-    else
-      'lib'
+                when /windows|msys/
+                  ''
+                when /cygwin/
+                  'cyg'
+                else
+                  'lib'
     end
 
     LIBSUFFIX = case OS
-    when /darwin/
-      'dylib'
-    when /linux|bsd|solaris/
-      'so'
-    when /windows|cygwin|msys/
-      'dll'
-    else
-      # Punt and just assume a sane unix (i.e. anything but AIX)
-      'so'
+                when /darwin/
+                  'dylib'
+                when /linux|bsd|solaris/
+                  'so'
+                when /windows|cygwin|msys/
+                  'dll'
+                else
+                  # Punt and just assume a sane unix (i.e. anything but AIX)
+                  'so'
     end
 
     LIBC = if IS_WINDOWS
-      RbConfig::CONFIG['RUBY_SO_NAME'].split('-')[-2] + '.dll'
-    elsif IS_GNU
-      GNU_LIBC
-    elsif OS == 'cygwin'
-      "cygwin1.dll"
-    elsif OS == 'msys'
-      # Not sure how msys 1.0 behaves, tested on MSYS2.
-      "msys-2.0.dll"
-    else
-      "#{LIBPREFIX}c.#{LIBSUFFIX}"
+             RbConfig::CONFIG['RUBY_SO_NAME'].split('-')[-2] + '.dll'
+           elsif IS_GNU
+             GNU_LIBC
+           elsif OS == 'cygwin'
+             'cygwin1.dll'
+           elsif OS == 'msys'
+             # Not sure how msys 1.0 behaves, tested on MSYS2.
+             'msys-2.0.dll'
+           else
+             "#{LIBPREFIX}c.#{LIBSUFFIX}"
     end
 
     # Test if current OS is a *BSD (include MAC)
@@ -169,4 +170,3 @@ module FFI
     end
   end
 end
-

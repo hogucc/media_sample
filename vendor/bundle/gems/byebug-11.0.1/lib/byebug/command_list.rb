@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "byebug/errors"
+require 'byebug/errors'
 
 module Byebug
   #

@@ -2,7 +2,7 @@
 
 module ActiveRecord
   class LogSubscriber < ActiveSupport::LogSubscriber
-    IGNORE_PAYLOAD_NAMES = ["SCHEMA", "EXPLAIN"]
+    IGNORE_PAYLOAD_NAMES = %w[SCHEMA EXPLAIN].freeze
 
     class_attribute :backtrace_cleaner, default: ActiveSupport::BacktraceCleaner.new
 
@@ -15,7 +15,8 @@ module ActiveRecord
     end
 
     def self.reset_runtime
-      rt, self.runtime = runtime, 0
+      rt = runtime
+      self.runtime = 0
       rt
     end
 
@@ -34,9 +35,9 @@ module ActiveRecord
 
       unless (payload[:binds] || []).empty?
         casted_params = type_casted_binds(payload[:type_casted_binds])
-        binds = "  " + payload[:binds].zip(casted_params).map { |attr, value|
+        binds = '  ' + payload[:binds].zip(casted_params).map do |attr, value|
           render_bind(attr, value)
-        }.inspect
+        end.inspect
       end
 
       name = colorize_payload_name(name, payload[:name])
@@ -46,72 +47,69 @@ module ActiveRecord
     end
 
     private
-      def type_casted_binds(casted_binds)
-        casted_binds.respond_to?(:call) ? casted_binds.call : casted_binds
+
+    def type_casted_binds(casted_binds)
+      casted_binds.respond_to?(:call) ? casted_binds.call : casted_binds
+    end
+
+    def render_bind(attr, value)
+      if attr.is_a?(Array)
+        attr = attr.first
+      elsif attr.type.binary? && attr.value
+        value = "<#{attr.value_for_database.to_s.bytesize} bytes of binary data>"
       end
 
-      def render_bind(attr, value)
-        if attr.is_a?(Array)
-          attr = attr.first
-        elsif attr.type.binary? && attr.value
-          value = "<#{attr.value_for_database.to_s.bytesize} bytes of binary data>"
-        end
+      [attr&.name, value]
+    end
 
-        [attr && attr.name, value]
+    def colorize_payload_name(name, payload_name)
+      if payload_name.blank? || payload_name == 'SQL' # SQL vs Model Load/Exists
+        color(name, MAGENTA, true)
+      else
+        color(name, CYAN, true)
       end
+    end
 
-      def colorize_payload_name(name, payload_name)
-        if payload_name.blank? || payload_name == "SQL" # SQL vs Model Load/Exists
-          color(name, MAGENTA, true)
-        else
-          color(name, CYAN, true)
-        end
+    def sql_color(sql)
+      case sql
+      when /\A\s*rollback/mi
+        RED
+      when /select .*for update/mi, /\A\s*lock/mi
+        WHITE
+      when /\A\s*select/i
+        BLUE
+      when /\A\s*insert/i
+        GREEN
+      when /\A\s*update/i
+        YELLOW
+      when /\A\s*delete/i
+        RED
+      when /transaction\s*\Z/i
+        CYAN
+      else
+        MAGENTA
       end
+    end
 
-      def sql_color(sql)
-        case sql
-        when /\A\s*rollback/mi
-          RED
-        when /select .*for update/mi, /\A\s*lock/mi
-          WHITE
-        when /\A\s*select/i
-          BLUE
-        when /\A\s*insert/i
-          GREEN
-        when /\A\s*update/i
-          YELLOW
-        when /\A\s*delete/i
-          RED
-        when /transaction\s*\Z/i
-          CYAN
-        else
-          MAGENTA
-        end
-      end
+    def logger
+      ActiveRecord::Base.logger
+    end
 
-      def logger
-        ActiveRecord::Base.logger
-      end
+    def debug(progname = nil, &block)
+      return unless super
 
-      def debug(progname = nil, &block)
-        return unless super
+      log_query_source if ActiveRecord::Base.verbose_query_logs
+    end
 
-        if ActiveRecord::Base.verbose_query_logs
-          log_query_source
-        end
-      end
+    def log_query_source
+      source = extract_query_source_location(caller)
 
-      def log_query_source
-        source = extract_query_source_location(caller)
+      logger.debug("  ↳ #{source}") if source
+    end
 
-        if source
-          logger.debug("  ↳ #{source}")
-        end
-      end
-
-      def extract_query_source_location(locations)
-        backtrace_cleaner.clean(locations.lazy).first
-      end
+    def extract_query_source_location(locations)
+      backtrace_cleaner.clean(locations.lazy).first
+    end
   end
 end
 

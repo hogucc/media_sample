@@ -21,6 +21,6 @@ class Hash
   #   { a: 1, b: 2, c: 3, d: 4 }.extract!(:a, :b) # => {:a=>1, :b=>2}
   #   { a: 1, b: 2 }.extract!(:a, :x)             # => {:a=>1}
   def extract!(*keys)
-    keys.each_with_object(self.class.new) { |key, result| result[key] = delete(key) if has_key?(key) }
+    keys.each_with_object(self.class.new) { |key, result| result[key] = delete(key) if key?(key) }
   end
 end

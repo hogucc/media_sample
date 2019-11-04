@@ -2,7 +2,7 @@
 
 module ActionController
   class LogSubscriber < ActiveSupport::LogSubscriber
-    INTERNAL_PARAMS = %w(controller action format _method only_path)
+    INTERNAL_PARAMS = %w[controller action format _method only_path].freeze
 
     def start_processing(event)
       return unless logger.info?
@@ -30,7 +30,7 @@ module ActionController
         additions << "Allocations: #{event.allocations}"
 
         message = +"Completed #{status} #{Rack::Utils::HTTP_STATUS_CODES[status]} in #{event.duration.round}ms"
-        message << " (#{additions.join(" | ")})" unless additions.empty?
+        message << " (#{additions.join(' | ')})" unless additions.empty?
         message << "\n\n" if defined?(Rails.env) && Rails.env.development?
 
         message
@@ -56,12 +56,12 @@ module ActionController
     def unpermitted_parameters(event)
       debug do
         unpermitted_keys = event.payload[:keys]
-        color("Unpermitted parameter#{'s' if unpermitted_keys.size > 1}: #{unpermitted_keys.map { |e| ":#{e}" }.join(", ")}", RED)
+        color("Unpermitted parameter#{'s' if unpermitted_keys.size > 1}: #{unpermitted_keys.map { |e| ":#{e}" }.join(', ')}", RED)
       end
     end
 
-    %w(write_fragment read_fragment exist_fragment?
-       expire_fragment expire_page write_page).each do |method|
+    %w[write_fragment read_fragment exist_fragment?
+       expire_fragment expire_page write_page].each do |method|
       class_eval <<-METHOD, __FILE__, __LINE__ + 1
         def #{method}(event)
           return unless logger.info? && ActionController::Base.enable_fragment_cache_logging

@@ -10,7 +10,9 @@ module Arel # :nodoc: all
         super()
       end
 
-      def nil?; @val.nil?; end
+      def nil?
+        @val.nil?
+      end
 
       def hash
         [self.class, val, attribute].hash
@@ -18,15 +20,17 @@ module Arel # :nodoc: all
 
       def eql?(other)
         self.class == other.class &&
-            self.val == other.val &&
-            self.attribute == other.attribute
+          val == other.val &&
+          attribute == other.attribute
       end
-      alias :== :eql?
+      alias == eql?
     end
 
     class Quoted < Arel::Nodes::Unary # :nodoc:
-      alias :val :value
-      def nil?; val.nil?; end
+      alias val value
+      def nil?
+        val.nil?
+      end
 
       def infinite?
         value.respond_to?(:infinite?) && value.infinite?

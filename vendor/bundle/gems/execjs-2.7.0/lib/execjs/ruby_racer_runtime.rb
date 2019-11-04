@@ -1,9 +1,9 @@
-require "execjs/runtime"
+require 'execjs/runtime'
 
 module ExecJS
   class RubyRacerRuntime < Runtime
     class Context < Runtime::Context
-      def initialize(runtime, source = "", options = {})
+      def initialize(_runtime, source = '', _options = {})
         source = encode(source)
 
         lock do
@@ -25,27 +25,23 @@ module ExecJS
         end
       end
 
-      def eval(source, options = {})
+      def eval(source, _options = {})
         source = encode(source)
 
         if /\S/ =~ source
           lock do
-            begin
-              unbox @v8_context.eval("(#{source})")
-            rescue ::V8::JSError => e
-              raise wrap_error(e)
-            end
+            unbox @v8_context.eval("(#{source})")
+          rescue ::V8::JSError => e
+            raise wrap_error(e)
           end
         end
       end
 
       def call(properties, *args)
         lock do
-          begin
-            unbox @v8_context.eval(properties).call(*args)
-          rescue ::V8::JSError => e
-            raise wrap_error(e)
-          end
+          unbox @v8_context.eval(properties).call(*args)
+        rescue ::V8::JSError => e
+          raise wrap_error(e)
         end
       end
 
@@ -56,9 +52,8 @@ module ExecJS
         when ::V8::Array
           value.map { |v| unbox(v) }
         when ::V8::Object
-          value.inject({}) do |vs, (k, v)|
+          value.each_with_object({}) do |(k, v), vs|
             vs[k] = unbox(v) unless v.is_a?(::V8::Function)
-            vs
           end
         when String
           value.force_encoding('UTF-8')
@@ -68,44 +63,44 @@ module ExecJS
       end
 
       private
-        def lock
-          result, exception = nil, nil
-          V8::C::Locker() do
-            begin
-              result = yield
-            rescue Exception => e
-              exception = e
-            end
-          end
 
-          if exception
-            raise exception
-          else
-            result
-          end
+      def lock
+        result = nil
+        exception = nil
+        V8::C::Locker() do
+          result = yield
+        rescue Exception => e
+          exception = e
         end
 
-        def wrap_error(e)
-          error_class = e.value["name"] == "SyntaxError" ? RuntimeError : ProgramError
-
-          stack = e.value["stack"] || ""
-          stack = stack.split("\n")
-          stack.shift
-          stack = [e.message[/<eval>:\d+:\d+/, 0]].compact if stack.empty?
-          stack = stack.map { |line| line.sub(" at ", "").sub("<eval>", "(execjs)").strip }
-
-          error = error_class.new(e.value.to_s)
-          error.set_backtrace(stack + caller)
-          error
+        if exception
+          raise exception
+        else
+          result
         end
+      end
+
+      def wrap_error(e)
+        error_class = e.value['name'] == 'SyntaxError' ? RuntimeError : ProgramError
+
+        stack = e.value['stack'] || ''
+        stack = stack.split("\n")
+        stack.shift
+        stack = [e.message[/<eval>:\d+:\d+/, 0]].compact if stack.empty?
+        stack = stack.map { |line| line.sub(' at ', '').sub('<eval>', '(execjs)').strip }
+
+        error = error_class.new(e.value.to_s)
+        error.set_backtrace(stack + caller)
+        error
+      end
     end
 
     def name
-      "therubyracer (V8)"
+      'therubyracer (V8)'
     end
 
     def available?
-      require "v8"
+      require 'v8'
       true
     rescue LoadError
       false

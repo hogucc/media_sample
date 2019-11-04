@@ -17,22 +17,21 @@ module ActionView
         end
 
         private
-          attr_reader :object_name, :method_and_value, :scope, :model
 
-          def i18n_default
-            if model
-              key = model.model_name.i18n_key
-              ["#{key}.#{method_and_value}".to_sym, ""]
-            else
-              ""
-            end
-          end
+        attr_reader :object_name, :method_and_value, :scope, :model
 
-          def human_attribute_name
-            if model && model.class.respond_to?(:human_attribute_name)
-              model.class.human_attribute_name(method_and_value)
-            end
+        def i18n_default
+          if model
+            key = model.model_name.i18n_key
+            ["#{key}.#{method_and_value}".to_sym, '']
+          else
+            ''
           end
+        end
+
+        def human_attribute_name
+          model.class.human_attribute_name(method_and_value) if model && model.class.respond_to?(:human_attribute_name)
+        end
       end
     end
   end

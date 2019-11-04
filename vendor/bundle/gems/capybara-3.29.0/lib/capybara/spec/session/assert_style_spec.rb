@@ -15,7 +15,7 @@ Capybara::SpecHelper.spec '#assert_matches_style', requires: [:css] do
     end.to raise_error(Capybara::ExpectationNotMet, 'Expected node to have styles {"display"=>"inline"}. Actual styles were {"display"=>"block"}')
   end
 
-  it 'should wait for style', requires: %i[css js] do
+  it 'should wait for style', requires: [:css, :js] do
     @session.visit('/with_js')
     el = @session.find(:css, '#change')
     @session.click_link('Change size')

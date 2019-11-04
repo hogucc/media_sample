@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "active_support/inflector"
+require 'active_support/inflector'
 
 class Module
   # Returns the name of the module containing this one.
@@ -66,9 +66,9 @@ class Module
   def module_parents
     parents = []
     if module_parent_name
-      parts = module_parent_name.split("::")
+      parts = module_parent_name.split('::')
       until parts.empty?
-        parents << ActiveSupport::Inflector.constantize(parts * "::")
+        parents << ActiveSupport::Inflector.constantize(parts * '::')
         parts.pop
       end
     end

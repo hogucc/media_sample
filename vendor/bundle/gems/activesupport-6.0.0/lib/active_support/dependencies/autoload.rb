@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "active_support/inflector/methods"
+require 'active_support/inflector/methods'
 
 module ActiveSupport
   # Autoload and eager load conveniences for your library.
@@ -36,33 +36,34 @@ module ActiveSupport
 
     def autoload(const_name, path = @_at_path)
       unless path
-        full = [name, @_under_path, const_name.to_s].compact.join("::")
+        full = [name, @_under_path, const_name.to_s].compact.join('::')
         path = Inflector.underscore(full)
       end
 
-      if @_eager_autoload
-        @_autoloads[const_name] = path
-      end
+      @_autoloads[const_name] = path if @_eager_autoload
 
       super const_name, path
     end
 
     def autoload_under(path)
-      @_under_path, old_path = path, @_under_path
+      old_path = @_under_path
+      @_under_path = path
       yield
     ensure
       @_under_path = old_path
     end
 
     def autoload_at(path)
-      @_at_path, old_path = path, @_at_path
+      old_path = @_at_path
+      @_at_path = path
       yield
     ensure
       @_at_path = old_path
     end
 
     def eager_autoload
-      old_eager, @_eager_autoload = @_eager_autoload, true
+      old_eager = @_eager_autoload
+      @_eager_autoload = true
       yield
     ensure
       @_eager_autoload = old_eager

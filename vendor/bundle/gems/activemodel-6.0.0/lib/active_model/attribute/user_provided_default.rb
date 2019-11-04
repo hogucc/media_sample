@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "active_model/attribute"
+require 'active_model/attribute'
 
 module ActiveModel
   class Attribute # :nodoc:
@@ -27,7 +27,7 @@ module ActiveModel
           name,
           value_before_type_cast,
           type,
-          original_attribute,
+          original_attribute
         ]
         result << value if defined?(@value)
         result
@@ -39,13 +39,12 @@ module ActiveModel
         @user_provided_value = user_provided_value
         @type = type
         @original_attribute = original_attribute
-        if values.length == 5
-          @value = value
-        end
+        @value = value if values.length == 5
       end
 
       private
-        attr_reader :user_provided_value
+
+      attr_reader :user_provided_value
     end
   end
 end

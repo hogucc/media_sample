@@ -5,8 +5,6 @@ require 'capybara/dsl'
 require 'capybara/rspec/matchers'
 require 'benchmark'
 
-# rubocop:disable RSpec/ExpectActual
-
 RSpec.shared_examples Capybara::RSpecMatchers do |session, _mode|
   include Capybara::DSL
   include Capybara::RSpecMatchers
@@ -944,4 +942,3 @@ RSpec.shared_examples Capybara::RSpecMatchers do |session, _mode|
     end
   end
 end
-# rubocop:enable RSpec/ExpectActual

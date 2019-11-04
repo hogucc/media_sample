@@ -1,5 +1,5 @@
-require "foreman/vendor/thor/lib/thor/line_editor/basic"
-require "foreman/vendor/thor/lib/thor/line_editor/readline"
+require 'foreman/vendor/thor/lib/thor/line_editor/basic'
+require 'foreman/vendor/thor/lib/thor/line_editor/readline'
 
 class Foreman::Thor
   module LineEditor

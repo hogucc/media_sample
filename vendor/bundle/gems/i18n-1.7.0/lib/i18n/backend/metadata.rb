@@ -20,52 +20,53 @@ module I18n
   module Backend
     module Metadata
       class << self
-        def included(base)
-          Object.class_eval do
-            def translation_metadata
-              unless self.frozen?
-                @translation_metadata ||= {}
-              else
-                {}
+        def included(_base)
+          unless Object.method_defined?(:translation_metadata)
+            Object.class_eval do
+              def translation_metadata
+                if frozen?
+                  {}
+                else
+                  @translation_metadata ||= {}
+                end
+              end
+
+              def translation_metadata=(translation_metadata)
+                @translation_metadata = translation_metadata unless frozen?
               end
             end
-
-            def translation_metadata=(translation_metadata)
-              @translation_metadata = translation_metadata unless self.frozen?
-            end
-          end unless Object.method_defined?(:translation_metadata)
+          end
         end
       end
 
       def translate(locale, key, options = EMPTY_HASH)
         metadata = {
-          :locale    => locale,
-          :key       => key,
-          :scope     => options[:scope],
-          :default   => options[:default],
-          :separator => options[:separator],
-          :values    => options.reject { |name, _value| RESERVED_KEYS.include?(name) }
+          locale: locale,
+          key: key,
+          scope: options[:scope],
+          default: options[:default],
+          separator: options[:separator],
+          values: options.reject { |name, _value| RESERVED_KEYS.include?(name) }
         }
         with_metadata(metadata) { super }
       end
 
       def interpolate(locale, entry, values = EMPTY_HASH)
-        metadata = entry.translation_metadata.merge(:original => entry)
+        metadata = entry.translation_metadata.merge(original: entry)
         with_metadata(metadata) { super }
       end
 
       def pluralize(locale, entry, count)
-        with_metadata(:count => count) { super }
+        with_metadata(count: count) { super }
       end
 
       protected
 
-        def with_metadata(metadata, &block)
-          result = yield
-          result.translation_metadata = result.translation_metadata.merge(metadata) if result
-          result
-        end
-
+      def with_metadata(metadata)
+        result = yield
+        result.translation_metadata = result.translation_metadata.merge(metadata) if result
+        result
+      end
     end
   end
 end

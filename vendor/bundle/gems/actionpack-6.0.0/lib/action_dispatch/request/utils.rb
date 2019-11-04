@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "active_support/core_ext/hash/indifferent_access"
+require 'active_support/core_ext/hash/indifferent_access'
 
 module ActionDispatch
   class Request
@@ -48,7 +48,7 @@ module ActionDispatch
           when Array
             handle_array params
           when Hash
-            if params.has_key?(:tempfile)
+            if params.key?(:tempfile)
               ActionDispatch::Http::UploadedFile.new(params)
             else
               params.each_with_object({}) do |(key, val), new_hash|

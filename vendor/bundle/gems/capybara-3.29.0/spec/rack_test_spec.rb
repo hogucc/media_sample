@@ -12,21 +12,7 @@ module TestSessions
   RackTest = Capybara::Session.new(:rack_test, TestApp)
 end
 
-skipped_tests = %i[
-  js
-  modals
-  screenshot
-  frames
-  windows
-  send_keys
-  server
-  hover
-  about_scheme
-  download
-  css
-  scroll
-  spatial
-]
+skipped_tests = [:js, :modals, :screenshot, :frames, :windows, :send_keys, :server, :hover, :about_scheme, :download, :css, :scroll, :spatial]
 Capybara::SpecHelper.run_specs TestSessions::RackTest, 'RackTest', capybara_skip: skipped_tests do |example|
   case example.metadata[:full_description]
   when /has_css\? should support case insensitive :class and :id options/
@@ -36,7 +22,7 @@ Capybara::SpecHelper.run_specs TestSessions::RackTest, 'RackTest', capybara_skip
   end
 end
 
-RSpec.describe Capybara::Session do # rubocop:disable RSpec/MultipleDescribes
+RSpec.describe Capybara::Session do
   context 'with rack test driver' do
     let(:session) { TestSessions::RackTest }
 

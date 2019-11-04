@@ -4,17 +4,17 @@ require 'generators/rails/jbuilder_generator'
 
 class JbuilderGeneratorTest < Rails::Generators::TestCase
   tests Rails::Generators::JbuilderGenerator
-  arguments %w(Post title body:text password:digest)
-  destination File.expand_path('../tmp', __FILE__)
+  arguments %w[Post title body:text password:digest]
+  destination File.expand_path('tmp', __dir__)
   setup :prepare_destination
 
   test 'views are generated' do
     run_generator
 
-    %w(index show).each do |view|
+    %w[index show].each do |view|
       assert_file "app/views/posts/#{view}.json.jbuilder"
     end
-    assert_file "app/views/posts/_post.json.jbuilder"
+    assert_file 'app/views/posts/_post.json.jbuilder'
   end
 
   test 'index content' do
@@ -29,18 +29,18 @@ class JbuilderGeneratorTest < Rails::Generators::TestCase
     end
 
     assert_file 'app/views/posts/_post.json.jbuilder' do |content|
-      assert_match %r{json\.extract! post, :id, :title, :body}, content
-      assert_match %r{:created_at, :updated_at}, content
-      assert_match %r{json\.url post_url\(post, format: :json\)}, content
+      assert_match /json\.extract! post, :id, :title, :body/, content
+      assert_match /:created_at, :updated_at/, content
+      assert_match /json\.url post_url\(post, format: :json\)/, content
     end
   end
 
   test 'timestamps are not generated in partial with --no-timestamps' do
-    run_generator %w(Post title body:text --no-timestamps)
+    run_generator %w[Post title body:text --no-timestamps]
 
     assert_file 'app/views/posts/_post.json.jbuilder' do |content|
-      assert_match %r{json\.extract! post, :id, :title, :body$}, content
-      assert_no_match %r{:created_at, :updated_at}, content
+      assert_match /json\.extract! post, :id, :title, :body$/, content
+      assert_no_match /:created_at, :updated_at/, content
     end
   end
 end

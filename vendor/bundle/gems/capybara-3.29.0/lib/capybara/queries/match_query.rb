@@ -7,13 +7,11 @@ module Capybara
         options.key?(:visible) ? super : :all
       end
 
-    private
+      private
 
       def assert_valid_keys
         invalid_options = @options.keys & COUNT_KEYS
-        unless invalid_options.empty?
-          raise ArgumentError, "Match queries don't support quantity options. Invalid keys - #{invalid_options.join(', ')}"
-        end
+        raise ArgumentError, "Match queries don't support quantity options. Invalid keys - #{invalid_options.join(', ')}" unless invalid_options.empty?
 
         super
       end

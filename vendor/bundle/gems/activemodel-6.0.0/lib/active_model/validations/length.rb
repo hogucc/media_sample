@@ -6,17 +6,16 @@ module ActiveModel
       MESSAGES  = { is: :wrong_length, minimum: :too_short, maximum: :too_long }.freeze
       CHECKS    = { is: :==, minimum: :>=, maximum: :<= }.freeze
 
-      RESERVED_OPTIONS = [:minimum, :maximum, :within, :is, :too_short, :too_long]
+      RESERVED_OPTIONS = [:minimum, :maximum, :within, :is, :too_short, :too_long].freeze
 
       def initialize(options)
         if range = (options.delete(:in) || options.delete(:within))
-          raise ArgumentError, ":in and :within must be a Range" unless range.is_a?(Range)
-          options[:minimum], options[:maximum] = range.min, range.max
+          raise ArgumentError, ':in and :within must be a Range' unless range.is_a?(Range)
+
+          options[:minimum], options[:maximum] = range.minmax
         end
 
-        if options[:allow_blank] == false && options[:minimum].nil? && options[:is].nil?
-          options[:minimum] = 1
-        end
+        options[:minimum] = 1 if options[:allow_blank] == false && options[:minimum].nil? && options[:is].nil?
 
         super
       end
@@ -24,9 +23,7 @@ module ActiveModel
       def check_validity!
         keys = CHECKS.keys & options.keys
 
-        if keys.empty?
-          raise ArgumentError, "Range unspecified. Specify the :in, :within, :maximum, :minimum, or :is option."
-        end
+        raise ArgumentError, 'Range unspecified. Specify the :in, :within, :maximum, :minimum, or :is option.' if keys.empty?
 
         keys.each do |key|
           value = options[key]
@@ -64,9 +61,10 @@ module ActiveModel
       end
 
       private
-        def skip_nil_check?(key)
-          key == :maximum && options[:allow_nil].nil? && options[:allow_blank].nil?
-        end
+
+      def skip_nil_check?(key)
+        key == :maximum && options[:allow_nil].nil? && options[:allow_blank].nil?
+      end
     end
 
     module HelperMethods
@@ -123,7 +121,7 @@ module ActiveModel
         validates_with LengthValidator, _merge_attributes(attr_names)
       end
 
-      alias_method :validates_size_of, :validates_length_of
+      alias validates_size_of validates_length_of
     end
   end
 end

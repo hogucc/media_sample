@@ -1,16 +1,16 @@
 # frozen_string_literal: true
 
-require "erb"
-require "active_support/core_ext/kernel/singleton_class"
-require "active_support/core_ext/module/redefine_method"
-require "active_support/multibyte/unicode"
+require 'erb'
+require 'active_support/core_ext/kernel/singleton_class'
+require 'active_support/core_ext/module/redefine_method'
+require 'active_support/multibyte/unicode'
 
 class ERB
   module Util
-    HTML_ESCAPE = { "&" => "&amp;",  ">" => "&gt;",   "<" => "&lt;", '"' => "&quot;", "'" => "&#39;" }
-    JSON_ESCAPE = { "&" => '\u0026', ">" => '\u003e', "<" => '\u003c', "\u2028" => '\u2028', "\u2029" => '\u2029' }
-    HTML_ESCAPE_ONCE_REGEXP = /["><']|&(?!([a-zA-Z]+|(#\d+)|(#[xX][\dA-Fa-f]+));)/
-    JSON_ESCAPE_REGEXP = /[\u2028\u2029&><]/u
+    HTML_ESCAPE = { '&' => '&amp;',  '>' => '&gt;',   '<' => '&lt;', '"' => '&quot;', "'" => '&#39;' }.freeze
+    JSON_ESCAPE = { '&' => '\u0026', '>' => '\u003e', '<' => '\u003c', "\u2028" => '\u2028', "\u2029" => '\u2029' }.freeze
+    HTML_ESCAPE_ONCE_REGEXP = /["><']|&(?!([a-zA-Z]+|(#\d+)|(#[xX][\dA-Fa-f]+));)/.freeze
+    JSON_ESCAPE_REGEXP = /[\u2028\u2029&><]/u.freeze
 
     # A utility method for escaping HTML tag characters.
     # This method is also aliased as <tt>h</tt>.
@@ -133,21 +133,21 @@ end
 
 module ActiveSupport #:nodoc:
   class SafeBuffer < String
-    UNSAFE_STRING_METHODS = %w(
+    UNSAFE_STRING_METHODS = %w[
       capitalize chomp chop delete delete_prefix delete_suffix
       downcase lstrip next reverse rstrip slice squeeze strip
       succ swapcase tr tr_s unicode_normalize upcase
-    )
+    ].freeze
 
-    UNSAFE_STRING_METHODS_WITH_BACKREF = %w(gsub sub)
+    UNSAFE_STRING_METHODS_WITH_BACKREF = %w[gsub sub].freeze
 
-    alias_method :original_concat, :concat
+    alias original_concat concat
     private :original_concat
 
     # Raised when <tt>ActiveSupport::SafeBuffer#safe_concat</tt> is called on unsafe buffers.
     class SafeConcatError < StandardError
       def initialize
-        super "Could not concatenate to the buffer because it is not html safe."
+        super 'Could not concatenate to the buffer because it is not html safe.'
       end
     end
 
@@ -155,9 +155,7 @@ module ActiveSupport #:nodoc:
       if html_safe?
         new_safe_buffer = super
 
-        if new_safe_buffer
-          new_safe_buffer.instance_variable_set :@html_safe, true
-        end
+        new_safe_buffer&.instance_variable_set :@html_safe, true
 
         new_safe_buffer
       else
@@ -167,10 +165,11 @@ module ActiveSupport #:nodoc:
 
     def safe_concat(value)
       raise SafeConcatError unless html_safe?
+
       original_concat(value)
     end
 
-    def initialize(str = "")
+    def initialize(str = '')
       @html_safe = true
       super
     end
@@ -220,12 +219,12 @@ module ActiveSupport #:nodoc:
     end
 
     def %(args)
-      case args
-      when Hash
-        escaped_args = Hash[args.map { |k, arg| [k, html_escape_interpolated_argument(arg)] }]
-      else
-        escaped_args = Array(args).map { |arg| html_escape_interpolated_argument(arg) }
-      end
+      escaped_args = case args
+                     when Hash
+                       Hash[args.map { |k, arg| [k, html_escape_interpolated_argument(arg)] }]
+                     else
+                       Array(args).map { |arg| html_escape_interpolated_argument(arg) }
+                     end
 
       self.class.new(super(escaped_args))
     end
@@ -247,8 +246,9 @@ module ActiveSupport #:nodoc:
     end
 
     UNSAFE_STRING_METHODS.each do |unsafe_method|
-      if unsafe_method.respond_to?(unsafe_method)
-        class_eval <<-EOT, __FILE__, __LINE__ + 1
+      next unless unsafe_method.respond_to?(unsafe_method)
+
+      class_eval <<-EOT, __FILE__, __LINE__ + 1
           def #{unsafe_method}(*args, &block)       # def capitalize(*args, &block)
             to_str.#{unsafe_method}(*args, &block)  #   to_str.capitalize(*args, &block)
           end                                       # end
@@ -257,13 +257,13 @@ module ActiveSupport #:nodoc:
             @html_safe = false                      #   @html_safe = false
             super                                   #   super
           end                                       # end
-        EOT
-      end
+      EOT
     end
 
     UNSAFE_STRING_METHODS_WITH_BACKREF.each do |unsafe_method|
-      if unsafe_method.respond_to?(unsafe_method)
-        class_eval <<-EOT, __FILE__, __LINE__ + 1
+      next unless unsafe_method.respond_to?(unsafe_method)
+
+      class_eval <<-EOT, __FILE__, __LINE__ + 1
           def #{unsafe_method}(*args, &block)             # def gsub(*args, &block)
             if block                                      #   if block
               to_str.#{unsafe_method}(*args) { |*params|  #     to_str.gsub(*args) { |*params|
@@ -286,19 +286,18 @@ module ActiveSupport #:nodoc:
               super                                       #     super
             end                                           #   end
           end                                             # end
-        EOT
-      end
+      EOT
     end
 
     private
 
-      def html_escape_interpolated_argument(arg)
-        (!html_safe? || arg.html_safe?) ? arg : CGI.escapeHTML(arg.to_s)
-      end
+    def html_escape_interpolated_argument(arg)
+      !html_safe? || arg.html_safe? ? arg : CGI.escapeHTML(arg.to_s)
+    end
 
-      def set_block_back_references(block, match_data)
-        block.binding.eval("proc { |m| $~ = m }").call(match_data)
-      end
+    def set_block_back_references(block, match_data)
+      block.binding.eval('proc { |m| $~ = m }').call(match_data)
+    end
   end
 end
 

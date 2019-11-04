@@ -1,7 +1,7 @@
-source "https://rubygems.org"
+source 'https://rubygems.org'
 
 gemspec
 
-gem "rake"
-gem "mocha", require: false
-gem "appraisal"
+gem 'appraisal'
+gem 'mocha', require: false
+gem 'rake'

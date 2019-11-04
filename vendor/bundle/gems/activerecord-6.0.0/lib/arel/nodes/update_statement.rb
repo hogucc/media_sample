@@ -27,15 +27,15 @@ module Arel # :nodoc: all
 
       def eql?(other)
         self.class == other.class &&
-          self.relation == other.relation &&
-          self.wheres == other.wheres &&
-          self.values == other.values &&
-          self.orders == other.orders &&
-          self.limit == other.limit &&
-          self.offset == other.offset &&
-          self.key == other.key
+          relation == other.relation &&
+          wheres == other.wheres &&
+          values == other.values &&
+          orders == other.orders &&
+          limit == other.limit &&
+          offset == other.offset &&
+          key == other.key
       end
-      alias :== :eql?
+      alias == eql?
     end
   end
 end

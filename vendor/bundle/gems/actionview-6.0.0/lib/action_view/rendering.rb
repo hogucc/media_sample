@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "action_view/view_paths"
+require 'action_view/view_paths'
 
 module ActionView
   # This is a class to fix I18n global state. Whenever you provide I18n.locale during a request,
@@ -10,7 +10,8 @@ module ActionView
 
     def initialize(original_config, lookup_context)
       original_config = original_config.original_config if original_config.respond_to?(:original_config)
-      @original_config, @lookup_context = original_config, lookup_context
+      @original_config = original_config
+      @lookup_context = lookup_context
     end
 
     def locale
@@ -35,18 +36,17 @@ module ActionView
 
     # Overwrite process to setup I18n proxy.
     def process(*) #:nodoc:
-      old_config, I18n.config = I18n.config, I18nProxy.new(I18n.config, lookup_context)
+      old_config = I18n.config
+      I18n.config = I18nProxy.new(I18n.config, lookup_context)
       super
     ensure
       I18n.config = old_config
     end
 
     module ClassMethods
-      def _routes
-      end
+      def _routes; end
 
-      def _helpers
-      end
+      def _helpers; end
 
       def build_view_context_class(klass, supports_path, routes, helpers)
         Class.new(klass) do
@@ -55,9 +55,7 @@ module ActionView
             include routes.mounted_helpers
           end
 
-          if helpers
-            include helpers
-          end
+          include helpers if helpers
         end
       end
 
@@ -66,9 +64,7 @@ module ActionView
 
         @view_context_class ||= build_view_context_class(klass, supports_path?, _routes, _helpers)
 
-        if klass.changed?(@view_context_class)
-          @view_context_class = build_view_context_class(klass, supports_path?, _routes, _helpers)
-        end
+        @view_context_class = build_view_context_class(klass, supports_path?, _routes, _helpers) if klass.changed?(@view_context_class)
 
         @view_context_class
       end
@@ -105,67 +101,63 @@ module ActionView
 
     private
 
-      # Find and render a template based on the options given.
-      def _render_template(options)
-        variant = options.delete(:variant)
-        assigns = options.delete(:assigns)
-        context = view_context
+    # Find and render a template based on the options given.
+    def _render_template(options)
+      variant = options.delete(:variant)
+      assigns = options.delete(:assigns)
+      context = view_context
 
-        context.assign assigns if assigns
-        lookup_context.variants = variant if variant
+      context.assign assigns if assigns
+      lookup_context.variants = variant if variant
 
-        rendered_template = context.in_rendering_context(options) do |renderer|
-          renderer.render_to_object(context, options)
-        end
-
-        rendered_format = rendered_template.format || lookup_context.formats.first
-        @rendered_format = Template::Types[rendered_format]
-
-        rendered_template.body
+      rendered_template = context.in_rendering_context(options) do |renderer|
+        renderer.render_to_object(context, options)
       end
 
-      # Assign the rendered format to look up context.
-      def _process_format(format)
-        super
-        lookup_context.formats = [format.to_sym] if format.to_sym
-      end
+      rendered_format = rendered_template.format || lookup_context.formats.first
+      @rendered_format = Template::Types[rendered_format]
 
-      # Normalize args by converting render "foo" to render :action => "foo" and
-      # render "foo/bar" to render :template => "foo/bar".
-      def _normalize_args(action = nil, options = {})
-        options = super(action, options)
-        case action
-        when NilClass
-        when Hash
+      rendered_template.body
+    end
+
+    # Assign the rendered format to look up context.
+    def _process_format(format)
+      super
+      lookup_context.formats = [format.to_sym] if format.to_sym
+    end
+
+    # Normalize args by converting render "foo" to render :action => "foo" and
+    # render "foo/bar" to render :template => "foo/bar".
+    def _normalize_args(action = nil, options = {})
+      options = super(action, options)
+      case action
+      when NilClass
+      when Hash
+        options = action
+      when String, Symbol
+        action = action.to_s
+        key = action.include?('/') ? :template : :action
+        options[key] = action
+      else
+        if action.respond_to?(:permitted?) && action.permitted?
           options = action
-        when String, Symbol
-          action = action.to_s
-          key = action.include?(?/) ? :template : :action
-          options[key] = action
         else
-          if action.respond_to?(:permitted?) && action.permitted?
-            options = action
-          else
-            options[:partial] = action
-          end
+          options[:partial] = action
         end
-
-        options
       end
 
-      # Normalize options.
-      def _normalize_options(options)
-        options = super(options)
-        if options[:partial] == true
-          options[:partial] = action_name
-        end
+      options
+    end
 
-        if (options.keys & [:partial, :file, :template]).empty?
-          options[:prefixes] ||= _prefixes
-        end
+    # Normalize options.
+    def _normalize_options(options)
+      options = super(options)
+      options[:partial] = action_name if options[:partial] == true
 
-        options[:template] ||= (options[:action] || action_name).to_s
-        options
-      end
+      options[:prefixes] ||= _prefixes if (options.keys & [:partial, :file, :template]).empty?
+
+      options[:template] ||= (options[:action] || action_name).to_s
+      options
+    end
   end
 end

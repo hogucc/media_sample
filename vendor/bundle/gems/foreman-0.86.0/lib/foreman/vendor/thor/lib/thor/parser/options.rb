@@ -1,11 +1,11 @@
 class Foreman::Thor
   class Options < Arguments #:nodoc: # rubocop:disable ClassLength
-    LONG_RE     = /^(--\w+(?:-\w+)*)$/
-    SHORT_RE    = /^(-[a-z])$/i
-    EQ_RE       = /^(--\w+(?:-\w+)*|-[a-z])=(.*)$/i
-    SHORT_SQ_RE = /^-([a-z]{2,})$/i # Allow either -x -v or -xv style for single char args
-    SHORT_NUM   = /^(-[a-z])#{NUMERIC}$/i
-    OPTS_END    = "--".freeze
+    LONG_RE     = /^(--\w+(?:-\w+)*)$/.freeze
+    SHORT_RE    = /^(-[a-z])$/i.freeze
+    EQ_RE       = /^(--\w+(?:-\w+)*|-[a-z])=(.*)$/i.freeze
+    SHORT_SQ_RE = /^-([a-z]{2,})$/i.freeze # Allow either -x -v or -xv style for single char args
+    SHORT_NUM   = /^(-[a-z])#{NUMERIC}$/i.freeze
+    OPTS_END    = '--'.freeze
 
     # Receives a hash and makes it switches.
     def self.to_switches(options)
@@ -18,11 +18,11 @@ class Foreman::Thor
         when Hash
           "--#{key} #{value.map { |k, v| "#{k}:#{v}" }.join(' ')}"
         when nil, false
-          ""
+          ''
         else
           "--#{key} #{value.inspect}"
         end
-      end.join(" ")
+      end.join(' ')
     end
 
     # Takes a hash of Foreman::Thor::Option and a hash with defaults.
@@ -48,7 +48,7 @@ class Foreman::Thor
         @switches[option.switch_name] = option
 
         option.aliases.each do |short|
-          name = short.to_s.sub(/^(?!\-)/, "-")
+          name = short.to_s.sub(/^(?!\-)/, '-')
           @shorts[name] ||= option.switch_name
         end
       end
@@ -83,13 +83,13 @@ class Foreman::Thor
           if is_switch
             case shifted
             when SHORT_SQ_RE
-              unshift($1.split("").map { |f| "-#{f}" })
+              unshift(Regexp.last_match(1).split('').map { |f| "-#{f}" })
               next
             when EQ_RE, SHORT_NUM
-              unshift($2)
-              switch = $1
+              unshift(Regexp.last_match(2))
+              switch = Regexp.last_match(1)
             when LONG_RE, SHORT_RE
-              switch = $1
+              switch = Regexp.last_match(1)
             end
 
             switch = normalize_switch(switch)
@@ -124,7 +124,7 @@ class Foreman::Thor
       raise UnknownArgumentError, "Unknown switches '#{unknown.join(', ')}'" unless unknown.empty?
     end
 
-  protected
+    protected
 
     # Check if the current value in peek is a registered switch.
     #
@@ -133,9 +133,9 @@ class Foreman::Thor
     def current_is_switch?
       case peek
       when LONG_RE, SHORT_RE, EQ_RE, SHORT_NUM
-        [true, switch?($1)]
+        [true, switch?(Regexp.last_match(1))]
       when SHORT_SQ_RE
-        [true, $1.split("").any? { |f| switch?("-#{f}") }]
+        [true, Regexp.last_match(1).split('').any? { |f| switch?("-#{f}") }]
       else
         [false, false]
       end
@@ -169,7 +169,7 @@ class Foreman::Thor
     # Check if the given argument is actually a shortcut.
     #
     def normalize_switch(arg)
-      (@shorts[arg] || arg).tr("_", "-")
+      (@shorts[arg] || arg).tr('_', '-')
     end
 
     def parsing_options?
@@ -181,10 +181,10 @@ class Foreman::Thor
     #
     def parse_boolean(switch)
       if current_is_value?
-        if ["true", "TRUE", "t", "T", true].include?(peek)
+        if ['true', 'TRUE', 't', 'T', true].include?(peek)
           shift
           true
-        elsif ["false", "FALSE", "f", "F", false].include?(peek)
+        elsif ['false', 'FALSE', 'f', 'F', false].include?(peek)
           shift
           false
         else

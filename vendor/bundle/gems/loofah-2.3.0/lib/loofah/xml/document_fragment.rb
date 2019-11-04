@@ -12,10 +12,10 @@ module Loofah
         #  constructor. Applications should use Loofah.fragment to
         #  parse a fragment.
         #
-        def parse tags
+        def parse(tags)
           doc = Loofah::XML::Document.new
           doc.encoding = tags.encoding.name if tags.respond_to?(:encoding)
-          self.new(doc, tags)
+          new(doc, tags)
         end
       end
     end

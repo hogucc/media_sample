@@ -8,13 +8,13 @@ Capybara.add_selector(:select, locator_type: [String, Symbol]) do
     locate_field(xpath, locator, options)
   end
 
-  filter_set(:_field, %i[disabled multiple name placeholder])
+  filter_set(:_field, [:disabled, :multiple, :name, :placeholder])
 
   node_filter(:options) do |node, options|
     actual = if node.visible?
-      node.all(:xpath, './/option', wait: false).map(&:text)
-    else
-      node.all(:xpath, './/option', visible: false, wait: false).map { |option| option.text(:all) }
+               node.all(:xpath, './/option', wait: false).map(&:text)
+             else
+               node.all(:xpath, './/option', visible: false, wait: false).map { |option| option.text(:all) }
     end
     (options.sort == actual.sort).tap do |res|
       add_error("Expected options #{options.inspect} found #{actual.inspect}") unless res

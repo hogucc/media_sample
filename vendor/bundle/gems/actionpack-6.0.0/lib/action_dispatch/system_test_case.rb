@@ -1,17 +1,17 @@
 # frozen_string_literal: true
 
-gem "capybara", ">= 2.15"
+gem 'capybara', '>= 2.15'
 
-require "capybara/dsl"
-require "capybara/minitest"
-require "selenium/webdriver"
-require "action_controller"
-require "action_dispatch/system_testing/driver"
-require "action_dispatch/system_testing/browser"
-require "action_dispatch/system_testing/server"
-require "action_dispatch/system_testing/test_helpers/screenshot_helper"
-require "action_dispatch/system_testing/test_helpers/setup_and_teardown"
-require "action_dispatch/system_testing/test_helpers/undef_methods"
+require 'capybara/dsl'
+require 'capybara/minitest'
+require 'selenium/webdriver'
+require 'action_controller'
+require 'action_dispatch/system_testing/driver'
+require 'action_dispatch/system_testing/browser'
+require 'action_dispatch/system_testing/server'
+require 'action_dispatch/system_testing/test_helpers/screenshot_helper'
+require 'action_dispatch/system_testing/test_helpers/setup_and_teardown'
+require 'action_dispatch/system_testing/test_helpers/undef_methods'
 
 module ActionDispatch
   # = System Testing
@@ -125,7 +125,7 @@ module ActionDispatch
 
     def self.start_application # :nodoc:
       Capybara.app = Rack::Builder.new do
-        map "/" do
+        map '/' do
           run Rails.application
         end
       end

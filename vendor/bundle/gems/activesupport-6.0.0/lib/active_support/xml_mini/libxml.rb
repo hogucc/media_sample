@@ -1,20 +1,18 @@
 # frozen_string_literal: true
 
-require "libxml"
-require "active_support/core_ext/object/blank"
-require "stringio"
+require 'libxml'
+require 'active_support/core_ext/object/blank'
+require 'stringio'
 
 module ActiveSupport
   module XmlMini_LibXML #:nodoc:
-    extend self
+    module_function
 
     # Parse an XML Document string or IO into a simple hash using libxml.
     # data::
     #   XML Document string or IO to parse
     def parse(data)
-      if !data.respond_to?(:read)
-        data = StringIO.new(data || "")
-      end
+      data = StringIO.new(data || '') unless data.respond_to?(:read)
 
       if data.eof?
         {}
@@ -34,7 +32,7 @@ module LibXML #:nodoc:
     end
 
     module Node #:nodoc:
-      CONTENT_ROOT = "__content__"
+      CONTENT_ROOT = '__content__'
 
       # Convert XML document to hash.
       #
@@ -55,15 +53,13 @@ module LibXML #:nodoc:
           if c.element?
             c.to_hash(node_hash)
           elsif c.text? || c.cdata?
-            node_hash[CONTENT_ROOT] ||= +""
+            node_hash[CONTENT_ROOT] ||= +''
             node_hash[CONTENT_ROOT] << c.content
           end
         end
 
         # Remove content node if it is blank
-        if node_hash.length > 1 && node_hash[CONTENT_ROOT].blank?
-          node_hash.delete(CONTENT_ROOT)
-        end
+        node_hash.delete(CONTENT_ROOT) if node_hash.length > 1 && node_hash[CONTENT_ROOT].blank?
 
         # Handle attributes
         each_attr { |a| node_hash[a.name] = a.value }

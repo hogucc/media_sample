@@ -46,14 +46,14 @@ module ActiveStorage
           end
         CODE
 
-        has_one :"#{name}_attachment", -> { where(name: name) }, class_name: "ActiveStorage::Attachment", as: :record, inverse_of: :record, dependent: :destroy
-        has_one :"#{name}_blob", through: :"#{name}_attachment", class_name: "ActiveStorage::Blob", source: :blob
+        has_one :"#{name}_attachment", -> { where(name: name) }, class_name: 'ActiveStorage::Attachment', as: :record, inverse_of: :record, dependent: :destroy
+        has_one :"#{name}_blob", through: :"#{name}_attachment", class_name: 'ActiveStorage::Blob', source: :blob
 
         scope :"with_attached_#{name}", -> { includes("#{name}_attachment": :blob) }
 
         after_save { attachment_changes[name.to_s]&.save }
 
-        after_commit(on: %i[ create update ]) { attachment_changes.delete(name.to_s).try(:upload) }
+        after_commit(on: [:create, :update]) { attachment_changes.delete(name.to_s).try(:upload) }
 
         ActiveRecord::Reflection.add_attachment_reflection(
           self,
@@ -109,7 +109,7 @@ module ActiveStorage
           end
         CODE
 
-        has_many :"#{name}_attachments", -> { where(name: name) }, as: :record, class_name: "ActiveStorage::Attachment", inverse_of: :record, dependent: :destroy do
+        has_many :"#{name}_attachments", -> { where(name: name) }, as: :record, class_name: 'ActiveStorage::Attachment', inverse_of: :record, dependent: :destroy do
           def purge
             each(&:purge)
             reset
@@ -120,13 +120,13 @@ module ActiveStorage
             reset
           end
         end
-        has_many :"#{name}_blobs", through: :"#{name}_attachments", class_name: "ActiveStorage::Blob", source: :blob
+        has_many :"#{name}_blobs", through: :"#{name}_attachments", class_name: 'ActiveStorage::Blob', source: :blob
 
         scope :"with_attached_#{name}", -> { includes("#{name}_attachments": :blob) }
 
         after_save { attachment_changes[name.to_s]&.save }
 
-        after_commit(on: %i[ create update ]) { attachment_changes.delete(name.to_s).try(:upload) }
+        after_commit(on: [:create, :update]) { attachment_changes.delete(name.to_s).try(:upload) }
 
         ActiveRecord::Reflection.add_attachment_reflection(
           self,

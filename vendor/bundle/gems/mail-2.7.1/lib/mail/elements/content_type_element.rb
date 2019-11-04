@@ -1,5 +1,5 @@
-# encoding: utf-8
 # frozen_string_literal: true
+
 require 'mail/parsers/content_type_parser'
 
 module Mail
@@ -14,8 +14,9 @@ module Mail
     end
 
     private
+
     def cleaned(string)
-      string =~ /(.+);\s*$/ ? $1 : string
+      string =~ /(.+);\s*$/ ? Regexp.last_match(1) : string
     end
   end
 end

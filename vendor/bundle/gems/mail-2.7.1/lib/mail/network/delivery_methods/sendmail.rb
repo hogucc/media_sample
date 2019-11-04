@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 require 'mail/check_delivery_params'
 
 module Mail
@@ -39,9 +40,9 @@ module Mail
   #   mail.deliver!
   class Sendmail
     DEFAULTS = {
-      :location   => '/usr/sbin/sendmail',
-      :arguments  => '-i'
-    }
+      location: '/usr/sbin/sendmail',
+      arguments: '-i'
+    }.freeze
 
     attr_accessor :settings
 
@@ -72,7 +73,7 @@ module Mail
       end
     else
       def self.popen(command, &block)
-        IO.popen command, 'w+', :err => :out, &block
+        IO.popen command, 'w+', err: :out, &block
       end
     end
 
@@ -88,7 +89,7 @@ module Mail
       #
       # A LF cannot be escaped with a backslash because a backslash + LF
       # combo is regarded as line continuation and simply ignored. Strip it.
-      escaped = address.gsub(/([^A-Za-z0-9_\s\+\-.,:\/@~])/n, "\\\\\\1").gsub("\n", '')
+      escaped = address.gsub(%r{([^A-Za-z0-9_\s\+\-.,:/@~])}n, '\\\\\\1').gsub("\n", '')
       %("#{escaped}")
     end
   end

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "active_record/middleware/database_selector/resolver"
+require 'active_record/middleware/database_selector/resolver'
 
 module ActiveRecord
   module Middleware
@@ -56,20 +56,20 @@ module ActiveRecord
 
       private
 
-        def select_database(request, &blk)
-          context = context_klass.call(request)
-          resolver = resolver_klass.call(context, options)
+      def select_database(request, &blk)
+        context = context_klass.call(request)
+        resolver = resolver_klass.call(context, options)
 
-          if reading_request?(request)
-            resolver.read(&blk)
-          else
-            resolver.write(&blk)
-          end
+        if reading_request?(request)
+          resolver.read(&blk)
+        else
+          resolver.write(&blk)
         end
+      end
 
-        def reading_request?(request)
-          request.get? || request.head?
-        end
+      def reading_request?(request)
+        request.get? || request.head?
+      end
     end
   end
 end

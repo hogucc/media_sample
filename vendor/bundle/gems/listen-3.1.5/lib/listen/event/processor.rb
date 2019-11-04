@@ -61,6 +61,7 @@ module Listen
 
         _flush_wakeup_reasons do |reason|
           next unless reason == :event
+
           _remember_time_of_first_unprocessed_event unless config.paused?
         end
 

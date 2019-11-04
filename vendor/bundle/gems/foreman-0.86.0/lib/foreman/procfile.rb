@@ -1,4 +1,4 @@
-require "foreman"
+require 'foreman'
 
 # Reads and writes Procfiles
 #
@@ -9,12 +9,11 @@ require "foreman"
 # All other lines are ignored.
 #
 class Foreman::Procfile
-
   # Initialize a Procfile
   #
   # @param [String] filename (nil)  An optional filename to read from
   #
-  def initialize(filename=nil)
+  def initialize(filename = nil)
     @entries = []
     load(filename) if filename
   end
@@ -32,7 +31,7 @@ class Foreman::Procfile
   # @param [String] name  The name of the Procfile entry to retrieve
   #
   def [](name)
-    if entry = @entries.detect { |n,c| name == n }
+    if entry = @entries.detect { |n, _c| name == n }
       entry.last
     end
   end
@@ -52,7 +51,7 @@ class Foreman::Procfile
   # @param [String] name  The name of the +Procfile+ entry to remove
   #
   def delete(name)
-    @entries.reject! { |n,c| name == n }
+    @entries.reject! { |n, _c| name == n }
   end
 
   # Load a Procfile from a file
@@ -69,7 +68,7 @@ class Foreman::Procfile
   #
   def save(filename)
     File.open(filename, 'w') do |file|
-      file.puts self.to_s
+      file.puts to_s
     end
   end
 
@@ -77,18 +76,15 @@ class Foreman::Procfile
   #
   def to_s
     @entries.map do |name, command|
-      [ name, command ].join(": ")
+      [name, command].join(': ')
     end.join("\n")
   end
 
-private
+  private
 
   def parse(filename)
-    File.read(filename).gsub("\r\n","\n").split("\n").map do |line|
-      if line =~ /^([A-Za-z0-9_-]+):\s*(.+)$/
-        [$1, $2]
-      end
+    File.read(filename).gsub("\r\n", "\n").split("\n").map do |line|
+      [Regexp.last_match(1), Regexp.last_match(2)] if line =~ /^([A-Za-z0-9_-]+):\s*(.+)$/
     end.compact
   end
-
 end

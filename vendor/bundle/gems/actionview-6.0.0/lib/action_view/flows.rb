@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "active_support/core_ext/string/output_safety"
+require 'active_support/core_ext/string/output_safety'
 
 module ActionView
   class OutputFlow #:nodoc:
@@ -24,7 +24,7 @@ module ActionView
     def append(key, value)
       @content[key] << value
     end
-    alias_method :append!, :append
+    alias append! append
   end
 
   class StreamingFlow < OutputFlow #:nodoc:
@@ -48,11 +48,13 @@ module ActionView
 
         begin
           @waiting_for = key
-          view.output_buffer, @parent = @child, view.output_buffer
+          @parent = view.output_buffer
+          view.output_buffer = @child
           Fiber.yield
         ensure
           @waiting_for = nil
-          view.output_buffer, @child = @parent, view.output_buffer
+          @child = view.output_buffer
+          view.output_buffer = @parent
         end
       end
 
@@ -69,8 +71,8 @@ module ActionView
 
     private
 
-      def inside_fiber?
-        Fiber.current.object_id != @root
-      end
+    def inside_fiber?
+      Fiber.current.object_id != @root
+    end
   end
 end

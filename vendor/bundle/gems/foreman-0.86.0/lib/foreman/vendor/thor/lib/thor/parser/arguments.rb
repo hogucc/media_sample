@@ -1,6 +1,6 @@
 class Foreman::Thor
   class Arguments #:nodoc: # rubocop:disable ClassLength
-    NUMERIC = /[-+]?(\d*\.\d+|\d+)/
+    NUMERIC = /[-+]?(\d*\.\d+|\d+)/.freeze
 
     # Receives an array of args and returns two arrays, one with arguments
     # and one with switches.
@@ -10,6 +10,7 @@ class Foreman::Thor
 
       args.each do |item|
         break if item =~ /^-/
+
         arguments << item
       end
 
@@ -42,6 +43,7 @@ class Foreman::Thor
 
       @switches.each do |argument|
         break unless peek
+
         @non_assigned_required.delete(argument)
         @assigns[argument.human_name] = send(:"parse_#{argument.type}", argument.human_name)
       end
@@ -54,11 +56,11 @@ class Foreman::Thor
       @pile
     end
 
-  private
+    private
 
     def no_or_skip?(arg)
       arg =~ /^--(no|skip)-([-\w]+)$/
-      $2
+      Regexp.last_match(2)
     end
 
     def last?
@@ -96,11 +98,13 @@ class Foreman::Thor
     #
     def parse_hash(name)
       return shift if peek.is_a?(Hash)
+
       hash = {}
 
-      while current_is_value? && peek.include?(":")
-        key, value = shift.split(":", 2)
+      while current_is_value? && peek.include?(':')
+        key, value = shift.split(':', 2)
         raise MalformattedArgumentError, "You can't specify '#{key}' more than once in option '#{name}'; got #{key}:#{hash[key]} and #{key}:#{value}" if hash.include? key
+
         hash[key] = value
       end
       hash
@@ -115,8 +119,9 @@ class Foreman::Thor
     #
     #   ["a", "b", "c"]
     #
-    def parse_array(name)
+    def parse_array(_name)
       return shift if peek.is_a?(Array)
+
       array = []
       array << shift while current_is_value?
       array
@@ -129,15 +134,11 @@ class Foreman::Thor
     def parse_numeric(name)
       return shift if peek.is_a?(Numeric)
 
-      unless peek =~ NUMERIC && $& == peek
-        raise MalformattedArgumentError, "Expected numeric value for '#{name}'; got #{peek.inspect}"
-      end
+      raise MalformattedArgumentError, "Expected numeric value for '#{name}'; got #{peek.inspect}" unless peek =~ NUMERIC && $& == peek
 
-      value = $&.index(".") ? shift.to_f : shift.to_i
+      value = $&.index('.') ? shift.to_f : shift.to_i
       if @switches.is_a?(Hash) && switch = @switches[name]
-        if switch.enum && !switch.enum.include?(value)
-          raise MalformattedArgumentError, "Expected '#{name}' to be one of #{switch.enum.join(', ')}; got #{value}"
-        end
+        raise MalformattedArgumentError, "Expected '#{name}' to be one of #{switch.enum.join(', ')}; got #{value}" if switch.enum && !switch.enum.include?(value)
       end
       value
     end
@@ -153,9 +154,7 @@ class Foreman::Thor
       else
         value = shift
         if @switches.is_a?(Hash) && switch = @switches[name]
-          if switch.enum && !switch.enum.include?(value)
-            raise MalformattedArgumentError, "Expected '#{name}' to be one of #{switch.enum.join(', ')}; got #{value}"
-          end
+          raise MalformattedArgumentError, "Expected '#{name}' to be one of #{switch.enum.join(', ')}; got #{value}" if switch.enum && !switch.enum.include?(value)
         end
         value
       end
@@ -165,10 +164,11 @@ class Foreman::Thor
     #
     def check_requirement!
       return if @non_assigned_required.empty?
+
       names = @non_assigned_required.map do |o|
         o.respond_to?(:switch_name) ? o.switch_name : o.human_name
       end.join("', '")
-      class_name = self.class.name.split("::").last.downcase
+      class_name = self.class.name.split('::').last.downcase
       raise RequiredArgumentMissingError, "No value provided for required #{class_name} '#{names}'"
     end
   end

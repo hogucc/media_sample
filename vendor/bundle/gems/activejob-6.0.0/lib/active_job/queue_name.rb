@@ -7,7 +7,7 @@ module ActiveJob
     # Includes the ability to override the default queue name and prefix.
     module ClassMethods
       mattr_accessor :queue_name_prefix
-      mattr_accessor :default_queue_name, default: "default"
+      mattr_accessor :default_queue_name, default: 'default'
 
       # Specifies the name of the queue to process the job on.
       #
@@ -39,11 +39,11 @@ module ActiveJob
       #     end
       #   end
       def queue_as(part_name = nil, &block)
-        if block_given?
-          self.queue_name = block
-        else
-          self.queue_name = queue_name_from_part(part_name)
-        end
+        self.queue_name = if block_given?
+                            block
+                          else
+                            queue_name_from_part(part_name)
+                          end
       end
 
       def queue_name_from_part(part_name) #:nodoc:
@@ -55,14 +55,12 @@ module ActiveJob
 
     included do
       class_attribute :queue_name, instance_accessor: false, default: -> { self.class.default_queue_name }
-      class_attribute :queue_name_delimiter, instance_accessor: false, default: "_"
+      class_attribute :queue_name_delimiter, instance_accessor: false, default: '_'
     end
 
     # Returns the name of the queue the job will be run on.
     def queue_name
-      if @queue_name.is_a?(Proc)
-        @queue_name = self.class.queue_name_from_part(instance_exec(&@queue_name))
-      end
+      @queue_name = self.class.queue_name_from_part(instance_exec(&@queue_name)) if @queue_name.is_a?(Proc)
       @queue_name
     end
   end

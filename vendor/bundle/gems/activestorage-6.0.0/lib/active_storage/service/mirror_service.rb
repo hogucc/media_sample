@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "active_support/core_ext/module/delegation"
+require 'active_support/core_ext/module/delegation'
 
 module ActiveStorage
   # Wraps a set of mirror services and provides a single ActiveStorage::Service object that will all
@@ -12,14 +12,15 @@ module ActiveStorage
     delegate :download, :download_chunk, :exist?, :url, :path_for, to: :primary
 
     # Stitch together from named services.
-    def self.build(primary:, mirrors:, configurator:, **options) #:nodoc:
+    def self.build(primary:, mirrors:, configurator:, **_options) #:nodoc:
       new \
         primary: configurator.build(primary),
         mirrors: mirrors.collect { |name| configurator.build name }
     end
 
     def initialize(primary:, mirrors:)
-      @primary, @mirrors = primary, mirrors
+      @primary = primary
+      @mirrors = mirrors
     end
 
     # Upload the +io+ to the +key+ specified to all services. If a +checksum+ is provided, all services will
@@ -41,15 +42,16 @@ module ActiveStorage
     end
 
     private
-      def each_service(&block)
-        [ primary, *mirrors ].each(&block)
-      end
 
-      def perform_across_services(method, *args)
-        # FIXME: Convert to be threaded
-        each_service.collect do |service|
-          service.public_send method, *args
-        end
+    def each_service(&block)
+      [primary, *mirrors].each(&block)
+    end
+
+    def perform_across_services(method, *args)
+      # FIXME: Convert to be threaded
+      each_service.collect do |service|
+        service.public_send method, *args
       end
+    end
   end
 end

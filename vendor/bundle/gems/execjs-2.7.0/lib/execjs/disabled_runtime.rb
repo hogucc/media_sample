@@ -1,21 +1,21 @@
-require "execjs/runtime"
+require 'execjs/runtime'
 
 module ExecJS
   class DisabledRuntime < Runtime
     def name
-      "Disabled"
+      'Disabled'
     end
 
-    def exec(source, options = {})
-      raise Error, "ExecJS disabled"
+    def exec(_source, _options = {})
+      raise Error, 'ExecJS disabled'
     end
 
-    def eval(source, options = {})
-      raise Error, "ExecJS disabled"
+    def eval(_source, _options = {})
+      raise Error, 'ExecJS disabled'
     end
 
-    def compile(source, options = {})
-      raise Error, "ExecJS disabled"
+    def compile(_source, _options = {})
+      raise Error, 'ExecJS disabled'
     end
 
     def deprecated?

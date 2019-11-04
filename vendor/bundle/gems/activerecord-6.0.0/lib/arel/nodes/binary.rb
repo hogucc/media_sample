@@ -23,13 +23,13 @@ module Arel # :nodoc: all
 
       def eql?(other)
         self.class == other.class &&
-          self.left == other.left &&
-          self.right == other.right
+          left == other.left &&
+          right == other.right
       end
-      alias :== :eql?
+      alias == eql?
     end
 
-    %w{
+    %w[
       As
       Assignment
       Between
@@ -45,7 +45,7 @@ module Arel # :nodoc: all
       UnionAll
       Intersect
       Except
-    }.each do |name|
+    ].each do |name|
       const_set name, Class.new(Binary)
     end
   end

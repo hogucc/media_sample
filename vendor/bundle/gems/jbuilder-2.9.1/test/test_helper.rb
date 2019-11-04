@@ -1,17 +1,17 @@
-require "bundler/setup"
+require 'bundler/setup'
 
-require "active_support"
-require "active_support/core_ext/array/access"
-require "active_support/cache/memory_store"
-require "active_support/json"
-require "active_model"
-require "action_view"
-require "rails/version"
+require 'active_support'
+require 'active_support/core_ext/array/access'
+require 'active_support/cache/memory_store'
+require 'active_support/json'
+require 'active_model'
+require 'action_view'
+require 'rails/version'
 
-require "jbuilder"
+require 'jbuilder'
 
-require "active_support/testing/autorun"
-require "mocha/setup"
+require 'active_support/testing/autorun'
+require 'mocha/setup'
 
 ActiveSupport.test_order = :random
 

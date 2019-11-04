@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require "pathname"
-require "byebug/command"
-require "byebug/helpers/frame"
-require "byebug/helpers/parse"
+require 'pathname'
+require 'byebug/command'
+require 'byebug/helpers/frame'
+require 'byebug/helpers/parse'
 
 module Byebug
   #
@@ -40,13 +40,13 @@ module Byebug
     end
 
     def self.short_description
-      "Moves to a frame in the call stack"
+      'Moves to a frame in the call stack'
     end
 
     def execute
-      return print(pr("frame.line", context.frame.to_hash)) unless @match[1]
+      return print(pr('frame.line', context.frame.to_hash)) unless @match[1]
 
-      pos, err = get_int(@match[1], "Frame")
+      pos, err = get_int(@match[1], 'Frame')
       return errmsg(err) unless pos
 
       switch_to_frame(pos)

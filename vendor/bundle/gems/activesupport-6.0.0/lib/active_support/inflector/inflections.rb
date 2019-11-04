@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
-require "concurrent/map"
-require "active_support/i18n"
-require "active_support/deprecation"
+require 'concurrent/map'
+require 'active_support/i18n'
+require 'active_support/deprecation'
 
 module ActiveSupport
   module Inflector
-    extend self
+    module_function
 
     # A singleton instance of this class is yielded by Inflector.inflections,
     # which can then be used to specify additional inflection rules. If passed
@@ -56,9 +56,10 @@ module ActiveSupport
         end
 
         private
-          def to_regex(string)
-            /\b#{::Regexp.escape(string)}\Z/i
-          end
+
+        def to_regex(string)
+          /\b#{::Regexp.escape(string)}\Z/i
+        end
       end
 
       def self.instance(locale = :en)
@@ -70,13 +71,17 @@ module ActiveSupport
       attr_reader :acronyms_camelize_regex, :acronyms_underscore_regex # :nodoc:
 
       def initialize
-        @plurals, @singulars, @uncountables, @humans, @acronyms = [], [], Uncountables.new, [], {}
+        @plurals = []
+        @singulars = []
+        @uncountables = Uncountables.new
+        @humans = []
+        @acronyms = {}
         define_acronym_regex_patterns
       end
 
       # Private, for the test suite.
       def initialize_dup(orig) # :nodoc:
-        %w(plurals singulars uncountables humans acronyms).each do |scope|
+        %w[plurals singulars uncountables humans acronyms].each do |scope|
           instance_variable_set("@#{scope}", orig.send(scope).dup)
         end
         define_acronym_regex_patterns
@@ -223,7 +228,10 @@ module ActiveSupport
       def clear(scope = :all)
         case scope
         when :all
-          @plurals, @singulars, @uncountables, @humans = [], [], Uncountables.new, []
+          @plurals = []
+          @singulars = []
+          @uncountables = Uncountables.new
+          @humans = []
         else
           instance_variable_set "@#{scope}", []
         end
@@ -231,11 +239,11 @@ module ActiveSupport
 
       private
 
-        def define_acronym_regex_patterns
-          @acronym_regex             = @acronyms.empty? ? /(?=a)b/ : /#{@acronyms.values.join("|")}/
-          @acronyms_camelize_regex   = /^(?:#{@acronym_regex}(?=\b|[A-Z_])|\w)/
-          @acronyms_underscore_regex = /(?:(?<=([A-Za-z\d]))|\b)(#{@acronym_regex})(?=\b|[^a-z])/
-        end
+      def define_acronym_regex_patterns
+        @acronym_regex             = @acronyms.empty? ? /(?=a)b/ : /#{@acronyms.values.join("|")}/
+        @acronyms_camelize_regex   = /^(?:#{@acronym_regex}(?=\b|[A-Z_])|\w)/
+        @acronyms_underscore_regex = /(?:(?<=([A-Za-z\d]))|\b)(#{@acronym_regex})(?=\b|[^a-z])/
+      end
     end
 
     # Yields a singleton instance of Inflector::Inflections so you can specify

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "active_support/per_thread_registry"
-require "active_support/notifications"
+require 'active_support/per_thread_registry'
+require 'active_support/notifications'
 
 module ActiveSupport
   # ActiveSupport::Subscriber is an object set to consume
@@ -68,9 +68,7 @@ module ActiveSupport
         # Only public methods are added as subscribers, and only if a notifier
         # has been set up. This means that subscribers will only be set up for
         # classes that call #attach_to.
-        if public_method_defined?(event) && notifier
-          add_event_subscriber(event)
-        end
+        add_event_subscriber(event) if public_method_defined?(event) && notifier
       end
 
       def subscribers
@@ -78,51 +76,52 @@ module ActiveSupport
       end
 
       private
-        attr_reader :subscriber, :notifier, :namespace
 
-        def add_event_subscriber(event) # :doc:
-          return if invalid_event?(event.to_s)
+      attr_reader :subscriber, :notifier, :namespace
 
-          pattern = prepare_pattern(event)
+      def add_event_subscriber(event) # :doc:
+        return if invalid_event?(event.to_s)
 
-          # Don't add multiple subscribers (eg. if methods are redefined).
-          return if pattern_subscribed?(pattern)
+        pattern = prepare_pattern(event)
 
-          subscriber.patterns[pattern] = notifier.subscribe(pattern, subscriber)
-        end
+        # Don't add multiple subscribers (eg. if methods are redefined).
+        return if pattern_subscribed?(pattern)
 
-        def remove_event_subscriber(event) # :doc:
-          return if invalid_event?(event.to_s)
+        subscriber.patterns[pattern] = notifier.subscribe(pattern, subscriber)
+      end
 
-          pattern = prepare_pattern(event)
+      def remove_event_subscriber(event) # :doc:
+        return if invalid_event?(event.to_s)
 
-          return unless pattern_subscribed?(pattern)
+        pattern = prepare_pattern(event)
 
-          notifier.unsubscribe(subscriber.patterns[pattern])
-          subscriber.patterns.delete(pattern)
-        end
+        return unless pattern_subscribed?(pattern)
 
-        def find_attached_subscriber
-          subscribers.find { |attached_subscriber| attached_subscriber.instance_of?(self) }
-        end
+        notifier.unsubscribe(subscriber.patterns[pattern])
+        subscriber.patterns.delete(pattern)
+      end
 
-        def invalid_event?(event)
-          %w{ start finish }.include?(event.to_s)
-        end
+      def find_attached_subscriber
+        subscribers.find { |attached_subscriber| attached_subscriber.instance_of?(self) }
+      end
 
-        def prepare_pattern(event)
-          "#{event}.#{namespace}"
-        end
+      def invalid_event?(event)
+        %w[start finish].include?(event.to_s)
+      end
 
-        def pattern_subscribed?(pattern)
-          subscriber.patterns.key?(pattern)
-        end
+      def prepare_pattern(event)
+        "#{event}.#{namespace}"
+      end
+
+      def pattern_subscribed?(pattern)
+        subscriber.patterns.key?(pattern)
+      end
     end
 
     attr_reader :patterns # :nodoc:
 
     def initialize
-      @queue_key = [self.class.name, object_id].join "-"
+      @queue_key = [self.class.name, object_id].join '-'
       @patterns  = {}
       super
     end
@@ -136,19 +135,20 @@ module ActiveSupport
       event_stack.push event
     end
 
-    def finish(name, id, payload)
+    def finish(name, _id, payload)
       event = event_stack.pop
       event.finish!
       event.payload.merge!(payload)
 
-      method = name.split(".").first
+      method = name.split('.').first
       send(method, event)
     end
 
     private
-      def event_stack
-        SubscriberQueueRegistry.instance.get_queue(@queue_key)
-      end
+
+    def event_stack
+      SubscriberQueueRegistry.instance.get_queue(@queue_key)
+    end
   end
 
   # This is a registry for all the event stacks kept for subscribers.

@@ -10,15 +10,15 @@ module ActiveRecord
 
       # Converts an arel AST to SQL
       def to_sql(arel_or_sql_string, binds = [])
-        sql, _ = to_sql_and_binds(arel_or_sql_string, binds)
+        sql, = to_sql_and_binds(arel_or_sql_string, binds)
         sql
       end
 
       def to_sql_and_binds(arel_or_sql_string, binds = []) # :nodoc:
         if arel_or_sql_string.respond_to?(:ast)
           unless binds.empty?
-            raise "Passing bind parameters with an arel AST is forbidden. " \
-              "The values must be stored on the AST directly"
+            raise 'Passing bind parameters with an arel AST is forbidden. ' \
+              'The values must be stored on the AST directly'
           end
 
           if prepared_statements
@@ -107,7 +107,7 @@ module ActiveRecord
       end
 
       # Determines whether the SQL statement is a write query.
-      def write_query?(sql)
+      def write_query?(_sql)
         raise NotImplementedError
       end
 
@@ -116,21 +116,21 @@ module ActiveRecord
       # Note: depending on your database connector, the result returned by this
       # method may be manually memory managed. Consider using the exec_query
       # wrapper instead.
-      def execute(sql, name = nil)
+      def execute(_sql, _name = nil)
         raise NotImplementedError
       end
 
       # Executes +sql+ statement in the context of this connection using
       # +binds+ as the bind substitutes. +name+ is logged along with
       # the executed +sql+ statement.
-      def exec_query(sql, name = "SQL", binds = [], prepare: false)
+      def exec_query(_sql, _name = 'SQL', _binds = [], prepare: false)
         raise NotImplementedError
       end
 
       # Executes insert +sql+ statement in the context of this connection using
       # +binds+ as the bind substitutes. +name+ is logged along with
       # the executed +sql+ statement.
-      def exec_insert(sql, name = nil, binds = [], pk = nil, sequence_name = nil)
+      def exec_insert(sql, name = nil, binds = [], pk = nil, _sequence_name = nil)
         sql, binds = sql_for_insert(sql, pk, binds)
         exec_query(sql, name, binds)
       end
@@ -187,7 +187,7 @@ module ActiveRecord
         with_multi_statements do
           disable_referential_integrity do
             Array(build_truncate_statements(*table_names)).each do |sql|
-              execute_batch(sql, "Truncate Tables")
+              execute_batch(sql, 'Truncate Tables')
             end
           end
         end
@@ -269,9 +269,8 @@ module ActiveRecord
       # isolation level.
       def transaction(requires_new: nil, isolation: nil, joinable: true)
         if !requires_new && current_transaction.joinable?
-          if isolation
-            raise ActiveRecord::TransactionIsolationError, "cannot set isolation when joining a transaction"
-          end
+          raise ActiveRecord::TransactionIsolationError, 'cannot set isolation when joining a transaction' if isolation
+
           yield
         else
           transaction_manager.within_new_transaction(isolation: isolation, joinable: joinable) { yield }
@@ -305,26 +304,26 @@ module ActiveRecord
       end
 
       # Begins the transaction (and turns off auto-committing).
-      def begin_db_transaction()    end
+      def begin_db_transaction() end
 
       def transaction_isolation_levels
         {
-          read_uncommitted: "READ UNCOMMITTED",
-          read_committed:   "READ COMMITTED",
-          repeatable_read:  "REPEATABLE READ",
-          serializable:     "SERIALIZABLE"
+          read_uncommitted: 'READ UNCOMMITTED',
+          read_committed: 'READ COMMITTED',
+          repeatable_read: 'REPEATABLE READ',
+          serializable: 'SERIALIZABLE'
         }
       end
 
       # Begins the transaction with the isolation level set. Raises an error by
       # default; adapters that support setting the isolation level should implement
       # this method.
-      def begin_isolated_db_transaction(isolation)
-        raise ActiveRecord::TransactionIsolationError, "adapter does not support setting transaction isolation"
+      def begin_isolated_db_transaction(_isolation)
+        raise ActiveRecord::TransactionIsolationError, 'adapter does not support setting transaction isolation'
       end
 
       # Commits the transaction (and turns on auto-committing).
-      def commit_db_transaction()   end
+      def commit_db_transaction() end
 
       # Rolls back the transaction (and turns on auto-committing). Must be
       # done if the transaction block raises an exception or returns false.
@@ -338,7 +337,7 @@ module ActiveRecord
         exec_rollback_to_savepoint(name)
       end
 
-      def default_sequence_name(table, column)
+      def default_sequence_name(_table, _column)
         nil
       end
 
@@ -353,7 +352,7 @@ module ActiveRecord
       # We keep this method to provide fallback
       # for databases like sqlite that do not support bulk inserts.
       def insert_fixture(fixture, table_name)
-        execute(build_fixture_sql(Array.wrap(fixture), table_name), "Fixture Insert")
+        execute(build_fixture_sql(Array.wrap(fixture), table_name), 'Fixture Insert')
       end
 
       def insert_fixtures_set(fixture_set, tables_to_delete = [])
@@ -365,15 +364,15 @@ module ActiveRecord
           disable_referential_integrity do
             transaction(requires_new: true) do
               total_sql.each do |sql|
-                execute_batch(sql, "Fixtures Load")
+                execute_batch(sql, 'Fixtures Load')
               end
             end
           end
         end
       end
 
-      def empty_insert_statement_value(primary_key = nil)
-        "DEFAULT VALUES"
+      def empty_insert_statement_value(_primary_key = nil)
+        'DEFAULT VALUES'
       end
 
       # Sanitizes the given LIMIT parameter in order to prevent SQL injection.
@@ -402,111 +401,111 @@ module ActiveRecord
       end
 
       private
-        def execute_batch(sql, name = nil)
-          execute(sql, name)
-        end
 
-        DEFAULT_INSERT_VALUE = Arel.sql("DEFAULT").freeze
-        private_constant :DEFAULT_INSERT_VALUE
+      def execute_batch(sql, name = nil)
+        execute(sql, name)
+      end
 
-        def default_insert_value(column)
-          DEFAULT_INSERT_VALUE
-        end
+      DEFAULT_INSERT_VALUE = Arel.sql('DEFAULT').freeze
+      private_constant :DEFAULT_INSERT_VALUE
 
-        def build_fixture_sql(fixtures, table_name)
-          columns = schema_cache.columns_hash(table_name)
+      def default_insert_value(_column)
+        DEFAULT_INSERT_VALUE
+      end
 
-          values_list = fixtures.map do |fixture|
-            fixture = fixture.stringify_keys
+      def build_fixture_sql(fixtures, table_name)
+        columns = schema_cache.columns_hash(table_name)
 
-            unknown_columns = fixture.keys - columns.keys
-            if unknown_columns.any?
-              raise Fixture::FixtureError, %(table "#{table_name}" has no columns named #{unknown_columns.map(&:inspect).join(', ')}.)
-            end
+        values_list = fixtures.map do |fixture|
+          fixture = fixture.stringify_keys
 
-            columns.map do |name, column|
-              if fixture.key?(name)
-                type = lookup_cast_type_from_column(column)
-                with_yaml_fallback(type.serialize(fixture[name]))
-              else
-                default_insert_value(column)
-              end
+          unknown_columns = fixture.keys - columns.keys
+          raise Fixture::FixtureError, %(table "#{table_name}" has no columns named #{unknown_columns.map(&:inspect).join(', ')}.) if unknown_columns.any?
+
+          columns.map do |name, column|
+            if fixture.key?(name)
+              type = lookup_cast_type_from_column(column)
+              with_yaml_fallback(type.serialize(fixture[name]))
+            else
+              default_insert_value(column)
             end
           end
+        end
 
-          table = Arel::Table.new(table_name)
-          manager = Arel::InsertManager.new
-          manager.into(table)
+        table = Arel::Table.new(table_name)
+        manager = Arel::InsertManager.new
+        manager.into(table)
 
-          if values_list.size == 1
-            values = values_list.shift
-            new_values = []
-            columns.each_key.with_index { |column, i|
-              unless values[i].equal?(DEFAULT_INSERT_VALUE)
-                new_values << values[i]
-                manager.columns << table[column]
-              end
-            }
-            values_list << new_values
-          else
-            columns.each_key { |column| manager.columns << table[column] }
+        if values_list.size == 1
+          values = values_list.shift
+          new_values = []
+          columns.each_key.with_index do |column, i|
+            unless values[i].equal?(DEFAULT_INSERT_VALUE)
+              new_values << values[i]
+              manager.columns << table[column]
+            end
           end
-
-          manager.values = manager.create_values_list(values_list)
-          manager.to_sql
+          values_list << new_values
+        else
+          columns.each_key { |column| manager.columns << table[column] }
         end
 
-        def build_fixture_statements(fixture_set)
-          fixture_set.map do |table_name, fixtures|
-            next if fixtures.empty?
-            build_fixture_sql(fixtures, table_name)
-          end.compact
-        end
+        manager.values = manager.create_values_list(values_list)
+        manager.to_sql
+      end
 
-        def build_truncate_statements(*table_names)
-          truncate_tables = table_names.map do |table_name|
-            "TRUNCATE TABLE #{quote_table_name(table_name)}"
-          end
-          combine_multi_statements(truncate_tables)
-        end
+      def build_fixture_statements(fixture_set)
+        fixture_set.map do |table_name, fixtures|
+          next if fixtures.empty?
 
-        def with_multi_statements
-          yield
-        end
+          build_fixture_sql(fixtures, table_name)
+        end.compact
+      end
 
-        def combine_multi_statements(total_sql)
-          total_sql.join(";\n")
+      def build_truncate_statements(*table_names)
+        truncate_tables = table_names.map do |table_name|
+          "TRUNCATE TABLE #{quote_table_name(table_name)}"
         end
+        combine_multi_statements(truncate_tables)
+      end
 
-        # Returns an ActiveRecord::Result instance.
-        def select(sql, name = nil, binds = [])
-          exec_query(sql, name, binds, prepare: false)
-        end
+      def with_multi_statements
+        yield
+      end
 
-        def select_prepared(sql, name = nil, binds = [])
-          exec_query(sql, name, binds, prepare: true)
-        end
+      def combine_multi_statements(total_sql)
+        total_sql.join(";\n")
+      end
 
-        def sql_for_insert(sql, pk, binds)
-          [sql, binds]
-        end
+      # Returns an ActiveRecord::Result instance.
+      def select(sql, name = nil, binds = [])
+        exec_query(sql, name, binds, prepare: false)
+      end
 
-        def last_inserted_id(result)
-          single_value_from_rows(result.rows)
-        end
+      def select_prepared(sql, name = nil, binds = [])
+        exec_query(sql, name, binds, prepare: true)
+      end
 
-        def single_value_from_rows(rows)
-          row = rows.first
-          row && row.first
-        end
+      def sql_for_insert(sql, _pk, binds)
+        [sql, binds]
+      end
 
-        def arel_from_relation(relation)
-          if relation.is_a?(Relation)
-            relation.arel
-          else
-            relation
-          end
+      def last_inserted_id(result)
+        single_value_from_rows(result.rows)
+      end
+
+      def single_value_from_rows(rows)
+        row = rows.first
+        row&.first
+      end
+
+      def arel_from_relation(relation)
+        if relation.is_a?(Relation)
+          relation.arel
+        else
+          relation
         end
+      end
     end
   end
 end

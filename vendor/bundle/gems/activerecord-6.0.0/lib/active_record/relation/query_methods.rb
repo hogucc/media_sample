@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require "active_record/relation/from_clause"
-require "active_record/relation/query_attribute"
-require "active_record/relation/where_clause"
-require "active_record/relation/where_clause_factory"
-require "active_model/forbidden_attributes_protection"
+require 'active_record/relation/from_clause'
+require 'active_record/relation/query_attribute'
+require 'active_record/relation/where_clause'
+require 'active_record/relation/where_clause_factory'
+require 'active_model/forbidden_attributes_protection'
 
 module ActiveRecord
   module QueryMethods
@@ -52,7 +52,7 @@ module ActiveRecord
           ActiveSupport::Deprecation.warn(<<~MSG.squish)
             NOT conditions will no longer behave as NOR in Rails 6.1.
             To continue using NOR conditions, NOT each conditions manually
-            (`#{ opts.keys.map { |key| ".where.not(#{key.inspect} => ...)" }.join }`).
+            (`#{opts.keys.map { |key| ".where.not(#{key.inspect} => ...)" }.join}`).
           MSG
           @scope.where_clause += where_clause.invert(:nor)
         else
@@ -63,9 +63,10 @@ module ActiveRecord
       end
 
       private
-        def not_behaves_as_nor?(opts)
-          opts.is_a?(Hash) && opts.size > 1
-        end
+
+      def not_behaves_as_nor?(opts)
+        opts.is_a?(Hash) && opts.size > 1
+      end
     end
 
     FROZEN_EMPTY_ARRAY = [].freeze
@@ -253,14 +254,13 @@ module ActiveRecord
     #   # => ActiveModel::MissingAttributeError: missing attribute: other_field
     def select(*fields)
       if block_given?
-        if fields.any?
-          raise ArgumentError, "`select' with block doesn't take arguments."
-        end
+        raise ArgumentError, "`select' with block doesn't take arguments." if fields.any?
 
         return super()
       end
 
       raise ArgumentError, "Call `select' with at least one field" if fields.empty?
+
       spawn._select!(*fields)
     end
 
@@ -380,8 +380,8 @@ module ActiveRecord
     end
 
     VALID_UNSCOPING_VALUES = Set.new([:where, :select, :group, :order, :lock,
-                                     :limit, :offset, :joins, :left_outer_joins, :annotate,
-                                     :includes, :from, :readonly, :having, :optimizer_hints])
+                                      :limit, :offset, :joins, :left_outer_joins, :annotate,
+                                      :includes, :from, :readonly, :having, :optimizer_hints])
 
     # Removes an unwanted relation that is already defined on a chain of relations.
     # This is useful when passing around chains of relations and would like to
@@ -429,16 +429,15 @@ module ActiveRecord
         case scope
         when Symbol
           scope = :left_outer_joins if scope == :left_joins
-          if !VALID_UNSCOPING_VALUES.include?(scope)
-            raise ArgumentError, "Called unscope() with invalid unscoping argument ':#{scope}'. Valid arguments are :#{VALID_UNSCOPING_VALUES.to_a.join(", :")}."
+          unless VALID_UNSCOPING_VALUES.include?(scope)
+            raise ArgumentError, "Called unscope() with invalid unscoping argument ':#{scope}'. Valid arguments are :#{VALID_UNSCOPING_VALUES.to_a.join(', :')}."
           end
+
           assert_mutability!
           @values[scope] = DEFAULT_VALUES[scope]
         when Hash
           scope.each do |key, target_value|
-            if key != :where
-              raise ArgumentError, "Hash arguments in .unscope(*args) must have :where as the key."
-            end
+            raise ArgumentError, 'Hash arguments in .unscope(*args) must have :where as the key.' if key != :where
 
             target_values = Array(target_value).map(&:to_s)
             self.where_clause = where_clause.except(*target_values)
@@ -501,7 +500,7 @@ module ActiveRecord
       check_if_method_has_arguments!(__callee__, args)
       spawn.left_outer_joins!(*args)
     end
-    alias :left_joins :left_outer_joins
+    alias left_joins left_outer_joins
 
     def left_outer_joins!(*args) # :nodoc:
       args.compact!
@@ -630,7 +629,7 @@ module ActiveRecord
     # If the condition is any blank-ish object, then #where is a no-op and returns
     # the current relation.
     def where(opts = :chain, *rest)
-      if :chain == opts
+      if opts == :chain
         WhereChain.new(spawn)
       elsif opts.blank?
         self
@@ -674,9 +673,7 @@ module ActiveRecord
     #    # SELECT `posts`.* FROM `posts` WHERE ((id = 1) OR (author_id = 3))
     #
     def or(other)
-      unless other.is_a? Relation
-        raise ArgumentError, "You have passed #{other.class.name} object to #or. Pass an ActiveRecord::Relation object instead."
-      end
+      raise ArgumentError, "You have passed #{other.class.name} object to #or. Pass an ActiveRecord::Relation object instead." unless other.is_a? Relation
 
       spawn.or!(other)
     end
@@ -684,9 +681,7 @@ module ActiveRecord
     def or!(other) # :nodoc:
       incompatible_values = structurally_incompatible_values_for_or(other)
 
-      unless incompatible_values.empty?
-        raise ArgumentError, "Relation passed to #or must be structurally compatible. Incompatible values: #{incompatible_values}"
-      end
+      raise ArgumentError, "Relation passed to #or must be structurally compatible. Incompatible values: #{incompatible_values}" unless incompatible_values.empty?
 
       self.where_clause = self.where_clause.or(other.where_clause)
       self.having_clause = having_clause.or(other.having_clause)
@@ -791,7 +786,7 @@ module ActiveRecord
     end
 
     def none! # :nodoc:
-      where!("1=0").extending!(NullRelation)
+      where!('1=0').extending!(NullRelation)
     end
 
     # Sets readonly attributes for the returned relation. If value is
@@ -1012,348 +1007,347 @@ module ActiveRecord
     end
 
     protected
-      def build_subquery(subquery_alias, select_value) # :nodoc:
-        subquery = except(:optimizer_hints).arel.as(subquery_alias)
 
-        Arel::SelectManager.new(subquery).project(select_value).tap do |arel|
-          arel.optimizer_hints(*optimizer_hints_values) unless optimizer_hints_values.empty?
-        end
+    def build_subquery(subquery_alias, select_value) # :nodoc:
+      subquery = except(:optimizer_hints).arel.as(subquery_alias)
+
+      Arel::SelectManager.new(subquery).project(select_value).tap do |arel|
+        arel.optimizer_hints(*optimizer_hints_values) unless optimizer_hints_values.empty?
       end
+    end
 
     private
-      def assert_mutability!
-        raise ImmutableRelation if @loaded
-        raise ImmutableRelation if defined?(@arel) && @arel
+
+    def assert_mutability!
+      raise ImmutableRelation if @loaded
+      raise ImmutableRelation if defined?(@arel) && @arel
+    end
+
+    def build_arel(aliases)
+      arel = Arel::SelectManager.new(table)
+
+      if !joins_values.empty?
+        build_joins(arel, joins_values.flatten, aliases)
+      elsif !left_outer_joins_values.empty?
+        build_left_outer_joins(arel, left_outer_joins_values.flatten, aliases)
       end
 
-      def build_arel(aliases)
-        arel = Arel::SelectManager.new(table)
-
-        if !joins_values.empty?
-          build_joins(arel, joins_values.flatten, aliases)
-        elsif !left_outer_joins_values.empty?
-          build_left_outer_joins(arel, left_outer_joins_values.flatten, aliases)
-        end
-
-        arel.where(where_clause.ast) unless where_clause.empty?
-        arel.having(having_clause.ast) unless having_clause.empty?
-        if limit_value
-          limit_attribute = ActiveModel::Attribute.with_cast_value(
-            "LIMIT",
-            connection.sanitize_limit(limit_value),
-            Type.default_value,
-          )
-          arel.take(Arel::Nodes::BindParam.new(limit_attribute))
-        end
-        if offset_value
-          offset_attribute = ActiveModel::Attribute.with_cast_value(
-            "OFFSET",
-            offset_value.to_i,
-            Type.default_value,
-          )
-          arel.skip(Arel::Nodes::BindParam.new(offset_attribute))
-        end
-        arel.group(*arel_columns(group_values.uniq.reject(&:blank?))) unless group_values.empty?
-
-        build_order(arel)
-
-        build_select(arel)
-
-        arel.optimizer_hints(*optimizer_hints_values) unless optimizer_hints_values.empty?
-        arel.distinct(distinct_value)
-        arel.from(build_from) unless from_clause.empty?
-        arel.lock(lock_value) if lock_value
-        arel.comment(*annotate_values) unless annotate_values.empty?
-
-        arel
-      end
-
-      def build_from
-        opts = from_clause.value
-        name = from_clause.name
-        case opts
-        when Relation
-          if opts.eager_loading?
-            opts = opts.send(:apply_join_dependency)
-          end
-          name ||= "subquery"
-          opts.arel.as(name.to_s)
-        else
-          opts
-        end
-      end
-
-      def valid_association_list(associations)
-        associations.each do |association|
-          case association
-          when Hash, Symbol, Array
-            # valid
-          else
-            raise ArgumentError, "only Hash, Symbol and Array are allowed"
-          end
-        end
-      end
-
-      def build_left_outer_joins(manager, outer_joins, aliases)
-        buckets = Hash.new { |h, k| h[k] = [] }
-        buckets[:association_join] = valid_association_list(outer_joins)
-        build_join_query(manager, buckets, Arel::Nodes::OuterJoin, aliases)
-      end
-
-      def build_joins(manager, joins, aliases)
-        buckets = Hash.new { |h, k| h[k] = [] }
-
-        unless left_outer_joins_values.empty?
-          left_joins = valid_association_list(left_outer_joins_values.flatten)
-          buckets[:stashed_join] << construct_join_dependency(left_joins, Arel::Nodes::OuterJoin)
-        end
-
-        joins.map! do |join|
-          if join.is_a?(String)
-            table.create_string_join(Arel.sql(join.strip)) unless join.blank?
-          else
-            join
-          end
-        end.delete_if(&:blank?).uniq!
-
-        while joins.first.is_a?(Arel::Nodes::Join)
-          join_node = joins.shift
-          if join_node.is_a?(Arel::Nodes::StringJoin) && !buckets[:stashed_join].empty?
-            buckets[:join_node] << join_node
-          else
-            buckets[:leading_join] << join_node
-          end
-        end
-
-        joins.each do |join|
-          case join
-          when Hash, Symbol, Array
-            buckets[:association_join] << join
-          when ActiveRecord::Associations::JoinDependency
-            buckets[:stashed_join] << join
-          when Arel::Nodes::Join
-            buckets[:join_node] << join
-          else
-            raise "unknown class: %s" % join.class.name
-          end
-        end
-
-        build_join_query(manager, buckets, Arel::Nodes::InnerJoin, aliases)
-      end
-
-      def build_join_query(manager, buckets, join_type, aliases)
-        association_joins = buckets[:association_join]
-        stashed_joins     = buckets[:stashed_join]
-        leading_joins     = buckets[:leading_join]
-        join_nodes        = buckets[:join_node]
-
-        join_sources = manager.join_sources
-        join_sources.concat(leading_joins) unless leading_joins.empty?
-
-        unless association_joins.empty? && stashed_joins.empty?
-          alias_tracker = alias_tracker(leading_joins + join_nodes, aliases)
-          join_dependency = construct_join_dependency(association_joins, join_type)
-          join_sources.concat(join_dependency.join_constraints(stashed_joins, alias_tracker))
-        end
-
-        join_sources.concat(join_nodes) unless join_nodes.empty?
-      end
-
-      def build_select(arel)
-        if select_values.any?
-          arel.project(*arel_columns(select_values.uniq))
-        elsif klass.ignored_columns.any?
-          arel.project(*klass.column_names.map { |field| arel_attribute(field) })
-        else
-          arel.project(table[Arel.star])
-        end
-      end
-
-      def arel_columns(columns)
-        columns.flat_map do |field|
-          case field
-          when Symbol
-            arel_column(field.to_s) do |attr_name|
-              connection.quote_table_name(attr_name)
-            end
-          when String
-            arel_column(field, &:itself)
-          when Proc
-            field.call
-          else
-            field
-          end
-        end
-      end
-
-      def arel_column(field)
-        field = klass.attribute_aliases[field] || field
-        from = from_clause.name || from_clause.value
-
-        if klass.columns_hash.key?(field) && (!from || table_name_matches?(from))
-          arel_attribute(field)
-        else
-          yield field
-        end
-      end
-
-      def table_name_matches?(from)
-        /(?:\A|(?<!FROM)\s)(?:\b#{table.name}\b|#{connection.quote_table_name(table.name)})(?!\.)/i.match?(from.to_s)
-      end
-
-      def reverse_sql_order(order_query)
-        if order_query.empty?
-          return [arel_attribute(primary_key).desc] if primary_key
-          raise IrreversibleOrderError,
-            "Relation has no current order and table has no primary key to be used as default order"
-        end
-
-        order_query.flat_map do |o|
-          case o
-          when Arel::Attribute
-            o.desc
-          when Arel::Nodes::Ordering
-            o.reverse
-          when String
-            if does_not_support_reverse?(o)
-              raise IrreversibleOrderError, "Order #{o.inspect} cannot be reversed automatically"
-            end
-            o.split(",").map! do |s|
-              s.strip!
-              s.gsub!(/\sasc\Z/i, " DESC") || s.gsub!(/\sdesc\Z/i, " ASC") || (s << " DESC")
-            end
-          else
-            o
-          end
-        end
-      end
-
-      def does_not_support_reverse?(order)
-        # Account for String subclasses like Arel::Nodes::SqlLiteral that
-        # override methods like #count.
-        order = String.new(order) unless order.instance_of?(String)
-
-        # Uses SQL function with multiple arguments.
-        (order.include?(",") && order.split(",").find { |section| section.count("(") != section.count(")") }) ||
-          # Uses "nulls first" like construction.
-          /\bnulls\s+(?:first|last)\b/i.match?(order)
-      end
-
-      def build_order(arel)
-        orders = order_values.uniq
-        orders.reject!(&:blank?)
-
-        arel.order(*orders) unless orders.empty?
-      end
-
-      VALID_DIRECTIONS = [:asc, :desc, :ASC, :DESC,
-                          "asc", "desc", "ASC", "DESC"].to_set # :nodoc:
-
-      def validate_order_args(args)
-        args.each do |arg|
-          next unless arg.is_a?(Hash)
-          arg.each do |_key, value|
-            unless VALID_DIRECTIONS.include?(value)
-              raise ArgumentError,
-                "Direction \"#{value}\" is invalid. Valid directions are: #{VALID_DIRECTIONS.to_a.inspect}"
-            end
-          end
-        end
-      end
-
-      def preprocess_order_args(order_args)
-        order_args.reject!(&:blank?)
-        order_args.map! do |arg|
-          klass.sanitize_sql_for_order(arg)
-        end
-        order_args.flatten!
-
-        @klass.disallow_raw_sql!(
-          order_args.flat_map { |a| a.is_a?(Hash) ? a.keys : a },
-          permit: connection.column_name_with_order_matcher
+      arel.where(where_clause.ast) unless where_clause.empty?
+      arel.having(having_clause.ast) unless having_clause.empty?
+      if limit_value
+        limit_attribute = ActiveModel::Attribute.with_cast_value(
+          'LIMIT',
+          connection.sanitize_limit(limit_value),
+          Type.default_value
         )
+        arel.take(Arel::Nodes::BindParam.new(limit_attribute))
+      end
+      if offset_value
+        offset_attribute = ActiveModel::Attribute.with_cast_value(
+          'OFFSET',
+          offset_value.to_i,
+          Type.default_value
+        )
+        arel.skip(Arel::Nodes::BindParam.new(offset_attribute))
+      end
+      arel.group(*arel_columns(group_values.uniq.reject(&:blank?))) unless group_values.empty?
 
-        validate_order_args(order_args)
+      build_order(arel)
 
-        references = order_args.grep(String)
-        references.map! { |arg| arg =~ /^\W?(\w+)\W?\./ && $1 }.compact!
-        references!(references) if references.any?
+      build_select(arel)
 
-        # if a symbol is given we prepend the quoted table name
-        order_args.map! do |arg|
-          case arg
-          when Symbol
-            order_column(arg.to_s).asc
-          when Hash
-            arg.map { |field, dir|
-              case field
-              when Arel::Nodes::SqlLiteral
-                field.send(dir.downcase)
-              else
-                order_column(field.to_s).send(dir.downcase)
-              end
-            }
-          else
-            arg
+      arel.optimizer_hints(*optimizer_hints_values) unless optimizer_hints_values.empty?
+      arel.distinct(distinct_value)
+      arel.from(build_from) unless from_clause.empty?
+      arel.lock(lock_value) if lock_value
+      arel.comment(*annotate_values) unless annotate_values.empty?
+
+      arel
+    end
+
+    def build_from
+      opts = from_clause.value
+      name = from_clause.name
+      case opts
+      when Relation
+        opts = opts.send(:apply_join_dependency) if opts.eager_loading?
+        name ||= 'subquery'
+        opts.arel.as(name.to_s)
+      else
+        opts
+      end
+    end
+
+    def valid_association_list(associations)
+      associations.each do |association|
+        case association
+        when Hash, Symbol, Array
+          # valid
+        else
+          raise ArgumentError, 'only Hash, Symbol and Array are allowed'
+        end
+      end
+    end
+
+    def build_left_outer_joins(manager, outer_joins, aliases)
+      buckets = Hash.new { |h, k| h[k] = [] }
+      buckets[:association_join] = valid_association_list(outer_joins)
+      build_join_query(manager, buckets, Arel::Nodes::OuterJoin, aliases)
+    end
+
+    def build_joins(manager, joins, aliases)
+      buckets = Hash.new { |h, k| h[k] = [] }
+
+      unless left_outer_joins_values.empty?
+        left_joins = valid_association_list(left_outer_joins_values.flatten)
+        buckets[:stashed_join] << construct_join_dependency(left_joins, Arel::Nodes::OuterJoin)
+      end
+
+      joins.map! do |join|
+        if join.is_a?(String)
+          table.create_string_join(Arel.sql(join.strip)) unless join.blank?
+        else
+          join
+        end
+      end.delete_if(&:blank?).uniq!
+
+      while joins.first.is_a?(Arel::Nodes::Join)
+        join_node = joins.shift
+        if join_node.is_a?(Arel::Nodes::StringJoin) && !buckets[:stashed_join].empty?
+          buckets[:join_node] << join_node
+        else
+          buckets[:leading_join] << join_node
+        end
+      end
+
+      joins.each do |join|
+        case join
+        when Hash, Symbol, Array
+          buckets[:association_join] << join
+        when ActiveRecord::Associations::JoinDependency
+          buckets[:stashed_join] << join
+        when Arel::Nodes::Join
+          buckets[:join_node] << join
+        else
+          raise 'unknown class: %s' % join.class.name
+        end
+      end
+
+      build_join_query(manager, buckets, Arel::Nodes::InnerJoin, aliases)
+    end
+
+    def build_join_query(manager, buckets, join_type, aliases)
+      association_joins = buckets[:association_join]
+      stashed_joins     = buckets[:stashed_join]
+      leading_joins     = buckets[:leading_join]
+      join_nodes        = buckets[:join_node]
+
+      join_sources = manager.join_sources
+      join_sources.concat(leading_joins) unless leading_joins.empty?
+
+      unless association_joins.empty? && stashed_joins.empty?
+        alias_tracker = alias_tracker(leading_joins + join_nodes, aliases)
+        join_dependency = construct_join_dependency(association_joins, join_type)
+        join_sources.concat(join_dependency.join_constraints(stashed_joins, alias_tracker))
+      end
+
+      join_sources.concat(join_nodes) unless join_nodes.empty?
+    end
+
+    def build_select(arel)
+      if select_values.any?
+        arel.project(*arel_columns(select_values.uniq))
+      elsif klass.ignored_columns.any?
+        arel.project(*klass.column_names.map { |field| arel_attribute(field) })
+      else
+        arel.project(table[Arel.star])
+      end
+    end
+
+    def arel_columns(columns)
+      columns.flat_map do |field|
+        case field
+        when Symbol
+          arel_column(field.to_s) do |attr_name|
+            connection.quote_table_name(attr_name)
           end
-        end.flatten!
+        when String
+          arel_column(field, &:itself)
+        when Proc
+          field.call
+        else
+          field
+        end
+      end
+    end
+
+    def arel_column(field)
+      field = klass.attribute_aliases[field] || field
+      from = from_clause.name || from_clause.value
+
+      if klass.columns_hash.key?(field) && (!from || table_name_matches?(from))
+        arel_attribute(field)
+      else
+        yield field
+      end
+    end
+
+    def table_name_matches?(from)
+      /(?:\A|(?<!FROM)\s)(?:\b#{table.name}\b|#{connection.quote_table_name(table.name)})(?!\.)/i.match?(from.to_s)
+    end
+
+    def reverse_sql_order(order_query)
+      if order_query.empty?
+        return [arel_attribute(primary_key).desc] if primary_key
+
+        raise IrreversibleOrderError,
+              'Relation has no current order and table has no primary key to be used as default order'
       end
 
-      def order_column(field)
-        arel_column(field) do |attr_name|
-          if attr_name == "count" && !group_values.empty?
-            arel_attribute(attr_name)
-          else
-            Arel.sql(connection.quote_table_name(attr_name))
+      order_query.flat_map do |o|
+        case o
+        when Arel::Attribute
+          o.desc
+        when Arel::Nodes::Ordering
+          o.reverse
+        when String
+          raise IrreversibleOrderError, "Order #{o.inspect} cannot be reversed automatically" if does_not_support_reverse?(o)
+
+          o.split(',').map! do |s|
+            s.strip!
+            s.gsub!(/\sasc\Z/i, ' DESC') || s.gsub!(/\sdesc\Z/i, ' ASC') || (s << ' DESC')
+          end
+        else
+          o
+        end
+      end
+    end
+
+    def does_not_support_reverse?(order)
+      # Account for String subclasses like Arel::Nodes::SqlLiteral that
+      # override methods like #count.
+      order = String.new(order) unless order.instance_of?(String)
+
+      # Uses SQL function with multiple arguments.
+      (order.include?(',') && order.split(',').find { |section| section.count('(') != section.count(')') }) ||
+        # Uses "nulls first" like construction.
+        /\bnulls\s+(?:first|last)\b/i.match?(order)
+    end
+
+    def build_order(arel)
+      orders = order_values.uniq
+      orders.reject!(&:blank?)
+
+      arel.order(*orders) unless orders.empty?
+    end
+
+    VALID_DIRECTIONS = [:asc, :desc, :ASC, :DESC,
+                        'asc', 'desc', 'ASC', 'DESC'].to_set # :nodoc:
+
+    def validate_order_args(args)
+      args.each do |arg|
+        next unless arg.is_a?(Hash)
+
+        arg.each do |_key, value|
+          unless VALID_DIRECTIONS.include?(value)
+            raise ArgumentError,
+                  "Direction \"#{value}\" is invalid. Valid directions are: #{VALID_DIRECTIONS.to_a.inspect}"
           end
         end
       end
+    end
 
-      # Checks to make sure that the arguments are not blank. Note that if some
-      # blank-like object were initially passed into the query method, then this
-      # method will not raise an error.
-      #
-      # Example:
-      #
-      #    Post.references()   # raises an error
-      #    Post.references([]) # does not raise an error
-      #
-      # This particular method should be called with a method_name and the args
-      # passed into that method as an input. For example:
-      #
-      # def references(*args)
-      #   check_if_method_has_arguments!("references", args)
-      #   ...
-      # end
-      def check_if_method_has_arguments!(method_name, args)
-        if args.blank?
-          raise ArgumentError, "The method .#{method_name}() must contain arguments."
+    def preprocess_order_args(order_args)
+      order_args.reject!(&:blank?)
+      order_args.map! do |arg|
+        klass.sanitize_sql_for_order(arg)
+      end
+      order_args.flatten!
+
+      @klass.disallow_raw_sql!(
+        order_args.flat_map { |a| a.is_a?(Hash) ? a.keys : a },
+        permit: connection.column_name_with_order_matcher
+      )
+
+      validate_order_args(order_args)
+
+      references = order_args.grep(String)
+      references.map! { |arg| arg =~ /^\W?(\w+)\W?\./ && Regexp.last_match(1) }.compact!
+      references!(references) if references.any?
+
+      # if a symbol is given we prepend the quoted table name
+      order_args.map! do |arg|
+        case arg
+        when Symbol
+          order_column(arg.to_s).asc
+        when Hash
+          arg.map do |field, dir|
+            case field
+            when Arel::Nodes::SqlLiteral
+              field.send(dir.downcase)
+            else
+              order_column(field.to_s).send(dir.downcase)
+            end
+          end
+        else
+          arg
+        end
+      end.flatten!
+    end
+
+    def order_column(field)
+      arel_column(field) do |attr_name|
+        if attr_name == 'count' && !group_values.empty?
+          arel_attribute(attr_name)
+        else
+          Arel.sql(connection.quote_table_name(attr_name))
         end
       end
+    end
 
-      STRUCTURAL_OR_METHODS = Relation::VALUE_METHODS - [:extending, :where, :having, :unscope, :references]
-      def structurally_incompatible_values_for_or(other)
-        values = other.values
-        STRUCTURAL_OR_METHODS.reject do |method|
-          default = DEFAULT_VALUES[method]
-          @values.fetch(method, default) == values.fetch(method, default)
-        end
+    # Checks to make sure that the arguments are not blank. Note that if some
+    # blank-like object were initially passed into the query method, then this
+    # method will not raise an error.
+    #
+    # Example:
+    #
+    #    Post.references()   # raises an error
+    #    Post.references([]) # does not raise an error
+    #
+    # This particular method should be called with a method_name and the args
+    # passed into that method as an input. For example:
+    #
+    # def references(*args)
+    #   check_if_method_has_arguments!("references", args)
+    #   ...
+    # end
+    def check_if_method_has_arguments!(method_name, args)
+      raise ArgumentError, "The method .#{method_name}() must contain arguments." if args.blank?
+    end
+
+    STRUCTURAL_OR_METHODS = Relation::VALUE_METHODS - [:extending, :where, :having, :unscope, :references]
+    def structurally_incompatible_values_for_or(other)
+      values = other.values
+      STRUCTURAL_OR_METHODS.reject do |method|
+        default = DEFAULT_VALUES[method]
+        @values.fetch(method, default) == values.fetch(method, default)
       end
+    end
 
-      def where_clause_factory
-        @where_clause_factory ||= Relation::WhereClauseFactory.new(klass, predicate_builder)
-      end
-      alias having_clause_factory where_clause_factory
+    def where_clause_factory
+      @where_clause_factory ||= Relation::WhereClauseFactory.new(klass, predicate_builder)
+    end
+    alias having_clause_factory where_clause_factory
 
-      DEFAULT_VALUES = {
-        create_with: FROZEN_EMPTY_HASH,
-        where: Relation::WhereClause.empty,
-        having: Relation::WhereClause.empty,
-        from: Relation::FromClause.empty
-      }
+    DEFAULT_VALUES = {
+      create_with: FROZEN_EMPTY_HASH,
+      where: Relation::WhereClause.empty,
+      having: Relation::WhereClause.empty,
+      from: Relation::FromClause.empty
+    }.freeze
 
-      Relation::MULTI_VALUE_METHODS.each do |value|
-        DEFAULT_VALUES[value] ||= FROZEN_EMPTY_ARRAY
-      end
+    Relation::MULTI_VALUE_METHODS.each do |value|
+      DEFAULT_VALUES[value] ||= FROZEN_EMPTY_ARRAY
+    end
   end
 end

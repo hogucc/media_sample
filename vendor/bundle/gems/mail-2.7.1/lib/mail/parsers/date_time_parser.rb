@@ -1,7 +1,7 @@
-
 # frozen_string_literal: true
-require "mail/utilities"
-require "mail/parser_tools"
+
+require 'mail/utilities'
+require 'mail/parser_tools'
 
 module Mail::Parsers
   module DateTimeParser
@@ -55,7 +55,7 @@ module Mail::Parsers
       191, 128, 143, 9, 40,
       9, 40, 9, 40, 9, 83,
       9, 77, 9, 84, 0,
-      0, 0,
+      0, 0
     ]
 
     class << self
@@ -76,7 +76,7 @@ module Mail::Parsers
       24, 49, 1, 1, 21, 1, 14, 1,
       1, 1, 1, 244, 244, 1, 24, 245,
       64, 32, 64, 32, 48, 64, 16, 32,
-      32, 32, 75, 69, 76, 0,
+      32, 32, 75, 69, 76, 0
     ]
 
     class << self
@@ -97,7 +97,7 @@ module Mail::Parsers
       2055, 2080, 2130, 2132, 2134, 2156, 2158, 2173,
       2175, 2177, 2179, 2181, 2426, 2671, 2673, 2698,
       2944, 3009, 3042, 3107, 3140, 3189, 3254, 3271,
-      3304, 3337, 3370, 3446, 3516, 3593,
+      3304, 3337, 3370, 3446, 3516, 3593
     ]
 
     class << self
@@ -554,7 +554,7 @@ module Mail::Parsers
       1, 1, 1, 1, 1, 1, 1, 1,
       1, 1, 1, 1, 1, 1, 1, 1,
       1, 1, 1, 1, 1, 1, 1, 90,
-      1, 1, 0,
+      1, 1, 0
     ]
 
     class << self
@@ -585,7 +585,7 @@ module Mail::Parsers
       99, 100, 101, 102, 92, 93, 92, 109,
       95, 96, 97, 98, 99, 100, 101, 102,
       94, 104, 52, 105, 52, 105, 104, 52,
-      105, 54,
+      105, 54
     ]
 
     class << self
@@ -616,7 +616,7 @@ module Mail::Parsers
       9, 9, 9, 9, 0, 0, 3, 12,
       0, 0, 0, 0, 0, 0, 0, 0,
       0, 13, 13, 14, 0, 3, 4, 4,
-      5, 0,
+      5, 0
     ]
 
     class << self
@@ -637,7 +637,7 @@ module Mail::Parsers
       0, 0, 0, 0, 0, 0, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 13,
-      0, 4, 13, 13, 13, 0,
+      0, 4, 13, 13, 13, 0
     ]
 
     class << self
@@ -665,7 +665,7 @@ module Mail::Parsers
     def self.parse(data)
       data = data.dup.force_encoding(Encoding::ASCII_8BIT) if data.respond_to?(:force_encoding)
 
-      raise Mail::Field::NilParseError.new(Mail::DateTimeElement) if data.nil?
+      raise Mail::Field::NilParseError, Mail::DateTimeElement if data.nil?
 
       date_time = DateTimeStruct.new([])
 
@@ -693,7 +693,7 @@ module Mail::Parsers
         _again = 20
         _test_eof = 30
         _out = 40
-        while true
+        loop do
           if _goto_level <= 0
             if p == pe
               _goto_level = _test_eof
@@ -709,9 +709,9 @@ module Mail::Parsers
             _inds = _index_offsets[cs]
             _slen = _key_spans[cs]
             _wide = data[p].ord
-            _trans = if (_slen > 0 &&
-                         _trans_keys[_keys] <= _wide &&
-                         _wide <= _trans_keys[_keys + 1])
+            _trans = if _slen > 0 &&
+                        _trans_keys[_keys] <= _wide &&
+                        _wide <= _trans_keys[_keys + 1]
                        _indicies[_inds + _wide - _trans_keys[_keys]]
                      else
                        _indicies[_inds + _slen]
@@ -869,15 +869,11 @@ module Mail::Parsers
               end
             end
           end
-          if _goto_level <= _out
-            break
-          end
+          break if _goto_level <= _out
         end
       end
 
-      if p != eof || cs < 103
-        raise Mail::Field::IncompleteParseError.new(Mail::DateTimeElement, data, p)
-      end
+      raise Mail::Field::IncompleteParseError.new(Mail::DateTimeElement, data, p) if p != eof || cs < 103
 
       date_time
     end

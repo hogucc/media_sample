@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "delegate"
+require 'delegate'
 
 module ActiveSupport
   module Tryable #:nodoc:
@@ -143,14 +143,14 @@ class NilClass
   #
   # With +try+
   #   @person.try(:children).try(:first).try(:name)
-  def try(method_name = nil, *args)
+  def try(_method_name = nil, *_args)
     nil
   end
 
   # Calling +try!+ on +nil+ always returns +nil+.
   #
   #   nil.try!(:name) # => nil
-  def try!(method_name = nil, *args)
+  def try!(_method_name = nil, *_args)
     nil
   end
 end

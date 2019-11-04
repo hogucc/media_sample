@@ -1,7 +1,7 @@
-
 # frozen_string_literal: true
-require "mail/utilities"
-require "mail/parser_tools"
+
+require 'mail/utilities'
+require 'mail/parser_tools'
 
 module Mail::Parsers
   module ContentTypeParser
@@ -34,7 +34,7 @@ module Mail::Parsers
       191, 128, 143, 9, 126,
       9, 59, 9, 126, 9, 126,
       9, 126, 9, 126, 9,
-      126, 0, 0, 0,
+      126, 0, 0, 0
     ]
 
     class << self
@@ -48,7 +48,7 @@ module Mail::Parsers
       64, 32, 64, 32, 48, 64, 16, 32,
       1, 24, 118, 244, 244, 1, 24, 245,
       64, 32, 64, 32, 48, 64, 16, 118,
-      51, 118, 118, 118, 118, 118, 0,
+      51, 118, 118, 118, 118, 118, 0
     ]
 
     class << self
@@ -62,7 +62,7 @@ module Mail::Parsers
       1879, 1944, 1977, 2042, 2075, 2124, 2189, 2206,
       2239, 2241, 2266, 2385, 2630, 2875, 2877, 2902,
       3148, 3213, 3246, 3311, 3344, 3393, 3458, 3475,
-      3594, 3646, 3765, 3884, 4003, 4122, 4241,
+      3594, 3646, 3765, 3884, 4003, 4122, 4241
     ]
 
     class << self
@@ -600,7 +600,7 @@ module Mail::Parsers
       54, 54, 54, 54, 54, 54, 54, 54,
       54, 54, 54, 54, 54, 54, 54, 54,
       54, 54, 54, 54, 54, 54, 54, 54,
-      1, 1, 0,
+      1, 1, 0
     ]
 
     class << self
@@ -622,7 +622,7 @@ module Mail::Parsers
       45, 46, 38, 4, 5, 47, 34, 18,
       49, 16, 50, 18, 49, 16, 50, 18,
       52, 32, 51, 53, 32, 53, 52, 32,
-      53,
+      53
     ]
 
     class << self
@@ -644,7 +644,7 @@ module Mail::Parsers
       0, 0, 0, 19, 19, 0, 20, 19,
       21, 21, 22, 21, 23, 23, 24, 23,
       21, 21, 0, 25, 0, 5, 12, 12,
-      14,
+      14
     ]
 
     class << self
@@ -658,7 +658,7 @@ module Mail::Parsers
       0, 0, 0, 0, 0, 0, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 19,
-      21, 21, 23, 21, 0, 12, 0,
+      21, 21, 23, 21, 0, 12, 0
     ]
 
     class << self
@@ -686,7 +686,8 @@ module Mail::Parsers
     def self.parse(data)
       data = data.dup.force_encoding(Encoding::ASCII_8BIT) if data.respond_to?(:force_encoding)
 
-      return ContentTypeStruct.new("text", "plain", []) if Mail::Utilities.blank?(data)
+      return ContentTypeStruct.new('text', 'plain', []) if Mail::Utilities.blank?(data)
+
       content_type = ContentTypeStruct.new(nil, nil, [])
 
       # Parser state
@@ -714,7 +715,7 @@ module Mail::Parsers
         _again = 20
         _test_eof = 30
         _out = 40
-        while true
+        loop do
           if _goto_level <= 0
             if p == pe
               _goto_level = _test_eof
@@ -730,9 +731,9 @@ module Mail::Parsers
             _inds = _index_offsets[cs]
             _slen = _key_spans[cs]
             _wide = data[p].ord
-            _trans = if (_slen > 0 &&
-                         _trans_keys[_keys] <= _wide &&
-                         _wide <= _trans_keys[_keys + 1])
+            _trans = if _slen > 0 &&
+                        _trans_keys[_keys] <= _wide &&
+                        _wide <= _trans_keys[_keys + 1]
                        _indicies[_inds + _wide - _trans_keys[_keys]]
                      else
                        _indicies[_inds + _slen]
@@ -778,14 +779,12 @@ module Mail::Parsers
                 end
               when 21
                 begin
-                  if param_attr.nil?
-                    raise Mail::Field::ParseError.new(Mail::ContentTypeElement, data, "no attribute for value")
-                  end
+                  raise Mail::Field::ParseError.new(Mail::ContentTypeElement, data, 'no attribute for value') if param_attr.nil?
 
                   # Use quoted s value if one exists, otherwise use parameter value
                   value = qstr || chars(data, param_val_s, p - 1)
 
-                  content_type.parameters << {param_attr => value}
+                  content_type.parameters << { param_attr => value }
                   param_attr = nil
                   qstr = nil
                 end
@@ -849,14 +848,12 @@ module Mail::Parsers
                 end
               when 25
                 begin
-                  if param_attr.nil?
-                    raise Mail::Field::ParseError.new(Mail::ContentTypeElement, data, "no attribute for value")
-                  end
+                  raise Mail::Field::ParseError.new(Mail::ContentTypeElement, data, 'no attribute for value') if param_attr.nil?
 
                   # Use quoted s value if one exists, otherwise use parameter value
                   value = qstr || chars(data, param_val_s, p - 1)
 
-                  content_type.parameters << {param_attr => value}
+                  content_type.parameters << { param_attr => value }
                   param_attr = nil
                   qstr = nil
                 end
@@ -879,14 +876,12 @@ module Mail::Parsers
                 begin
                 end
                 begin
-                  if param_attr.nil?
-                    raise Mail::Field::ParseError.new(Mail::ContentTypeElement, data, "no attribute for value")
-                  end
+                  raise Mail::Field::ParseError.new(Mail::ContentTypeElement, data, 'no attribute for value') if param_attr.nil?
 
                   # Use quoted s value if one exists, otherwise use parameter value
                   value = qstr || chars(data, param_val_s, p - 1)
 
-                  content_type.parameters << {param_attr => value}
+                  content_type.parameters << { param_attr => value }
                   param_attr = nil
                   qstr = nil
                 end
@@ -936,14 +931,12 @@ module Mail::Parsers
                   end
                 end
                 begin
-                  if param_attr.nil?
-                    raise Mail::Field::ParseError.new(Mail::ContentTypeElement, data, "no attribute for value")
-                  end
+                  raise Mail::Field::ParseError.new(Mail::ContentTypeElement, data, 'no attribute for value') if param_attr.nil?
 
                   # Use quoted s value if one exists, otherwise use parameter value
                   value = qstr || chars(data, param_val_s, p - 1)
 
-                  content_type.parameters << {param_attr => value}
+                  content_type.parameters << { param_attr => value }
                   param_attr = nil
                   qstr = nil
                 end
@@ -960,14 +953,12 @@ module Mail::Parsers
                   end
                 end
                 begin
-                  if param_attr.nil?
-                    raise Mail::Field::ParseError.new(Mail::ContentTypeElement, data, "no attribute for value")
-                  end
+                  raise Mail::Field::ParseError.new(Mail::ContentTypeElement, data, 'no attribute for value') if param_attr.nil?
 
                   # Use quoted s value if one exists, otherwise use parameter value
                   value = qstr || chars(data, param_val_s, p - 1)
 
-                  content_type.parameters << {param_attr => value}
+                  content_type.parameters << { param_attr => value }
                   param_attr = nil
                   qstr = nil
                 end
@@ -994,14 +985,12 @@ module Mail::Parsers
                 end
               when 21
                 begin
-                  if param_attr.nil?
-                    raise Mail::Field::ParseError.new(Mail::ContentTypeElement, data, "no attribute for value")
-                  end
+                  raise Mail::Field::ParseError.new(Mail::ContentTypeElement, data, 'no attribute for value') if param_attr.nil?
 
                   # Use quoted s value if one exists, otherwise use parameter value
                   value = qstr || chars(data, param_val_s, p - 1)
 
-                  content_type.parameters << {param_attr => value}
+                  content_type.parameters << { param_attr => value }
                   param_attr = nil
                   qstr = nil
                 end
@@ -1012,29 +1001,23 @@ module Mail::Parsers
                 begin
                 end
                 begin
-                  if param_attr.nil?
-                    raise Mail::Field::ParseError.new(Mail::ContentTypeElement, data, "no attribute for value")
-                  end
+                  raise Mail::Field::ParseError.new(Mail::ContentTypeElement, data, 'no attribute for value') if param_attr.nil?
 
                   # Use quoted s value if one exists, otherwise use parameter value
                   value = qstr || chars(data, param_val_s, p - 1)
 
-                  content_type.parameters << {param_attr => value}
+                  content_type.parameters << { param_attr => value }
                   param_attr = nil
                   qstr = nil
                 end
               end
             end
           end
-          if _goto_level <= _out
-            break
-          end
+          break if _goto_level <= _out
         end
       end
 
-      if p != eof || cs < 47
-        raise Mail::Field::IncompleteParseError.new(Mail::ContentTypeElement, data, p)
-      end
+      raise Mail::Field::IncompleteParseError.new(Mail::ContentTypeElement, data, p) if p != eof || cs < 47
 
       content_type
     end

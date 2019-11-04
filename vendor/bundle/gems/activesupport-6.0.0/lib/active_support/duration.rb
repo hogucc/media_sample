@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require "active_support/core_ext/array/conversions"
-require "active_support/core_ext/module/delegation"
-require "active_support/core_ext/object/acts_like"
-require "active_support/core_ext/string/filters"
+require 'active_support/core_ext/array/conversions'
+require 'active_support/core_ext/module/delegation'
+require 'active_support/core_ext/object/acts_like'
+require 'active_support/core_ext/string/filters'
 
 module ActiveSupport
   # Provides accurate date and time measurements using Date#advance and
@@ -32,8 +32,6 @@ module ActiveSupport
           value <=> other.value
         elsif Numeric === other
           value <=> other
-        else
-          nil
         end
       end
 
@@ -90,44 +88,45 @@ module ActiveSupport
       end
 
       private
-        def calculate(op, other)
-          if Scalar === other
-            Scalar.new(value.public_send(op, other.value))
-          elsif Numeric === other
-            Scalar.new(value.public_send(op, other))
-          else
-            raise_type_error(other)
-          end
-        end
 
-        def raise_type_error(other)
-          raise TypeError, "no implicit conversion of #{other.class} into #{self.class}"
+      def calculate(op, other)
+        if Scalar === other
+          Scalar.new(value.public_send(op, other.value))
+        elsif Numeric === other
+          Scalar.new(value.public_send(op, other))
+        else
+          raise_type_error(other)
         end
+      end
+
+      def raise_type_error(other)
+        raise TypeError, "no implicit conversion of #{other.class} into #{self.class}"
+      end
     end
 
     SECONDS_PER_MINUTE = 60
     SECONDS_PER_HOUR   = 3600
-    SECONDS_PER_DAY    = 86400
-    SECONDS_PER_WEEK   = 604800
-    SECONDS_PER_MONTH  = 2629746  # 1/12 of a gregorian year
-    SECONDS_PER_YEAR   = 31556952 # length of a gregorian year (365.2425 days)
+    SECONDS_PER_DAY    = 86_400
+    SECONDS_PER_WEEK   = 604_800
+    SECONDS_PER_MONTH  = 2_629_746  # 1/12 of a gregorian year
+    SECONDS_PER_YEAR   = 31_556_952 # length of a gregorian year (365.2425 days)
 
     PARTS_IN_SECONDS = {
       seconds: 1,
       minutes: SECONDS_PER_MINUTE,
-      hours:   SECONDS_PER_HOUR,
-      days:    SECONDS_PER_DAY,
-      weeks:   SECONDS_PER_WEEK,
-      months:  SECONDS_PER_MONTH,
-      years:   SECONDS_PER_YEAR
+      hours: SECONDS_PER_HOUR,
+      days: SECONDS_PER_DAY,
+      weeks: SECONDS_PER_WEEK,
+      months: SECONDS_PER_MONTH,
+      years: SECONDS_PER_YEAR
     }.freeze
 
     PARTS = [:years, :months, :weeks, :days, :hours, :minutes, :seconds].freeze
 
     attr_accessor :value, :parts
 
-    autoload :ISO8601Parser,     "active_support/duration/iso8601_parser"
-    autoload :ISO8601Serializer, "active_support/duration/iso8601_serializer"
+    autoload :ISO8601Parser,     'active_support/duration/iso8601_parser'
+    autoload :ISO8601Serializer, 'active_support/duration/iso8601_serializer'
 
     class << self
       # Creates a new Duration from string formatted according to ISO 8601 Duration.
@@ -185,11 +184,11 @@ module ActiveSupport
         remainder = value.to_f
 
         PARTS.each do |part|
-          unless part == :seconds
-            part_in_seconds = PARTS_IN_SECONDS[part]
-            parts[part] = remainder.div(part_in_seconds)
-            remainder = (remainder % part_in_seconds).round(9)
-          end
+          next if part == :seconds
+
+          part_in_seconds = PARTS_IN_SECONDS[part]
+          parts[part] = remainder.div(part_in_seconds)
+          remainder = (remainder % part_in_seconds).round(9)
         end
 
         parts[:seconds] = remainder
@@ -199,17 +198,18 @@ module ActiveSupport
 
       private
 
-        def calculate_total_seconds(parts)
-          parts.inject(0) do |total, (part, value)|
-            total + value * PARTS_IN_SECONDS[part]
-          end
+      def calculate_total_seconds(parts)
+        parts.inject(0) do |total, (part, value)|
+          total + value * PARTS_IN_SECONDS[part]
         end
+      end
     end
 
     def initialize(value, parts) #:nodoc:
-      @value, @parts = value, parts.to_h
+      @value = value
+      @parts = parts.to_h
       @parts.default = 0
-      @parts.reject! { |k, v| v.zero? }
+      @parts.reject! { |_k, v| v.zero? }
     end
 
     def coerce(other) #:nodoc:
@@ -251,7 +251,7 @@ module ActiveSupport
     # Subtracts another Duration or a Numeric from this Duration. Numeric
     # values are treated as seconds.
     def -(other)
-      self + (-other)
+      self + -other
     end
 
     # Multiplies this Duration by a Numeric and returns a new Duration.
@@ -297,7 +297,7 @@ module ActiveSupport
     def is_a?(klass) #:nodoc:
       Duration == klass || value.is_a?(klass)
     end
-    alias :kind_of? :is_a?
+    alias kind_of? is_a?
 
     def instance_of?(klass) # :nodoc:
       Duration == klass || value.instance_of?(klass)
@@ -360,36 +360,36 @@ module ActiveSupport
     def since(time = ::Time.current)
       sum(1, time)
     end
-    alias :from_now :since
-    alias :after :since
+    alias from_now since
+    alias after since
 
     # Calculates a new Time or Date that is as far in the past
     # as this Duration represents.
     def ago(time = ::Time.current)
       sum(-1, time)
     end
-    alias :until :ago
-    alias :before :ago
+    alias until ago
+    alias before ago
 
     def inspect #:nodoc:
-      return "0 seconds" if parts.empty?
+      return '0 seconds' if parts.empty?
 
-      parts.
-        sort_by { |unit,  _ | PARTS.index(unit) }.
-        map     { |unit, val| "#{val} #{val == 1 ? unit.to_s.chop : unit.to_s}" }.
-        to_sentence(locale: ::I18n.default_locale)
+      parts
+        .sort_by { |unit, _| PARTS.index(unit) }
+        .map     { |unit, val| "#{val} #{val == 1 ? unit.to_s.chop : unit.to_s}" }
+        .to_sentence(locale: ::I18n.default_locale)
     end
 
-    def as_json(options = nil) #:nodoc:
+    def as_json(_options = nil) #:nodoc:
       to_i
     end
 
     def init_with(coder) #:nodoc:
-      initialize(coder["value"], coder["parts"])
+      initialize(coder['value'], coder['parts'])
     end
 
     def encode_with(coder) #:nodoc:
-      coder.map = { "value" => @value, "parts" => @parts }
+      coder.map = { 'value' => @value, 'parts' => @parts }
     end
 
     # Build ISO 8601 Duration string for this duration.
@@ -400,34 +400,34 @@ module ActiveSupport
 
     private
 
-      def sum(sign, time = ::Time.current)
-        parts.inject(time) do |t, (type, number)|
-          if t.acts_like?(:time) || t.acts_like?(:date)
-            if type == :seconds
-              t.since(sign * number)
-            elsif type == :minutes
-              t.since(sign * number * 60)
-            elsif type == :hours
-              t.since(sign * number * 3600)
-            else
-              t.advance(type => sign * number)
-            end
+    def sum(sign, time = ::Time.current)
+      parts.inject(time) do |t, (type, number)|
+        if t.acts_like?(:time) || t.acts_like?(:date)
+          if type == :seconds
+            t.since(sign * number)
+          elsif type == :minutes
+            t.since(sign * number * 60)
+          elsif type == :hours
+            t.since(sign * number * 3600)
           else
-            raise ::ArgumentError, "expected a time or date, got #{time.inspect}"
+            t.advance(type => sign * number)
           end
+        else
+          raise ::ArgumentError, "expected a time or date, got #{time.inspect}"
         end
       end
+    end
 
-      def respond_to_missing?(method, _)
-        value.respond_to?(method)
-      end
+    def respond_to_missing?(method, _)
+      value.respond_to?(method)
+    end
 
-      def method_missing(method, *args, &block)
-        value.public_send(method, *args, &block)
-      end
+    def method_missing(method, *args, &block)
+      value.public_send(method, *args, &block)
+    end
 
-      def raise_type_error(other)
-        raise TypeError, "no implicit conversion of #{other.class} into #{self.class}"
-      end
+    def raise_type_error(other)
+      raise TypeError, "no implicit conversion of #{other.class} into #{self.class}"
+    end
   end
 end

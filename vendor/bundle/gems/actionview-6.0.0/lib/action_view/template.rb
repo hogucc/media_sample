@@ -1,10 +1,9 @@
 # frozen_string_literal: true
 
-require "active_support/core_ext/object/try"
-require "active_support/core_ext/kernel/singleton_class"
-require "active_support/deprecation"
-require "thread"
-require "delegate"
+require 'active_support/core_ext/object/try'
+require 'active_support/core_ext/kernel/singleton_class'
+require 'active_support/deprecation'
+require 'delegate'
 
 module ActionView
   # = Action View Template
@@ -12,11 +11,11 @@ module ActionView
     extend ActiveSupport::Autoload
 
     def self.finalize_compiled_template_methods
-      ActiveSupport::Deprecation.warn "ActionView::Template.finalize_compiled_template_methods is deprecated and has no effect"
+      ActiveSupport::Deprecation.warn 'ActionView::Template.finalize_compiled_template_methods is deprecated and has no effect'
     end
 
     def self.finalize_compiled_template_methods=(_)
-      ActiveSupport::Deprecation.warn "ActionView::Template.finalize_compiled_template_methods= is deprecated and has no effect"
+      ActiveSupport::Deprecation.warn 'ActionView::Template.finalize_compiled_template_methods= is deprecated and has no effect'
     end
 
     # === Encodings in ActionView::Template
@@ -129,7 +128,7 @@ module ActionView
 
     def initialize(source, identifier, handler, format: nil, variant: nil, locals: nil, virtual_path: nil, updated_at: nil)
       unless locals
-        ActiveSupport::Deprecation.warn "ActionView::Template#initialize requires a locals parameter"
+        ActiveSupport::Deprecation.warn 'ActionView::Template#initialize requires a locals parameter'
         locals = []
       end
 
@@ -141,16 +140,16 @@ module ActionView
       @virtual_path      = virtual_path
 
       @variable = if @virtual_path
-        base = @virtual_path[-1] == "/" ? "" : ::File.basename(@virtual_path)
-        base =~ /\A_?(.*?)(?:\.\w+)*\z/
-        $1.to_sym
+                    base = @virtual_path[-1] == '/' ? '' : ::File.basename(@virtual_path)
+                    base =~ /\A_?(.*?)(?:\.\w+)*\z/
+                    Regexp.last_match(1).to_sym
       end
 
       if updated_at
-        ActiveSupport::Deprecation.warn "ActionView::Template#updated_at is deprecated"
-        @updated_at        = updated_at
+        ActiveSupport::Deprecation.warn 'ActionView::Template#updated_at is deprecated'
+        @updated_at = updated_at
       else
-        @updated_at        = Time.now
+        @updated_at = Time.now
       end
       @format            = format
       @variant           = variant
@@ -162,10 +161,16 @@ module ActionView
     deprecate def virtual_path=(_); end
     deprecate def locals=(_); end
     deprecate def formats=(_); end
-    deprecate def formats; Array(format); end
+    deprecate def formats
+      Array(format)
+              end
     deprecate def variants=(_); end
-    deprecate def variants; [variant]; end
-    deprecate def refresh(_); self; end
+    deprecate def variants
+      [variant]
+              end
+    deprecate def refresh(_)
+      self
+              end
 
     # Returns whether the underlying handler supports streaming. If so,
     # a streaming buffer *may* be passed when it starts rendering.
@@ -184,7 +189,7 @@ module ActionView
         compile!(view)
         view._run(method_name, self, locals, buffer, &block)
       end
-    rescue => e
+    rescue StandardError => e
       handle_render_error(view, e)
     end
 
@@ -193,7 +198,7 @@ module ActionView
     end
 
     def short_identifier
-      @short_identifier ||= defined?(Rails.root) ? identifier.sub("#{Rails.root}/", "") : identifier
+      @short_identifier ||= defined?(Rails.root) ? identifier.sub("#{Rails.root}/", '') : identifier
     end
 
     def inspect
@@ -222,11 +227,11 @@ module ActionView
       # Look for # encoding: *. If we find one, we'll encode the
       # String in that encoding, otherwise, we'll use the
       # default external encoding.
-      if source.sub!(/\A#{ENCODING_FLAG}/, "")
-        encoding = magic_encoding = $1
-      else
-        encoding = Encoding.default_external
-      end
+      encoding = if source.sub!(/\A#{ENCODING_FLAG}/, '')
+                   magic_encoding = Regexp.last_match(1)
+                 else
+                   Encoding.default_external
+                 end
 
       # Tag the source with the default external encoding
       # or the encoding specified in the file
@@ -250,12 +255,11 @@ module ActionView
       end
     end
 
-
     # Exceptions are marshalled when using the parallel test runner with DRb, so we need
     # to ensure that references to the template object can be marshalled as well. This means forgoing
     # the marshalling of the compiler mutex and instantiating that again on unmarshalling.
     def marshal_dump # :nodoc:
-      [ @source, @identifier, @handler, @compiled, @locals, @virtual_path, @updated_at, @format, @variant ]
+      [@source, @identifier, @handler, @compiled, @locals, @virtual_path, @updated_at, @format, @variant]
     end
 
     def marshal_load(array) # :nodoc:
@@ -265,129 +269,127 @@ module ActionView
 
     private
 
-      # Compile a template. This method ensures a template is compiled
-      # just once and removes the source after it is compiled.
-      def compile!(view)
+    # Compile a template. This method ensures a template is compiled
+    # just once and removes the source after it is compiled.
+    def compile!(view)
+      return if @compiled
+
+      # Templates can be used concurrently in threaded environments
+      # so compilation and any instance variable modification must
+      # be synchronized
+      @compile_mutex.synchronize do
+        # Any thread holding this lock will be compiling the template needed
+        # by the threads waiting. So re-check the @compiled flag to avoid
+        # re-compilation
         return if @compiled
 
-        # Templates can be used concurrently in threaded environments
-        # so compilation and any instance variable modification must
-        # be synchronized
-        @compile_mutex.synchronize do
-          # Any thread holding this lock will be compiling the template needed
-          # by the threads waiting. So re-check the @compiled flag to avoid
-          # re-compilation
-          return if @compiled
+        mod = view.compiled_method_container
 
-          mod = view.compiled_method_container
-
-          instrument("!compile_template") do
-            compile(mod)
-          end
-
-          @compiled = true
+        instrument('!compile_template') do
+          compile(mod)
         end
+
+        @compiled = true
       end
+    end
 
-      class LegacyTemplate < DelegateClass(Template) # :nodoc:
-        attr_reader :source
+    class LegacyTemplate < DelegateClass(Template) # :nodoc:
+      attr_reader :source
 
-        def initialize(template, source)
-          super(template)
-          @source = source
-        end
+      def initialize(template, source)
+        super(template)
+        @source = source
       end
+    end
 
-      # Among other things, this method is responsible for properly setting
-      # the encoding of the compiled template.
-      #
-      # If the template engine handles encodings, we send the encoded
-      # String to the engine without further processing. This allows
-      # the template engine to support additional mechanisms for
-      # specifying the encoding. For instance, ERB supports <%# encoding: %>
-      #
-      # Otherwise, after we figure out the correct encoding, we then
-      # encode the source into <tt>Encoding.default_internal</tt>.
-      # In general, this means that templates will be UTF-8 inside of Rails,
-      # regardless of the original source encoding.
-      def compile(mod)
-        source = encode!
-        code = @handler.call(self, source)
+    # Among other things, this method is responsible for properly setting
+    # the encoding of the compiled template.
+    #
+    # If the template engine handles encodings, we send the encoded
+    # String to the engine without further processing. This allows
+    # the template engine to support additional mechanisms for
+    # specifying the encoding. For instance, ERB supports <%# encoding: %>
+    #
+    # Otherwise, after we figure out the correct encoding, we then
+    # encode the source into <tt>Encoding.default_internal</tt>.
+    # In general, this means that templates will be UTF-8 inside of Rails,
+    # regardless of the original source encoding.
+    def compile(mod)
+      source = encode!
+      code = @handler.call(self, source)
 
-        # Make sure that the resulting String to be eval'd is in the
-        # encoding of the code
-        original_source = source
-        source = +<<-end_src
+      # Make sure that the resulting String to be eval'd is in the
+      # encoding of the code
+      original_source = source
+      source = +<<-end_src
           def #{method_name}(local_assigns, output_buffer)
             @virtual_path = #{@virtual_path.inspect};#{locals_code};#{code}
           end
-        end_src
+      end_src
 
-        # Make sure the source is in the encoding of the returned code
-        source.force_encoding(code.encoding)
+      # Make sure the source is in the encoding of the returned code
+      source.force_encoding(code.encoding)
 
-        # In case we get back a String from a handler that is not in
-        # BINARY or the default_internal, encode it to the default_internal
-        source.encode!
+      # In case we get back a String from a handler that is not in
+      # BINARY or the default_internal, encode it to the default_internal
+      source.encode!
 
-        # Now, validate that the source we got back from the template
-        # handler is valid in the default_internal. This is for handlers
-        # that handle encoding but screw up
-        unless source.valid_encoding?
-          raise WrongEncodingError.new(source, Encoding.default_internal)
-        end
+      # Now, validate that the source we got back from the template
+      # handler is valid in the default_internal. This is for handlers
+      # that handle encoding but screw up
+      raise WrongEncodingError.new(source, Encoding.default_internal) unless source.valid_encoding?
 
-        begin
-          mod.module_eval(source, identifier, 0)
-        rescue SyntaxError
-          # Account for when code in the template is not syntactically valid; e.g. if we're using
-          # ERB and the user writes <%= foo( %>, attempting to call a helper `foo` and interpolate
-          # the result into the template, but missing an end parenthesis.
-          raise SyntaxErrorInTemplate.new(self, original_source)
-        end
+      begin
+        mod.module_eval(source, identifier, 0)
+      rescue SyntaxError
+        # Account for when code in the template is not syntactically valid; e.g. if we're using
+        # ERB and the user writes <%= foo( %>, attempting to call a helper `foo` and interpolate
+        # the result into the template, but missing an end parenthesis.
+        raise SyntaxErrorInTemplate.new(self, original_source)
       end
+    end
 
-      def handle_render_error(view, e)
-        if e.is_a?(Template::Error)
-          e.sub_template_of(self)
-          raise e
-        else
-          raise Template::Error.new(self)
-        end
+    def handle_render_error(_view, e)
+      if e.is_a?(Template::Error)
+        e.sub_template_of(self)
+        raise e
+      else
+        raise Template::Error, self
       end
+    end
 
-      def locals_code
-        # Only locals with valid variable names get set directly. Others will
-        # still be available in local_assigns.
-        locals = @locals - Module::RUBY_RESERVED_KEYWORDS
-        locals = locals.grep(/\A@?(?![A-Z0-9])(?:[[:alnum:]_]|[^\0-\177])+\z/)
+    def locals_code
+      # Only locals with valid variable names get set directly. Others will
+      # still be available in local_assigns.
+      locals = @locals - Module::RUBY_RESERVED_KEYWORDS
+      locals = locals.grep(/\A@?(?![A-Z0-9])(?:[[:alnum:]_]|[^\0-\177])+\z/)
 
-        # Assign for the same variable is to suppress unused variable warning
-        locals.each_with_object(+"") { |key, code| code << "#{key} = local_assigns[:#{key}]; #{key} = #{key};" }
+      # Assign for the same variable is to suppress unused variable warning
+      locals.each_with_object(+'') { |key, code| code << "#{key} = local_assigns[:#{key}]; #{key} = #{key};" }
+    end
+
+    def method_name
+      @method_name ||= begin
+        m = +"_#{identifier_method_name}__#{@identifier.hash}_#{__id__}"
+        m.tr!('-', '_')
+        m
       end
+    end
 
-      def method_name
-        @method_name ||= begin
-          m = +"_#{identifier_method_name}__#{@identifier.hash}_#{__id__}"
-          m.tr!("-", "_")
-          m
-        end
-      end
+    def identifier_method_name
+      short_identifier.tr('^a-z_', '_')
+    end
 
-      def identifier_method_name
-        short_identifier.tr("^a-z_", "_")
-      end
+    def instrument(action, &block) # :doc:
+      ActiveSupport::Notifications.instrument("#{action}.action_view", instrument_payload, &block)
+    end
 
-      def instrument(action, &block) # :doc:
-        ActiveSupport::Notifications.instrument("#{action}.action_view", instrument_payload, &block)
-      end
+    def instrument_render_template(&block)
+      ActiveSupport::Notifications.instrument('!render_template.action_view', instrument_payload, &block)
+    end
 
-      def instrument_render_template(&block)
-        ActiveSupport::Notifications.instrument("!render_template.action_view", instrument_payload, &block)
-      end
-
-      def instrument_payload
-        { virtual_path: @virtual_path, identifier: @identifier }
-      end
+    def instrument_payload
+      { virtual_path: @virtual_path, identifier: @identifier }
+    end
   end
 end

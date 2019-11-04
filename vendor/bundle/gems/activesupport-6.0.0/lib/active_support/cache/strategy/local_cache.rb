@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require "active_support/core_ext/object/duplicable"
-require "active_support/core_ext/string/inflections"
-require "active_support/per_thread_registry"
+require 'active_support/core_ext/object/duplicable'
+require 'active_support/core_ext/string/inflections'
+require 'active_support/per_thread_registry'
 
 module ActiveSupport
   module Cache
@@ -11,7 +11,7 @@ module ActiveSupport
       # duration of a block. Repeated calls to the cache for the same key will hit the
       # in-memory cache for faster access.
       module LocalCache
-        autoload :Middleware, "active_support/cache/strategy/local_cache_middleware"
+        autoload :Middleware, 'active_support/cache/strategy/local_cache_middleware'
 
         # Class for storing and registering the local caches.
         class LocalCacheRegistry # :nodoc:
@@ -29,8 +29,13 @@ module ActiveSupport
             @registry[local_cache_key] = value
           end
 
-          def self.set_cache_for(l, v); instance.set_cache_for l, v; end
-          def self.cache_for(l); instance.cache_for l; end
+          def self.set_cache_for(l, v)
+            instance.set_cache_for l, v
+          end
+
+          def self.cache_for(l)
+            instance.cache_for l
+          end
         end
 
         # Simple memory backed cache. This cache is not thread safe and is intended only
@@ -46,11 +51,11 @@ module ActiveSupport
             yield
           end
 
-          def clear(options = nil)
+          def clear(_options = nil)
             @data.clear
           end
 
-          def read_entry(key, options)
+          def read_entry(key, _options)
             @data[key]
           end
 
@@ -65,16 +70,16 @@ module ActiveSupport
             values
           end
 
-          def write_entry(key, value, options)
+          def write_entry(key, value, _options)
             @data[key] = value
             true
           end
 
-          def delete_entry(key, options)
+          def delete_entry(key, _options)
             !!@data.delete(key)
           end
 
-          def fetch_entry(key, options = nil) # :nodoc:
+          def fetch_entry(key, _options = nil) # :nodoc:
             @data.fetch(key) { @data[key] = yield }
           end
         end
@@ -88,24 +93,28 @@ module ActiveSupport
         # duration of request.
         def middleware
           @middleware ||= Middleware.new(
-            "ActiveSupport::Cache::Strategy::LocalCache",
-            local_cache_key)
+            'ActiveSupport::Cache::Strategy::LocalCache',
+            local_cache_key
+          )
         end
 
         def clear(options = nil) # :nodoc:
           return super unless cache = local_cache
+
           cache.clear(options)
           super
         end
 
         def cleanup(options = nil) # :nodoc:
           return super unless cache = local_cache
+
           cache.clear
           super
         end
 
         def increment(name, amount = 1, options = nil) # :nodoc:
           return super unless local_cache
+
           value = bypass_local_cache { super }
           write_cache_value(name, value, options)
           value
@@ -113,81 +122,83 @@ module ActiveSupport
 
         def decrement(name, amount = 1, options = nil) # :nodoc:
           return super unless local_cache
+
           value = bypass_local_cache { super }
           write_cache_value(name, value, options)
           value
         end
 
         private
-          def read_entry(key, options)
-            if cache = local_cache
-              cache.fetch_entry(key) { super }
-            else
-              super
-            end
-          end
 
-          def read_multi_entries(keys, options)
-            return super unless local_cache
-
-            local_entries = local_cache.read_multi_entries(keys, options)
-            missed_keys = keys - local_entries.keys
-
-            if missed_keys.any?
-              local_entries.merge!(super(missed_keys, options))
-            else
-              local_entries
-            end
-          end
-
-          def write_entry(key, entry, options)
-            if options[:unless_exist]
-              local_cache.delete_entry(key, options) if local_cache
-            else
-              local_cache.write_entry(key, entry, options) if local_cache
-            end
-
+        def read_entry(key, options)
+          if cache = local_cache
+            cache.fetch_entry(key) { super }
+          else
             super
           end
+        end
 
-          def delete_entry(key, options)
-            local_cache.delete_entry(key, options) if local_cache
-            super
+        def read_multi_entries(keys, options)
+          return super unless local_cache
+
+          local_entries = local_cache.read_multi_entries(keys, options)
+          missed_keys = keys - local_entries.keys
+
+          if missed_keys.any?
+            local_entries.merge!(super(missed_keys, options))
+          else
+            local_entries
+          end
+        end
+
+        def write_entry(key, entry, options)
+          if options[:unless_exist]
+            local_cache&.delete_entry(key, options)
+          else
+            local_cache&.write_entry(key, entry, options)
           end
 
-          def write_cache_value(name, value, options)
-            name = normalize_key(name, options)
-            cache = local_cache
-            cache.mute do
-              if value
-                cache.write(name, value, options)
-              else
-                cache.delete(name, options)
-              end
+          super
+        end
+
+        def delete_entry(key, options)
+          local_cache&.delete_entry(key, options)
+          super
+        end
+
+        def write_cache_value(name, value, options)
+          name = normalize_key(name, options)
+          cache = local_cache
+          cache.mute do
+            if value
+              cache.write(name, value, options)
+            else
+              cache.delete(name, options)
             end
           end
+        end
 
-          def local_cache_key
-            @local_cache_key ||= "#{self.class.name.underscore}_local_cache_#{object_id}".gsub(/[\/-]/, "_").to_sym
-          end
+        def local_cache_key
+          @local_cache_key ||= "#{self.class.name.underscore}_local_cache_#{object_id}".gsub(%r{[/-]}, '_').to_sym
+        end
 
-          def local_cache
-            LocalCacheRegistry.cache_for(local_cache_key)
-          end
+        def local_cache
+          LocalCacheRegistry.cache_for(local_cache_key)
+        end
 
-          def bypass_local_cache
-            use_temporary_local_cache(nil) { yield }
-          end
+        def bypass_local_cache
+          use_temporary_local_cache(nil) { yield }
+        end
 
-          def use_temporary_local_cache(temporary_cache)
-            save_cache = LocalCacheRegistry.cache_for(local_cache_key)
-            begin
-              LocalCacheRegistry.set_cache_for(local_cache_key, temporary_cache)
-              yield
-            ensure
-              LocalCacheRegistry.set_cache_for(local_cache_key, save_cache)
-            end
+        def use_temporary_local_cache(temporary_cache)
+          save_cache = LocalCacheRegistry.cache_for(local_cache_key)
+          begin
+            LocalCacheRegistry.set_cache_for(local_cache_key, temporary_cache)
+            yield
+          ensure
+            LocalCacheRegistry.set_cache_for(local_cache_key, save_cache)
           end
+        end
       end
     end
   end

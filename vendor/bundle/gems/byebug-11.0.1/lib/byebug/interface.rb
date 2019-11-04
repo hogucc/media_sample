@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require "byebug/setting"
-require "byebug/history"
-require "byebug/helpers/file"
+require 'byebug/setting'
+require 'byebug/history'
+require 'byebug/helpers/file'
 
 #
 # Namespace for all of byebug's code
@@ -22,7 +22,7 @@ module Byebug
     def initialize
       @command_queue = []
       @history = History.new
-      @last_line = ""
+      @last_line = ''
     end
 
     def last_if_empty(input)
@@ -99,11 +99,10 @@ module Byebug
     # Confirms user introduced an affirmative response to the input stream.
     #
     def confirm(prompt)
-      readline(prompt) == "y"
+      readline(prompt) == 'y'
     end
 
-    def close
-    end
+    def close; end
 
     #
     # Saves or clears history according to +autosave+ setting.
@@ -126,7 +125,7 @@ module Byebug
     # array of commands: [cmd1, cmd2, ..., cmdN]
     #
     def split_commands(cmd_line)
-      return [""] if cmd_line.empty?
+      return [''] if cmd_line.empty?
 
       cmd_line.split(/;/).each_with_object([]) do |v, m|
         if m.empty? || m.last[-1] != '\\'
@@ -134,13 +133,13 @@ module Byebug
           next
         end
 
-        m.last[-1, 1] = ""
-        m.last << ";" << v
+        m.last[-1, 1] = ''
+        m.last << ';' << v
       end
     end
   end
 end
 
-require "byebug/interfaces/local_interface"
-require "byebug/interfaces/script_interface"
-require "byebug/interfaces/remote_interface"
+require 'byebug/interfaces/local_interface'
+require 'byebug/interfaces/script_interface'
+require 'byebug/interfaces/remote_interface'

@@ -1,5 +1,5 @@
-# encoding: utf-8
 # frozen_string_literal: true
+
 require 'mail/fields/common/common_field'
 
 module Mail
@@ -7,7 +7,7 @@ module Mail
   #
   # ===Per RFC 2822:
   #  2.2.2. Structured Header Field Bodies
-  #  
+  #
   #     Some field bodies in this standard have specific syntactical
   #     structure more restrictive than the unstructured field bodies
   #     described above. These are referred to as "structured" field bodies.
@@ -21,32 +21,26 @@ module Mail
   #     described in section 2.2.3.  Semantic analysis of structured field
   #     bodies is given along with their syntax.
   class StructuredField
-    
     include Mail::CommonField
     include Mail::Utilities
-    
+
     def initialize(name = nil, value = nil, charset = nil)
       self.name    = name
       self.value   = value
       self.charset = charset
       self
     end
-    
-    def charset
-      @charset
-    end
-    
-    def charset=(val)
-      @charset = val
-    end
-    
+
+    attr_reader :charset
+
+    attr_writer :charset
+
     def default
       decoded
     end
-    
+
     def errors
       []
     end
-
   end
 end

@@ -1,10 +1,9 @@
-# encoding: utf-8
 # frozen_string_literal: true
+
 require 'mail/fields/common/parameter_hash'
 
 module Mail
   class ContentTypeField < StructuredField
-
     FIELD_NAME = 'content-type'
     CAPITALIZED_FIELD = 'Content-Type'
 
@@ -22,7 +21,7 @@ module Mail
       end
       value = ensure_filename_quoted(value)
       super(CAPITALIZED_FIELD, value, charset)
-      self.parse
+      parse
       self
     end
 
@@ -35,17 +34,15 @@ module Mail
     end
 
     def element
-      begin
-        @element ||= Mail::ContentTypeElement.new(value)
-      rescue
-        attempt_to_clean
-      end
+      @element ||= Mail::ContentTypeElement.new(value)
+    rescue StandardError
+      attempt_to_clean
     end
 
     def attempt_to_clean
       # Sanitize the value, handle special cases
       @element ||= Mail::ContentTypeElement.new(sanatize(value))
-    rescue
+    rescue StandardError
       # All else fails, just get the MIME media type
       @element ||= Mail::ContentTypeElement.new(get_mime_type(value))
     end
@@ -66,7 +63,7 @@ module Mail
       decoded
     end
 
-    alias :content_type :string
+    alias content_type string
 
     def parameters
       unless @parameters
@@ -76,11 +73,11 @@ module Mail
       @parameters
     end
 
-    def ContentTypeField.with_boundary(type)
+    def self.with_boundary(type)
       new("#{type}; boundary=#{generate_boundary}")
     end
 
-    def ContentTypeField.generate_boundary
+    def self.generate_boundary
       "--==_mimepart_#{Mail.random_tag}"
     end
 
@@ -93,45 +90,42 @@ module Mail
     end
 
     def stringify(params)
-      params.map { |k,v| "#{k}=#{Encodings.param_encode(v)}" }.join("; ")
+      params.map { |k, v| "#{k}=#{Encodings.param_encode(v)}" }.join('; ')
     end
 
     def filename
-      case
-      when parameters['filename']
-        @filename = parameters['filename']
-      when parameters['name']
-        @filename = parameters['name']
-      else
-        @filename = nil
-      end
+      @filename = if parameters['filename']
+                    parameters['filename']
+                  elsif parameters['name']
+                    parameters['name']
+                  end
       @filename
     end
 
     # TODO: Fix this up
     def encoded
-      if parameters.length > 0
-        p = ";\r\n\s#{parameters.encoded}"
-      else
-        p = ""
-      end
+      p = if !parameters.empty?
+            ";\r\n\s#{parameters.encoded}"
+          else
+            ''
+          end
       "#{CAPITALIZED_FIELD}: #{content_type}#{p}\r\n"
     end
 
     def decoded
-      if parameters.length > 0
-        p = "; #{parameters.decoded}"
-      else
-        p = ""
-      end
-      "#{content_type}" + p
+      p = if !parameters.empty?
+            "; #{parameters.decoded}"
+          else
+            ''
+          end
+      content_type.to_s + p
     end
 
     private
 
     def method_missing(name, *args, &block)
       if name.to_s =~ /(\w+)=/
-        self.parameters[$1] = args.first
+        parameters[Regexp.last_match(1)] = args.first
         @value = "#{content_type}; #{stringify(parameters)}"
       else
         super
@@ -140,55 +134,52 @@ module Mail
 
     # Various special cases from random emails found that I am not going to change
     # the parser for
-    def sanatize( val )
-
+    def sanatize(val)
       # TODO: check if there are cases where whitespace is not a separator
-      val = val.
-        gsub(/\s*=\s*/,'='). # remove whitespaces around equal sign
-        gsub(/[; ]+/, '; '). #use '; ' as a separator (or EOL)
-        gsub(/;\s*$/,'') #remove trailing to keep examples below
+      val = val
+            .gsub(/\s*=\s*/, '=') # remove whitespaces around equal sign
+            .gsub(/[; ]+/, '; ') # use '; ' as a separator (or EOL)
+            .gsub(/;\s*$/, '') # remove trailing to keep examples below
 
       if val =~ /(boundary=(\S*))/i
-        val = "#{$`.downcase}boundary=#{$2}#{$'.downcase}"
+        val = "#{$`.downcase}boundary=#{Regexp.last_match(2)}#{$'.downcase}"
       else
         val.downcase!
       end
 
-      case
-      when val.chomp =~ /^\s*([\w\-]+)\/([\w\-]+)\s*;\s?(ISO[\w\-]+)$/i
+      if val.chomp =~ %r{^\s*([\w\-]+)/([\w\-]+)\s*;\s?(ISO[\w\-]+)$}i
         # Microsoft helper:
         # Handles 'type/subtype;ISO-8559-1'
-        "#{$1}/#{$2}; charset=#{quote_atom($3)}"
-      when val.chomp =~ /^text;?$/i
+        "#{Regexp.last_match(1)}/#{Regexp.last_match(2)}; charset=#{quote_atom(Regexp.last_match(3))}"
+      elsif val.chomp =~ /^text;?$/i
         # Handles 'text;' and 'text'
-        "text/plain;"
-      when val.chomp =~ /^(\w+);\s(.*)$/i
+        'text/plain;'
+      elsif val.chomp =~ /^(\w+);\s(.*)$/i
         # Handles 'text; <parameters>'
-        "text/plain; #{$2}"
-      when val =~ /([\w\-]+\/[\w\-]+);\scharset="charset="(\w+)""/i
+        "text/plain; #{Regexp.last_match(2)}"
+      elsif val =~ %r{([\w\-]+/[\w\-]+);\scharset="charset="(\w+)""}i
         # Handles text/html; charset="charset="GB2312""
-        "#{$1}; charset=#{quote_atom($2)}"
-      when val =~ /([\w\-]+\/[\w\-]+);\s+(.*)/i
-        type = $1
+        "#{Regexp.last_match(1)}; charset=#{quote_atom(Regexp.last_match(2))}"
+      elsif val =~ %r{([\w\-]+/[\w\-]+);\s+(.*)}i
+        type = Regexp.last_match(1)
         # Handles misquoted param values
         # e.g: application/octet-stream; name=archiveshelp1[1].htm
         # and: audio/x-midi;\r\n\sname=Part .exe
-        params = $2.to_s.split(/\s+/)
+        params = Regexp.last_match(2).to_s.split(/\s+/)
         params = params.map { |i| i.to_s.chomp.strip }
         params = params.map { |i| i.split(/\s*\=\s*/, 2) }
-        params = params.map { |i| "#{i[0]}=#{dquote(i[1].to_s.gsub(/;$/,""))}" }.join('; ')
+        params = params.map { |i| "#{i[0]}=#{dquote(i[1].to_s.gsub(/;$/, ''))}" }.join('; ')
         "#{type}; #{params}"
-      when val =~ /^\s*$/
+      elsif val =~ /^\s*$/
         'text/plain'
       else
         val
       end
     end
 
-    def get_mime_type( val )
-      case
-      when val =~ /^([\w\-]+)\/([\w\-]+);.+$/i
-        "#{$1}/#{$2}"
+    def get_mime_type(val)
+      if val =~ %r{^([\w\-]+)/([\w\-]+);.+$}i
+        "#{Regexp.last_match(1)}/#{Regexp.last_match(2)}"
       else
         'text/plain'
       end

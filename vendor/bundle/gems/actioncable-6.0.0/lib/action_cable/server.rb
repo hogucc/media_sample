@@ -11,7 +11,7 @@ module ActionCable
       autoload :Configuration
 
       autoload :Worker
-      autoload :ActiveRecordConnectionManagement, "action_cable/server/worker/active_record_connection_management"
+      autoload :ActiveRecordConnectionManagement, 'action_cable/server/worker/active_record_connection_management'
     end
   end
 end

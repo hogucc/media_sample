@@ -4,7 +4,7 @@ module Arel # :nodoc: all
   class SelectManager < Arel::TreeManager
     include Arel::Crud
 
-    STRING_OR_SYMBOL_CLASS = [Symbol, String]
+    STRING_OR_SYMBOL_CLASS = [Symbol, String].freeze
 
     def initialize(table = nil)
       super()
@@ -19,27 +19,23 @@ module Arel # :nodoc: all
     end
 
     def limit
-      @ast.limit && @ast.limit.expr
+      @ast.limit&.expr
     end
-    alias :taken :limit
+    alias taken limit
 
     def constraints
       @ctx.wheres
     end
 
     def offset
-      @ast.offset && @ast.offset.expr
+      @ast.offset&.expr
     end
 
     def skip(amount)
-      if amount
-        @ast.offset = Nodes::Offset.new(amount)
-      else
-        @ast.offset = nil
-      end
+      @ast.offset = (Nodes::Offset.new(amount) if amount)
       self
     end
-    alias :offset= :skip
+    alias offset= skip
 
     ###
     # Produces an Arel::Nodes::Exists node
@@ -51,10 +47,10 @@ module Arel # :nodoc: all
       create_table_alias grouping(@ast), Nodes::SqlLiteral.new(other)
     end
 
-    def lock(locking = Arel.sql("FOR UPDATE"))
+    def lock(locking = Arel.sql('FOR UPDATE'))
       case locking
       when true
-        locking = Arel.sql("FOR UPDATE")
+        locking = Arel.sql('FOR UPDATE')
       when Arel::Nodes::SqlLiteral
       when String
         locking = Arel.sql locking
@@ -98,7 +94,7 @@ module Arel # :nodoc: all
     end
 
     def froms
-      @ast.cores.map { |x| x.from }.compact
+      @ast.cores.map(&:from).compact
     end
 
     def join(relation, klass = Nodes::InnerJoin)
@@ -107,6 +103,7 @@ module Arel # :nodoc: all
       case relation
       when String, Nodes::SqlLiteral
         raise EmptyJoinError if relation.empty?
+
         klass = Nodes::StringJoin
       end
 
@@ -147,27 +144,17 @@ module Arel # :nodoc: all
     end
 
     def optimizer_hints(*hints)
-      unless hints.empty?
-        @ctx.optimizer_hints = Arel::Nodes::OptimizerHints.new(hints)
-      end
+      @ctx.optimizer_hints = Arel::Nodes::OptimizerHints.new(hints) unless hints.empty?
       self
     end
 
     def distinct(value = true)
-      if value
-        @ctx.set_quantifier = Arel::Nodes::Distinct.new
-      else
-        @ctx.set_quantifier = nil
-      end
+      @ctx.set_quantifier = (Arel::Nodes::Distinct.new if value)
       self
     end
 
     def distinct_on(value)
-      if value
-        @ctx.set_quantifier = Arel::Nodes::DistinctOn.new(value)
-      else
-        @ctx.set_quantifier = nil
-      end
+      @ctx.set_quantifier = (Arel::Nodes::DistinctOn.new(value) if value)
       self
     end
 
@@ -198,7 +185,7 @@ module Arel # :nodoc: all
         node_class = Nodes::Union
       end
 
-      node_class.new self.ast, other.ast
+      node_class.new ast, other.ast
     end
 
     def intersect(other)
@@ -208,7 +195,7 @@ module Arel # :nodoc: all
     def except(other)
       Nodes::Except.new ast, other.ast
     end
-    alias :minus :except
+    alias minus except
 
     def lateral(table_name = nil)
       base = table_name.nil? ? ast : as(table_name)
@@ -216,22 +203,18 @@ module Arel # :nodoc: all
     end
 
     def with(*subqueries)
-      if subqueries.first.is_a? Symbol
-        node_class = Nodes.const_get("With#{subqueries.shift.to_s.capitalize}")
-      else
-        node_class = Nodes::With
-      end
+      node_class = if subqueries.first.is_a? Symbol
+                     Nodes.const_get("With#{subqueries.shift.to_s.capitalize}")
+                   else
+                     Nodes::With
+                   end
       @ast.with = node_class.new(subqueries.flatten)
 
       self
     end
 
     def take(limit)
-      if limit
-        @ast.limit = Nodes::Limit.new(limit)
-      else
-        @ast.limit = nil
-      end
+      @ast.limit = (Nodes::Limit.new(limit) if limit)
       self
     end
     alias limit= take
@@ -250,22 +233,23 @@ module Arel # :nodoc: all
     end
 
     private
-      def collapse(exprs)
-        exprs = exprs.compact
-        exprs.map! { |expr|
-          if String === expr
-            # FIXME: Don't do this automatically
-            Arel.sql(expr)
-          else
-            expr
-          end
-        }
 
-        if exprs.length == 1
-          exprs.first
+    def collapse(exprs)
+      exprs = exprs.compact
+      exprs.map! do |expr|
+        if String === expr
+          # FIXME: Don't do this automatically
+          Arel.sql(expr)
         else
-          create_and exprs
+          expr
         end
       end
+
+      if exprs.length == 1
+        exprs.first
+      else
+        create_and exprs
+      end
+    end
   end
 end

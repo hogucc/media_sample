@@ -8,11 +8,12 @@ module ActiveRecord
       # schema qualified type names. +schema+ and +identifier+ are unquoted to prevent
       # double quoting.
       class Name # :nodoc:
-        SEPARATOR = "."
+        SEPARATOR = '.'
         attr_reader :schema, :identifier
 
         def initialize(schema, identifier)
-          @schema, @identifier = unquote(schema), unquote(identifier)
+          @schema = unquote(schema)
+          @identifier = unquote(identifier)
         end
 
         def to_s
@@ -30,7 +31,7 @@ module ActiveRecord
         def ==(o)
           o.class == self.class && o.parts == parts
         end
-        alias_method :eql?, :==
+        alias eql? ==
 
         def hash
           parts.hash
@@ -38,22 +39,23 @@ module ActiveRecord
 
         protected
 
-          def parts
-            @parts ||= [@schema, @identifier].compact
-          end
+        def parts
+          @parts ||= [@schema, @identifier].compact
+        end
 
         private
-          def unquote(part)
-            if part && part.start_with?('"')
-              part[1..-2]
-            else
-              part
-            end
+
+        def unquote(part)
+          if part&.start_with?('"')
+            part[1..-2]
+          else
+            part
           end
+        end
       end
 
       module Utils # :nodoc:
-        extend self
+        module_function
 
         # Returns an instance of <tt>ActiveRecord::ConnectionAdapters::PostgreSQL::Name</tt>
         # extracted from +string+.

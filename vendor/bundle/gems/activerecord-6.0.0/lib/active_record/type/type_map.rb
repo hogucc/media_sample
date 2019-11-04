@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "concurrent/map"
+require 'concurrent/map'
 
 module ActiveRecord
   module Type
@@ -24,13 +24,10 @@ module ActiveRecord
 
       def register_type(key, value = nil, &block)
         raise ::ArgumentError unless value || block
+
         @cache.clear
 
-        if block
-          @mapping[key] = block
-        else
-          @mapping[key] = proc { value }
-        end
+        @mapping[key] = (block || proc { value })
       end
 
       def alias_type(key, target_key)
@@ -46,17 +43,17 @@ module ActiveRecord
 
       private
 
-        def perform_fetch(lookup_key, *args)
-          matching_pair = @mapping.reverse_each.detect do |key, _|
-            key === lookup_key
-          end
-
-          if matching_pair
-            matching_pair.last.call(lookup_key, *args)
-          else
-            yield lookup_key, *args
-          end
+      def perform_fetch(lookup_key, *args)
+        matching_pair = @mapping.reverse_each.detect do |key, _|
+          key === lookup_key
         end
+
+        if matching_pair
+          matching_pair.last.call(lookup_key, *args)
+        else
+          yield lookup_key, *args
+        end
+      end
     end
   end
 end

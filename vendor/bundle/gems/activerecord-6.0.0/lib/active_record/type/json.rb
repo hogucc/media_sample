@@ -11,7 +11,12 @@ module ActiveRecord
 
       def deserialize(value)
         return value unless value.is_a?(::String)
-        ActiveSupport::JSON.decode(value) rescue nil
+
+        begin
+          ActiveSupport::JSON.decode(value)
+        rescue StandardError
+          nil
+        end
       end
 
       def serialize(value)

@@ -215,9 +215,9 @@ module Capybara
 
       def default_visibility(fallback = Capybara.ignore_hidden_elements, options = {})
         vis = if @default_visibility&.respond_to?(:call)
-          @default_visibility.call(options)
-        else
-          @default_visibility
+                @default_visibility.call(options)
+              else
+                @default_visibility
         end
         vis.nil? ? fallback : vis
       end
@@ -249,7 +249,7 @@ module Capybara
         Array(@locator_type)
       end
 
-    private
+      private
 
       def handled_custom_keys(filter, keys)
         keys.select do |key|
@@ -258,7 +258,7 @@ module Capybara
       end
 
       def parameter_names(block)
-        block.parameters.select { |(type, _name)| %i[key keyreq].include? type }.map { |(_type, name)| name }
+        block.parameters.select { |(type, _name)| [:key, :keyreq].include? type }.map { |(_type, name)| name }
       end
 
       def expression(type, allowed_filters, &block)

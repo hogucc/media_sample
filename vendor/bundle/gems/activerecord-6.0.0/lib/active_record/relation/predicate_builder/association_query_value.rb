@@ -13,31 +13,32 @@ module ActiveRecord
       end
 
       private
-        attr_reader :associated_table, :value
 
-        def ids
-          case value
-          when Relation
-            value.select_values.empty? ? value.select(primary_key) : value
-          when Array
-            value.map { |v| convert_to_id(v) }
-          else
-            convert_to_id(value)
-          end
-        end
+      attr_reader :associated_table, :value
 
-        def primary_key
-          associated_table.association_join_primary_key
+      def ids
+        case value
+        when Relation
+          value.select_values.empty? ? value.select(primary_key) : value
+        when Array
+          value.map { |v| convert_to_id(v) }
+        else
+          convert_to_id(value)
         end
+      end
 
-        def convert_to_id(value)
-          case value
-          when Base
-            value._read_attribute(primary_key)
-          else
-            value
-          end
+      def primary_key
+        associated_table.association_join_primary_key
+      end
+
+      def convert_to_id(value)
+        case value
+        when Base
+          value._read_attribute(primary_key)
+        else
+          value
         end
+      end
     end
   end
 end

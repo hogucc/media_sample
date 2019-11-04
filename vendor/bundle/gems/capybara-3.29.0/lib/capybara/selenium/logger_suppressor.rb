@@ -13,7 +13,8 @@ module Capybara
       end
 
       def suppress_deprecations
-        prev_suppress_for_capybara, @suppress_for_capybara = @suppress_for_capybara, true
+        prev_suppress_for_capybara = @suppress_for_capybara
+        @suppress_for_capybara = true
         yield
       ensure
         @suppress_for_capybara = prev_suppress_for_capybara

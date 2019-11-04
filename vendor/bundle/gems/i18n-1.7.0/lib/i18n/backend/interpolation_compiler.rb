@@ -19,10 +19,10 @@ module I18n
   module Backend
     module InterpolationCompiler
       module Compiler
-        extend self
+        module_function
 
-        TOKENIZER                    = /(%%\{[^\}]+\}|%\{[^\}]+\})/
-        INTERPOLATION_SYNTAX_PATTERN = /(%)?(%\{([^\}]+)\})/
+        TOKENIZER                    = /(%%\{[^\}]+\}|%\{[^\}]+\})/.freeze
+        INTERPOLATION_SYNTAX_PATTERN = /(%)?(%\{([^\}]+)\})/.freeze
 
         def compile_if_an_interpolation(string)
           if interpolated_str?(string)
@@ -37,10 +37,11 @@ module I18n
         end
 
         def interpolated_str?(str)
-          str.kind_of?(::String) && str =~ INTERPOLATION_SYNTAX_PATTERN
+          str.is_a?(::String) && str =~ INTERPOLATION_SYNTAX_PATTERN
         end
 
         protected
+
         # tokenize("foo %{bar} baz %%{buz}") # => ["foo ", "%{bar}", " baz ", "%%{buz}"]
         def tokenize(str)
           str.split(TOKENIZER)
@@ -52,7 +53,7 @@ module I18n
           end.join
         end
 
-        def handle_interpolation_token(interpolation, matchdata)
+        def handle_interpolation_token(_interpolation, matchdata)
           escaped, pattern, key = matchdata.values_at(1, 2, 3)
           escaped ? pattern : compile_interpolation_token(key.to_sym)
         end
@@ -87,7 +88,7 @@ module I18n
         end
 
         def escape_plain_str(str)
-          str.gsub(/"|\\|#/) {|x| "\\#{x}"}
+          str.gsub(/"|\\|#/) { |x| "\\#{x}" }
         end
 
         def escape_key_sym(key)
@@ -112,10 +113,11 @@ module I18n
       end
 
       protected
+
       def compile_all_strings_in(data)
         data.each_value do |value|
           Compiler.compile_if_an_interpolation(value)
-          compile_all_strings_in(value) if value.kind_of?(Hash)
+          compile_all_strings_in(value) if value.is_a?(Hash)
         end
       end
     end

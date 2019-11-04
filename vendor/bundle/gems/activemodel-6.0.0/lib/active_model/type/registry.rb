@@ -24,15 +24,16 @@ module ActiveModel
       end
 
       private
-        attr_reader :registrations
 
-        def registration_klass
-          Registration
-        end
+      attr_reader :registrations
 
-        def find_registration(symbol, *args)
-          registrations.find { |r| r.matches?(symbol, *args) }
-        end
+      def registration_klass
+        Registration
+      end
+
+      def find_registration(symbol, *args)
+        registrations.find { |r| r.matches?(symbol, *args) }
+      end
     end
 
     class Registration
@@ -50,12 +51,13 @@ module ActiveModel
         end
       end
 
-      def matches?(type_name, *args, **kwargs)
+      def matches?(type_name, *_args, **_kwargs)
         type_name == name
       end
 
       private
-        attr_reader :name, :block
+
+      attr_reader :name, :block
     end
   end
   # :startdoc:

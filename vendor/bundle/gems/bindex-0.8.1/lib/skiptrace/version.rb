@@ -1,3 +1,3 @@
 module Skiptrace
-  VERSION = "0.8.1"
+  VERSION = '0.8.1'.freeze
 end

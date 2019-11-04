@@ -1,16 +1,13 @@
 module ChildProcess
   module Windows
     class Handle
-
       class << self
         private :new
 
         def open(pid, access = PROCESS_ALL_ACCESS)
           handle = Lib.open_process(access, false, pid)
 
-          if handle.null?
-            raise Error, Lib.last_error_message
-          end
+          raise Error, Lib.last_error_message if handle.null?
 
           h = new(handle, pid)
           return h unless block_given?
@@ -26,13 +23,9 @@ module ChildProcess
       attr_reader :pointer
 
       def initialize(pointer, pid)
-        unless pointer.kind_of?(FFI::Pointer)
-          raise TypeError, "invalid handle: #{pointer.inspect}"
-        end
+        raise TypeError, "invalid handle: #{pointer.inspect}" unless pointer.is_a?(FFI::Pointer)
 
-        if pointer.null?
-          raise ArgumentError, "handle is null: #{pointer.inspect}"
-        end
+        raise ArgumentError, "handle is null: #{pointer.inspect}" if pointer.null?
 
         @pid     = pid
         @pointer = pointer
@@ -64,8 +57,8 @@ module ChildProcess
           Lib.check_error ok
         else
           thread_id     = FFI::MemoryPointer.new(:ulong)
-          module_handle = Lib.get_module_handle("kernel32")
-          proc_address  = Lib.get_proc_address(module_handle, "ExitProcess")
+          module_handle = Lib.get_module_handle('kernel32')
+          proc_address  = Lib.get_proc_address(module_handle, 'ExitProcess')
 
           thread = Lib.create_remote_thread(@pointer, 0, 0, proc_address, 0, 0, thread_id)
           check_error thread
@@ -85,7 +78,6 @@ module ChildProcess
       def wait(milliseconds = nil)
         Lib.wait_for_single_object(@pointer, milliseconds || INFINITE)
       end
-
     end # Handle
   end # Windows
 end # ChildProcess

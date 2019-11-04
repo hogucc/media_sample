@@ -30,7 +30,7 @@ unless Concurrent.on_jruby?
     ext.source_pattern = '*.{c,h}'
 
     ext.cross_compile  = true
-    ext.cross_platform = ['x86-mingw32', 'x64-mingw32']
+    ext.cross_platform = %w[x86-mingw32 x64-mingw32]
   end
 end
 
@@ -70,10 +70,10 @@ begin
     desc '* Configured for ci'
     RSpec::Core::RakeTask.new(:ci) do |t|
       options      = %w[ --color
-                    --backtrace
-                    --order defined
-                    --format documentation
-                    --tag ~notravis ]
+                         --backtrace
+                         --order defined
+                         --format documentation
+                         --tag ~notravis ]
       t.rspec_opts = [*options].join(' ')
     end
 
@@ -91,9 +91,9 @@ begin
   end
 
   desc 'executed in CI'
-  task :ci => [:compile, 'spec:ci']
+  task ci: [:compile, 'spec:ci']
 
-  task :default => [:clobber, :compile, :spec]
+  task default: [:clobber, :compile, :spec]
 rescue LoadError => e
   puts 'RSpec is not installed, skipping test task definitions: ' + e.message
 end
@@ -116,10 +116,9 @@ begin
                          '--default-return', 'undocumented']
 
   desc 'Generate YARD Documentation (signpost, master)'
-  task :yard => ['yard:signpost', 'yard:master']
+  task yard: ['yard:signpost', 'yard:master']
 
   namespace :yard do
-
     desc '* eval markdown files'
     task :eval_md do
       Dir.chdir File.join(__dir__, 'docs-source') do
@@ -129,17 +128,17 @@ begin
 
     task :update_readme do
       Dir.chdir __dir__ do
-        content = File.read(File.join('README.md')).
-            gsub(/\[([\w ]+)\]\(http:\/\/ruby-concurrency\.github\.io\/concurrent-ruby\/master\/.*\)/) do |_|
-          case $1
+        content = File.read(File.join('README.md'))
+                      .gsub(%r{\[([\w ]+)\]\(http://ruby-concurrency\.github\.io/concurrent-ruby/master/.*\)}) do |_|
+          case Regexp.last_match(1)
           when 'LockFreeLinkedSet'
-            "{Concurrent::Edge::#{$1} #{$1}}"
+            "{Concurrent::Edge::#{Regexp.last_match(1)} #{Regexp.last_match(1)}}"
           when '.dataflow'
             '{Concurrent.dataflow Concurrent.dataflow}'
           when 'thread pool'
             '{file:thread_pools.md thread pool}'
           else
-            "{Concurrent::#{$1} #{$1}}"
+            "{Concurrent::#{Regexp.last_match(1)} #{Regexp.last_match(1)}}"
           end
         end
         FileUtils.mkpath 'tmp'
@@ -147,7 +146,7 @@ begin
       end
     end
 
-    define_yard_task = -> name do
+    define_yard_task = lambda do |name|
       output_dir = "docs/#{name}"
 
       removal_name = "remove.#{name}"
@@ -160,9 +159,10 @@ begin
       desc "* of #{name} into subdir #{name}"
       YARD::Rake::YardocTask.new(name) do |yard|
         yard.options.push(
-            '--output-dir', output_dir,
-            '--main', 'tmp/README.md',
-            *common_yard_options)
+          '--output-dir', output_dir,
+          '--main', 'tmp/README.md',
+          *common_yard_options
+        )
         yard.files = ['./lib/**/*.rb',
                       './lib-edge/**/*.rb',
                       './ext/concurrent_ruby_ext/**/*.c',
@@ -179,35 +179,34 @@ begin
     define_yard_task.call current_yard_version_name
     define_yard_task.call 'master'
 
-    desc "* signpost for versions"
+    desc '* signpost for versions'
     YARD::Rake::YardocTask.new(:signpost) do |yard|
       yard.options.push(
-          '--output-dir', 'docs',
-          '--main', 'docs-source/signpost.md',
-          *common_yard_options)
+        '--output-dir', 'docs',
+        '--main', 'docs-source/signpost.md',
+        *common_yard_options
+      )
       yard.files = ['no-lib']
     end
 
-    define_uptodate_task = -> name do
+    define_uptodate_task = lambda do |name|
       namespace name do
         desc "** ensure that #{name} generated documentation is matching the source code"
         task :uptodate do
           Dir.chdir(__dir__) do
-            begin
-              FileUtils.cp_r 'docs', 'docs-copy', verbose: true
-              Rake::Task["yard:#{name}"].invoke
-              sh 'diff -r docs/ docs-copy/' do |ok, res|
-                unless ok
-                  begin
-                    STDOUT.puts 'Command failed. Continue? (y/n)'
-                    input = STDIN.gets.strip.downcase
-                  end until %w(y n).include?(input)
-                  exit 1 if input == 'n'
-                end
+            FileUtils.cp_r 'docs', 'docs-copy', verbose: true
+            Rake::Task["yard:#{name}"].invoke
+            sh 'diff -r docs/ docs-copy/' do |ok, _res|
+              unless ok
+                begin
+                  STDOUT.puts 'Command failed. Continue? (y/n)'
+                  input = STDIN.gets.strip.downcase
+                end until %w[y n].include?(input)
+                exit 1 if input == 'n'
               end
-            ensure
-              FileUtils.rm_rf 'docs-copy', verbose: true
             end
+          ensure
+            FileUtils.rm_rf 'docs-copy', verbose: true
           end
         end
       end
@@ -216,13 +215,12 @@ begin
     define_uptodate_task.call current_yard_version_name
     define_uptodate_task.call 'master'
   end
-
 rescue LoadError => e
   puts 'YARD is not installed, skipping documentation task definitions: ' + e.message
 end
 
 desc 'build, test, and publish the gem'
-task :release => ['release:checks', 'release:build', 'release:test', 'release:publish']
+task release: ['release:checks', 'release:build', 'release:test', 'release:publish']
 
 namespace :release do
   # Depends on environment of @pitr-ch
@@ -230,25 +228,25 @@ namespace :release do
   mri_version   = '2.5.1'
   jruby_version = 'jruby-9.1.17.1'
 
-  task :checks => "yard:#{current_yard_version_name}:uptodate" do
+  task checks: "yard:#{current_yard_version_name}:uptodate" do
     Dir.chdir(__dir__) do
-      sh 'test -z "$(git status --porcelain)"' do |ok, res|
+      sh 'test -z "$(git status --porcelain)"' do |ok, _res|
         unless ok
           begin
             STDOUT.puts 'Command failed. Continue? (y/n)'
             input = STDIN.gets.strip.downcase
-          end until %w(y n).include?(input)
+          end until %w[y n].include?(input)
           exit 1 if input == 'n'
         end
       end
       sh 'git fetch'
-      sh 'test $(git show-ref --verify --hash refs/heads/master) = ' +
-             '$(git show-ref --verify --hash refs/remotes/origin/master)' do |ok, res|
+      sh 'test $(git show-ref --verify --hash refs/heads/master) = ' \
+         '$(git show-ref --verify --hash refs/remotes/origin/master)' do |ok, _res|
         unless ok
           begin
             STDOUT.puts 'Command failed. Continue? (y/n)'
             input = STDIN.gets.strip.downcase
-          end until %w(y n).include?(input)
+          end until %w[y n].include?(input)
           exit 1 if input == 'n'
         end
       end
@@ -256,7 +254,7 @@ namespace :release do
   end
 
   desc '* build all *.gem files necessary for release'
-  task :build => [:clobber, 'repackage:all']
+  task build: [:clobber, 'repackage:all']
 
   desc '* test actual installed gems instead of cloned repository on MRI and JRuby'
   task :test do
@@ -278,7 +276,7 @@ namespace :release do
   end
 
   desc '* do all nested steps'
-  task :publish => ['publish:ask', 'publish:tag', 'publish:rubygems', 'publish:post_steps']
+  task publish: ['publish:ask', 'publish:tag', 'publish:rubygems', 'publish:post_steps']
 
   namespace :publish do
     publish_edge = false
@@ -287,12 +285,12 @@ namespace :release do
       begin
         STDOUT.puts 'Do you want to publish anything? (y/n)'
         input = STDIN.gets.strip.downcase
-      end until %w(y n).include?(input)
+      end until %w[y n].include?(input)
       exit 1 if input == 'n'
       begin
         STDOUT.puts 'Do you want to publish edge? (y/n)'
         input = STDIN.gets.strip.downcase
-      end until %w(y n).include?(input)
+      end until %w[y n].include?(input)
       publish_edge = input == 'y'
     end
 

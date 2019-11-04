@@ -1,5 +1,5 @@
-require "erb"
-require "open-uri"
+require 'erb'
+require 'open-uri'
 
 class Foreman::Thor
   module Actions
@@ -82,9 +82,9 @@ class Foreman::Thor
       render = open(source) { |input| input.binmode.read }
 
       destination ||= if block_given?
-        block.arity == 1 ? yield(render) : yield
-      else
-        File.basename(source)
+                        block.arity == 1 ? yield(render) : yield
+                      else
+                        File.basename(source)
       end
 
       create_file destination, render, config
@@ -107,13 +107,13 @@ class Foreman::Thor
     #
     def template(source, *args, &block)
       config = args.last.is_a?(Hash) ? args.pop : {}
-      destination = args.first || source.sub(/#{TEMPLATE_EXTNAME}$/, "")
+      destination = args.first || source.sub(/#{TEMPLATE_EXTNAME}$/, '')
 
       source  = File.expand_path(find_in_source_paths(source.to_s))
-      context = config.delete(:context) || instance_eval("binding")
+      context = config.delete(:context) || instance_eval('binding')
 
       create_file destination, nil, config do
-        content = CapturableERB.new(::File.binread(source), nil, "-", "@output_buffer").result(context)
+        content = CapturableERB.new(::File.binread(source), nil, '-', '@output_buffer').result(context)
         content = yield(content) if block
         content
       end
@@ -132,6 +132,7 @@ class Foreman::Thor
     #
     def chmod(path, mode, config = {})
       return unless behavior == :invoke
+
       path = File.expand_path(path, destination_root)
       say_status :chmod, relative_to_original_destination_root(path), config.fetch(:verbose, true)
       FileUtils.chmod_R(mode, path) unless options[:pretend]
@@ -157,7 +158,7 @@ class Foreman::Thor
       config[:after] = /\A/
       insert_into_file(path, *(args << config), &block)
     end
-    alias_method :prepend_file, :prepend_to_file
+    alias prepend_file prepend_to_file
 
     # Append text to a file. Since it depends on insert_into_file, it's reversible.
     #
@@ -179,7 +180,7 @@ class Foreman::Thor
       config[:before] = /\z/
       insert_into_file(path, *(args << config), &block)
     end
-    alias_method :append_file, :append_to_file
+    alias append_file append_to_file
 
     # Injects text right after the class definition. Since it depends on
     # insert_into_file, it's reversible.
@@ -222,6 +223,7 @@ class Foreman::Thor
     #
     def gsub_file(path, flag, *args, &block)
       return unless behavior == :invoke
+
       config = args.last.is_a?(Hash) ? args.pop : {}
 
       path = File.expand_path(path, destination_root)
@@ -230,7 +232,7 @@ class Foreman::Thor
       unless options[:pretend]
         content = File.binread(path)
         content.gsub!(flag, *args, &block)
-        File.open(path, "wb") { |file| file.write(content) }
+        File.open(path, 'wb') { |file| file.write(content) }
       end
     end
 
@@ -285,17 +287,18 @@ class Foreman::Thor
     #
     def remove_file(path, config = {})
       return unless behavior == :invoke
+
       path = File.expand_path(path, destination_root)
 
       say_status :remove, relative_to_original_destination_root(path), config.fetch(:verbose, true)
       ::FileUtils.rm_rf(path) if !options[:pretend] && File.exist?(path)
     end
-    alias_method :remove_dir, :remove_file
+    alias remove_dir remove_file
 
     attr_accessor :output_buffer
     private :output_buffer, :output_buffer=
 
-  private
+    private
 
     def concat(string)
       @output_buffer.concat(string)
@@ -305,8 +308,9 @@ class Foreman::Thor
       with_output_buffer { yield(*args) }
     end
 
-    def with_output_buffer(buf = "") #:nodoc:
-      self.output_buffer, old_buffer = buf, output_buffer
+    def with_output_buffer(buf = '') #:nodoc:
+      self.output_buffer = buf
+      old_buffer = output_buffer
       yield
       output_buffer
     ensure
@@ -316,7 +320,7 @@ class Foreman::Thor
     # Foreman::Thor::Actions#capture depends on what kind of buffer is used in ERB.
     # Thus CapturableERB fixes ERB to use String buffer.
     class CapturableERB < ERB
-      def set_eoutvar(compiler, eoutvar = "_erbout")
+      def set_eoutvar(compiler, eoutvar = '_erbout')
         compiler.put_cmd = "#{eoutvar}.concat"
         compiler.insert_cmd = "#{eoutvar}.concat"
         compiler.pre_cmd = ["#{eoutvar} = ''"]

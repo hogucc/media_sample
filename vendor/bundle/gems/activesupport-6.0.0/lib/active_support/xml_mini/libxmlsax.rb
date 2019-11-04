@@ -1,20 +1,20 @@
 # frozen_string_literal: true
 
-require "libxml"
-require "active_support/core_ext/object/blank"
-require "stringio"
+require 'libxml'
+require 'active_support/core_ext/object/blank'
+require 'stringio'
 
 module ActiveSupport
   module XmlMini_LibXMLSAX #:nodoc:
-    extend self
+    module_function
 
     # Class that will build the hash while the XML document
     # is being parsed using SAX events.
     class HashBuilder
       include LibXML::XML::SaxParser::Callbacks
 
-      CONTENT_KEY   = "__content__"
-      HASH_SIZE_KEY = "__hash_size__"
+      CONTENT_KEY   = '__content__'
+      HASH_SIZE_KEY = '__hash_size__'
 
       attr_reader :hash
 
@@ -23,7 +23,7 @@ module ActiveSupport
       end
 
       def on_start_document
-        @hash = { CONTENT_KEY => +"" }
+        @hash = { CONTENT_KEY => +'' }
         @hash_stack = [@hash]
       end
 
@@ -33,7 +33,7 @@ module ActiveSupport
       end
 
       def on_start_element(name, attrs = {})
-        new_hash = { CONTENT_KEY => +"" }.merge!(attrs)
+        new_hash = { CONTENT_KEY => +'' }.merge!(attrs)
         new_hash[HASH_SIZE_KEY] = new_hash.size + 1
 
         case current_hash[name]
@@ -45,10 +45,8 @@ module ActiveSupport
         @hash_stack.push(new_hash)
       end
 
-      def on_end_element(name)
-        if current_hash.length > current_hash.delete(HASH_SIZE_KEY) && current_hash[CONTENT_KEY].blank? || current_hash[CONTENT_KEY] == ""
-          current_hash.delete(CONTENT_KEY)
-        end
+      def on_end_element(_name)
+        current_hash.delete(CONTENT_KEY) if current_hash.length > current_hash.delete(HASH_SIZE_KEY) && current_hash[CONTENT_KEY].blank? || current_hash[CONTENT_KEY] == ''
         @hash_stack.pop
       end
 
@@ -56,16 +54,14 @@ module ActiveSupport
         current_hash[CONTENT_KEY] << string
       end
 
-      alias_method :on_cdata_block, :on_characters
+      alias on_cdata_block on_characters
     end
 
     attr_accessor :document_class
     self.document_class = HashBuilder
 
     def parse(data)
-      if !data.respond_to?(:read)
-        data = StringIO.new(data || "")
-      end
+      data = StringIO.new(data || '') unless data.respond_to?(:read)
 
       if data.eof?
         {}

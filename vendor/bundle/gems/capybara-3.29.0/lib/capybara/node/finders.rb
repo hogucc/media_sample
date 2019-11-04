@@ -260,7 +260,7 @@ module Capybara
           Result.new([], nil)
         end
       end
-      alias_method :find_all, :all
+      alias find_all all
 
       ##
       #
@@ -281,7 +281,7 @@ module Capybara
         all(*args, options, &optional_filter_block).first
       end
 
-    private
+      private
 
       def synced_resolve(query)
         synchronize(query.wait) do
@@ -300,15 +300,15 @@ module Capybara
       end
 
       def ambiguous?(query, result)
-        %i[one smart].include?(query.match) && (result.size > 1)
+        [:one, :smart].include?(query.match) && (result.size > 1)
       end
 
       def prefer_exact?(query)
-        %i[smart prefer_exact].include?(query.match)
+        [:smart, :prefer_exact].include?(query.match)
       end
 
       def options_include_minimum?(opts)
-        %i[count minimum between].any? { |key| opts.key?(key) }
+        [:count, :minimum, :between].any? { |key| opts.key?(key) }
       end
 
       def parent

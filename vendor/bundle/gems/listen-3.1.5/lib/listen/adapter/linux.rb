@@ -2,7 +2,7 @@ module Listen
   module Adapter
     # @see https://github.com/nex3/rb-inotify
     class Linux < Base
-      OS_REGEXP = /linux/i
+      OS_REGEXP = /linux/i.freeze
 
       DEFAULTS = {
         events: [
@@ -50,9 +50,7 @@ module Listen
         _log(:debug) { "inotify: #{rel_path} (#{event.flags.inspect})" }
 
         if /1|true/ =~ ENV['LISTEN_GEM_SIMULATE_FSEVENT']
-          if (event.flags & [:moved_to, :moved_from]) || _dir_event?(event)
-            rel_path = path.dirname.relative_path_from(dir).to_s
-          end
+          rel_path = path.dirname.relative_path_from(dir).to_s if (event.flags & [:moved_to, :moved_from]) || _dir_event?(event)
           _queue_change(:dir, dir, rel_path, {})
           return
         end
@@ -76,6 +74,7 @@ module Listen
       def _skip_event?(event)
         # Event on root directory
         return true if event.name == ''
+
         # INotify reports changes to files inside directories as events
         # on the directories themselves too.
         #
@@ -84,11 +83,11 @@ module Listen
       end
 
       def _change(event_flags)
-        { modified:   [:attrib, :close_write],
-          moved_to:   [:moved_to],
+        { modified: [:attrib, :close_write],
+          moved_to: [:moved_to],
           moved_from: [:moved_from],
-          added:      [:create],
-          removed:    [:delete] }.each do |change, flags|
+          added: [:create],
+          removed: [:delete] }.each do |change, flags|
           return change unless (flags & event_flags).empty?
         end
         nil
@@ -99,7 +98,7 @@ module Listen
       end
 
       def _stop
-        @worker && @worker.close
+        @worker&.close
       end
     end
   end

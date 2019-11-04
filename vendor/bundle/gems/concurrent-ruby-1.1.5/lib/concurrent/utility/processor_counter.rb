@@ -3,7 +3,6 @@ require 'concurrent/delay'
 
 module Concurrent
   module Utility
-
     # @!visibility private
     class ProcessorCounter
       def initialize
@@ -77,69 +76,71 @@ module Concurrent
         if Concurrent.on_jruby?
           java.lang.Runtime.getRuntime.availableProcessors
         else
-          os_name = RbConfig::CONFIG["target_os"]
+          os_name = RbConfig::CONFIG['target_os']
           if os_name =~ /mingw|mswin/
             require 'win32ole'
-            result = WIN32OLE.connect("winmgmts://").ExecQuery(
-              "select NumberOfLogicalProcessors from Win32_Processor")
+            result = WIN32OLE.connect('winmgmts://').ExecQuery(
+              'select NumberOfLogicalProcessors from Win32_Processor'
+            )
             result.to_enum.collect(&:NumberOfLogicalProcessors).reduce(:+)
-          elsif File.readable?("/proc/cpuinfo") && (cpuinfo_count = IO.read("/proc/cpuinfo").scan(/^processor/).size) > 0
+          elsif File.readable?('/proc/cpuinfo') && (cpuinfo_count = IO.read('/proc/cpuinfo').scan(/^processor/).size) > 0
             cpuinfo_count
-          elsif File.executable?("/usr/bin/nproc")
-            IO.popen("/usr/bin/nproc --all", &:read).to_i
-          elsif File.executable?("/usr/bin/hwprefs")
-            IO.popen("/usr/bin/hwprefs thread_count", &:read).to_i
-          elsif File.executable?("/usr/sbin/psrinfo")
-            IO.popen("/usr/sbin/psrinfo", &:read).scan(/^.*on-*line/).size
-          elsif File.executable?("/usr/sbin/ioscan")
-            IO.popen("/usr/sbin/ioscan -kC processor", &:read).scan(/^.*processor/).size
-          elsif File.executable?("/usr/sbin/pmcycles")
-            IO.popen("/usr/sbin/pmcycles -m", &:read).count("\n")
-          elsif File.executable?("/usr/sbin/lsdev")
-            IO.popen("/usr/sbin/lsdev -Cc processor -S 1", &:read).count("\n")
-          elsif File.executable?("/usr/sbin/sysconf") and os_name =~ /irix/i
-            IO.popen("/usr/sbin/sysconf NPROC_ONLN", &:read).to_i
-          elsif File.executable?("/usr/sbin/sysctl")
-            IO.popen("/usr/sbin/sysctl -n hw.ncpu", &:read).to_i
-          elsif File.executable?("/sbin/sysctl")
-            IO.popen("/sbin/sysctl -n hw.ncpu", &:read).to_i
+          elsif File.executable?('/usr/bin/nproc')
+            IO.popen('/usr/bin/nproc --all', &:read).to_i
+          elsif File.executable?('/usr/bin/hwprefs')
+            IO.popen('/usr/bin/hwprefs thread_count', &:read).to_i
+          elsif File.executable?('/usr/sbin/psrinfo')
+            IO.popen('/usr/sbin/psrinfo', &:read).scan(/^.*on-*line/).size
+          elsif File.executable?('/usr/sbin/ioscan')
+            IO.popen('/usr/sbin/ioscan -kC processor', &:read).scan(/^.*processor/).size
+          elsif File.executable?('/usr/sbin/pmcycles')
+            IO.popen('/usr/sbin/pmcycles -m', &:read).count("\n")
+          elsif File.executable?('/usr/sbin/lsdev')
+            IO.popen('/usr/sbin/lsdev -Cc processor -S 1', &:read).count("\n")
+          elsif File.executable?('/usr/sbin/sysconf') && os_name =~ /irix/i
+            IO.popen('/usr/sbin/sysconf NPROC_ONLN', &:read).to_i
+          elsif File.executable?('/usr/sbin/sysctl')
+            IO.popen('/usr/sbin/sysctl -n hw.ncpu', &:read).to_i
+          elsif File.executable?('/sbin/sysctl')
+            IO.popen('/sbin/sysctl -n hw.ncpu', &:read).to_i
           else
-            # TODO (pitr-ch 05-Nov-2016): warn about failures
+            # TODO: (pitr-ch 05-Nov-2016): warn about failures
             1
           end
         end
-      rescue
-        return 1
+      rescue StandardError
+        1
       end
 
       def compute_physical_processor_count
-        ppc = case RbConfig::CONFIG["target_os"]
+        ppc = case RbConfig::CONFIG['target_os']
               when /darwin1/
-                IO.popen("/usr/sbin/sysctl -n hw.physicalcpu", &:read).to_i
+                IO.popen('/usr/sbin/sysctl -n hw.physicalcpu', &:read).to_i
               when /linux/
                 cores = {} # unique physical ID / core ID combinations
                 phy   = 0
-                IO.read("/proc/cpuinfo").scan(/^physical id.*|^core id.*/) do |ln|
-                  if ln.start_with?("physical")
+                IO.read('/proc/cpuinfo').scan(/^physical id.*|^core id.*/) do |ln|
+                  if ln.start_with?('physical')
                     phy = ln[/\d+/]
-                  elsif ln.start_with?("core")
-                    cid        = phy + ":" + ln[/\d+/]
-                    cores[cid] = true if not cores[cid]
+                  elsif ln.start_with?('core')
+                    cid        = phy + ':' + ln[/\d+/]
+                    cores[cid] = true unless cores[cid]
                   end
                 end
                 cores.count
               when /mswin|mingw/
                 require 'win32ole'
-                result_set = WIN32OLE.connect("winmgmts://").ExecQuery(
-                  "select NumberOfCores from Win32_Processor")
+                result_set = WIN32OLE.connect('winmgmts://').ExecQuery(
+                  'select NumberOfCores from Win32_Processor'
+                )
                 result_set.to_enum.collect(&:NumberOfCores).reduce(:+)
               else
                 processor_count
               end
         # fall back to logical count if physical info is invalid
         ppc > 0 ? ppc : processor_count
-      rescue
-        return 1
+      rescue StandardError
+        1
       end
     end
   end

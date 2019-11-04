@@ -25,7 +25,7 @@ module URI
     # params like "key=first_value&key=last_value" key will only be last_value.
     #
     # Read the documentation for +parse+, +create+ and +build+ for more.
-    alias :app :host
+    alias app host
     attr_reader :model_name, :model_id, :params
 
     # Raised when creating a Global ID for a model without an id
@@ -85,9 +85,7 @@ module URI
         parts[:host] = parts[:app]
         parts[:path] = "/#{parts[:model_name]}/#{CGI.escape(parts[:model_id].to_s)}"
 
-        if parts[:params] && !parts[:params].empty?
-          parts[:query] = URI.encode_www_form(parts[:params])
-        end
+        parts[:query] = URI.encode_www_form(parts[:params]) if parts[:params] && !parts[:params].empty?
 
         super parts
       end
@@ -99,78 +97,80 @@ module URI
     end
 
     protected
-      def set_path(path)
-        set_model_components(path) unless defined?(@model_name) && @model_id
-        super
-      end
 
-      # Ruby 2.2 uses #query= instead of #set_query
-      def query=(query)
-        set_params parse_query_params(query)
-        super
-      end
+    def set_path(path)
+      set_model_components(path) unless defined?(@model_name) && @model_id
+      super
+    end
 
-      # Ruby 2.1 or less uses #set_query to assign the query
-      def set_query(query)
-        set_params parse_query_params(query)
-        super
-      end
+    # Ruby 2.2 uses #query= instead of #set_query
+    def query=(query)
+      set_params parse_query_params(query)
+      super
+    end
 
-      def set_params(params)
-        @params = params
-      end
+    # Ruby 2.1 or less uses #set_query to assign the query
+    def set_query(query)
+      set_params parse_query_params(query)
+      super
+    end
+
+    def set_params(params)
+      @params = params
+    end
 
     private
-      COMPONENT = [ :scheme, :app, :model_name, :model_id, :params ].freeze
 
-      # Extracts model_name and model_id from the URI path.
-      PATH_REGEXP = %r(\A/([^/]+)/?([^/]+)?\z)
+    COMPONENT = [:scheme, :app, :model_name, :model_id, :params].freeze
 
-      def check_host(host)
-        validate_component(host)
+    # Extracts model_name and model_id from the URI path.
+    PATH_REGEXP = %r{\A/([^/]+)/?([^/]+)?\z}.freeze
+
+    def check_host(host)
+      validate_component(host)
+      super
+    end
+
+    def check_path(path)
+      validate_component(path)
+      set_model_components(path, true)
+    end
+
+    def check_scheme(scheme)
+      if scheme == 'gid'
         super
+      else
+        raise URI::BadURIError, "Not a gid:// URI scheme: #{inspect}"
       end
+    end
 
-      def check_path(path)
-        validate_component(path)
-        set_model_components(path, true)
-      end
+    def set_model_components(path, validate = false)
+      _, model_name, model_id = path.match(PATH_REGEXP).to_a
+      model_id = CGI.unescape(model_id) if model_id
 
-      def check_scheme(scheme)
-        if scheme == 'gid'
-          super
-        else
-          raise URI::BadURIError, "Not a gid:// URI scheme: #{inspect}"
-        end
-      end
+      validate_component(model_name) && validate_model_id(model_id, model_name) if validate
 
-      def set_model_components(path, validate = false)
-        _, model_name, model_id = path.match(PATH_REGEXP).to_a
-        model_id = CGI.unescape(model_id) if model_id
+      @model_name = model_name
+      @model_id = model_id
+    end
 
-        validate_component(model_name) && validate_model_id(model_id, model_name) if validate
+    def validate_component(component)
+      return component unless component.blank?
 
-        @model_name = model_name
-        @model_id = model_id
-      end
+      raise URI::InvalidComponentError,
+            "Expected a URI like gid://app/Person/1234: #{inspect}"
+    end
 
-      def validate_component(component)
-        return component unless component.blank?
+    def validate_model_id(model_id, model_name)
+      return model_id unless model_id.blank?
 
-        raise URI::InvalidComponentError,
-          "Expected a URI like gid://app/Person/1234: #{inspect}"
-      end
+      raise MissingModelIdError, 'Unable to create a Global ID for ' \
+        "#{model_name} without a model id."
+    end
 
-      def validate_model_id(model_id, model_name)
-        return model_id unless model_id.blank?
-
-        raise MissingModelIdError, "Unable to create a Global ID for " \
-          "#{model_name} without a model id."
-      end
-
-      def parse_query_params(query)
-        Hash[URI.decode_www_form(query)].with_indifferent_access if query
-      end
+    def parse_query_params(query)
+      Hash[URI.decode_www_form(query)].with_indifferent_access if query
+    end
   end
 
   @@schemes['GID'] = GID

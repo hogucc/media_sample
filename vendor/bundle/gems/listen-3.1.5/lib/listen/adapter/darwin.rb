@@ -1,4 +1,3 @@
-require 'thread'
 require 'listen/internals/thread_pool'
 
 module Listen
@@ -6,7 +5,7 @@ module Listen
     # Adapter implementation for Mac OS X `FSEvents`.
     #
     class Darwin < Base
-      OS_REGEXP = /darwin(?<major_version>1\d+)/i
+      OS_REGEXP = /darwin(?<major_version>1\d+)/i.freeze
 
       # The default delay between checking for changes.
       DEFAULTS = { latency: 0.1 }.freeze
@@ -29,6 +28,7 @@ module Listen
 
         fsevent_version = Gem::Version.new(FSEvent::VERSION)
         return true if fsevent_version <= Gem::Version.new('0.9.4')
+
         Kernel.warn INCOMPATIBLE_GEM_VERSION
         false
       end
@@ -69,7 +69,7 @@ module Listen
       def _run_worker(worker)
         _log :debug, "fsevent: running worker: #{worker.inspect}"
         worker.run
-      rescue
+      rescue StandardError
         format_string = 'fsevent: running worker failed: %s:%s called from: %s'
         _log_exception format_string, caller
       end

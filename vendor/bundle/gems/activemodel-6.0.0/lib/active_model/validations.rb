@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "active_support/core_ext/array/extract_options"
+require 'active_support/core_ext/array/extract_options'
 
 module ActiveModel
   # == Active \Model \Validations
@@ -155,7 +155,7 @@ module ActiveModel
         if args.all? { |arg| arg.is_a?(Symbol) }
           options.each_key do |k|
             unless VALID_OPTIONS_FOR_VALIDATE.include?(k)
-              raise ArgumentError.new("Unknown key: #{k.inspect}. Valid keys are: #{VALID_OPTIONS_FOR_VALIDATE.map(&:inspect).join(', ')}. Perhaps you meant to call `validates` instead of `validate`?")
+              raise ArgumentError, "Unknown key: #{k.inspect}. Valid keys are: #{VALID_OPTIONS_FOR_VALIDATE.map(&:inspect).join(', ')}. Perhaps you meant to call `validates` instead of `validate`?"
             end
           end
         end
@@ -164,7 +164,7 @@ module ActiveModel
           options = options.dup
           options[:on] = Array(options[:on])
           options[:if] = Array(options[:if])
-          options[:if].unshift ->(o) {
+          options[:if].unshift lambda { |o|
             !(options[:on] & Array(o.validation_context)).empty?
           }
         end
@@ -332,14 +332,15 @@ module ActiveModel
     #   person.valid?       # => true
     #   person.valid?(:new) # => false
     def valid?(context = nil)
-      current_context, self.validation_context = validation_context, context
+      current_context = validation_context
+      self.validation_context = context
       errors.clear
       run_validations!
     ensure
       self.validation_context = current_context
     end
 
-    alias_method :validate, :valid?
+    alias validate valid?
 
     # Performs the opposite of <tt>valid?</tt>. Returns +true+ if errors were
     # added, +false+ otherwise.
@@ -399,9 +400,9 @@ module ActiveModel
     #       @data[key]
     #     end
     #   end
-    alias :read_attribute_for_validation :send
+    alias read_attribute_for_validation send
 
-  private
+    private
 
     def run_validations!
       _run_validate_callbacks
@@ -409,7 +410,7 @@ module ActiveModel
     end
 
     def raise_validation_error # :doc:
-      raise(ValidationError.new(self))
+      raise ValidationError, self
     end
   end
 
@@ -428,10 +429,10 @@ module ActiveModel
 
     def initialize(model)
       @model = model
-      errors = @model.errors.full_messages.join(", ")
+      errors = @model.errors.full_messages.join(', ')
       super(I18n.t(:"#{@model.class.i18n_scope}.errors.messages.model_invalid", errors: errors, default: :"errors.messages.model_invalid"))
     end
   end
 end
 
-Dir[File.expand_path("validations/*.rb", __dir__)].each { |file| require file }
+Dir[File.expand_path('validations/*.rb', __dir__)].each { |file| require file }

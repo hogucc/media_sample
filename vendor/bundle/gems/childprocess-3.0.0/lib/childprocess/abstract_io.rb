@@ -28,9 +28,8 @@ module ChildProcess
 
     private
 
-    def check_type(io)
-      raise SubclassResponsibility, "check_type"
+    def check_type(_io)
+      raise SubclassResponsibility, 'check_type'
     end
-
   end
 end

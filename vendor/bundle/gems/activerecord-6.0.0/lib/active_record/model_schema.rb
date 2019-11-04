@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "monitor"
+require 'monitor'
 
 module ActiveRecord
   module ModelSchema
@@ -120,15 +120,15 @@ module ActiveRecord
     included do
       mattr_accessor :primary_key_prefix_type, instance_writer: false
 
-      class_attribute :table_name_prefix, instance_writer: false, default: ""
-      class_attribute :table_name_suffix, instance_writer: false, default: ""
-      class_attribute :schema_migrations_table_name, instance_accessor: false, default: "schema_migrations"
-      class_attribute :internal_metadata_table_name, instance_accessor: false, default: "ar_internal_metadata"
+      class_attribute :table_name_prefix, instance_writer: false, default: ''
+      class_attribute :table_name_suffix, instance_writer: false, default: ''
+      class_attribute :schema_migrations_table_name, instance_accessor: false, default: 'schema_migrations'
+      class_attribute :internal_metadata_table_name, instance_accessor: false, default: 'ar_internal_metadata'
       class_attribute :pluralize_table_names, instance_writer: false, default: true
       class_attribute :implicit_order_column, instance_accessor: false
 
-      self.protected_environments = ["production"]
-      self.inheritance_column = "type"
+      self.protected_environments = ['production']
+      self.inheritance_column = 'type'
       self.ignored_columns = [].freeze
 
       delegate :type_for_attribute, to: :class
@@ -144,7 +144,7 @@ module ActiveRecord
     #   records, artists => artists_records
     #   music_artists, music_records => music_artists_records
     def self.derive_join_table_name(first_table, second_table) # :nodoc:
-      [first_table.to_s, second_table.to_s].sort.join("\0").gsub(/^(.*_)(.+)\0\1(.+)/, '\1\2_\3').tr("\0", "_")
+      [first_table.to_s, second_table.to_s].sort.join("\0").gsub(/^(.*_)(.+)\0\1(.+)/, '\1\2_\3').tr("\0", '_')
     end
 
     module ClassMethods
@@ -203,10 +203,11 @@ module ActiveRecord
       #     self.table_name = "project"
       #   end
       def table_name=(value)
-        value = value && value.to_s
+        value = value&.to_s
 
         if defined?(@table_name)
           return if value == @table_name
+
           reset_column_information if connected?
         end
 
@@ -225,11 +226,11 @@ module ActiveRecord
       # Computes the table name, (re)sets it internally, and returns it.
       def reset_table_name #:nodoc:
         self.table_name = if abstract_class?
-          superclass == Base ? nil : superclass.table_name
-        elsif superclass.abstract_class?
-          superclass.table_name || compute_table_name
-        else
-          compute_table_name
+                            superclass == Base ? nil : superclass.table_name
+                          elsif superclass.abstract_class?
+                            superclass.table_name || compute_table_name
+                          else
+                            compute_table_name
         end
       end
 
@@ -414,9 +415,9 @@ module ActiveRecord
       def content_columns
         @content_columns ||= columns.reject do |c|
           c.name == primary_key ||
-          c.name == inheritance_column ||
-          c.name.end_with?("_id") ||
-          c.name.end_with?("_count")
+            c.name == inheritance_column ||
+            c.name.end_with?('_id') ||
+            c.name.end_with?('_count')
         end
       end
 
@@ -457,86 +458,87 @@ module ActiveRecord
 
       protected
 
-        def initialize_load_schema_monitor
-          @load_schema_monitor = Monitor.new
-        end
+      def initialize_load_schema_monitor
+        @load_schema_monitor = Monitor.new
+      end
 
       private
 
-        def inherited(child_class)
-          super
-          child_class.initialize_load_schema_monitor
+      def inherited(child_class)
+        super
+        child_class.initialize_load_schema_monitor
+      end
+
+      def schema_loaded?
+        defined?(@schema_loaded) && @schema_loaded
+      end
+
+      def load_schema
+        return if schema_loaded?
+
+        @load_schema_monitor.synchronize do
+          return if defined?(@columns_hash) && @columns_hash
+
+          load_schema!
+
+          @schema_loaded = true
         end
+      end
 
-        def schema_loaded?
-          defined?(@schema_loaded) && @schema_loaded
+      def load_schema!
+        @columns_hash = connection.schema_cache.columns_hash(table_name).except(*ignored_columns)
+        @columns_hash.each do |name, column|
+          define_attribute(
+            name,
+            connection.lookup_cast_type_from_column(column),
+            default: column.default,
+            user_provided_default: false
+          )
         end
+      end
 
-        def load_schema
-          return if schema_loaded?
-          @load_schema_monitor.synchronize do
-            return if defined?(@columns_hash) && @columns_hash
+      def reload_schema_from_cache
+        @arel_table = nil
+        @column_names = nil
+        @symbol_column_to_string_name_hash = nil
+        @attribute_types = nil
+        @content_columns = nil
+        @default_attributes = nil
+        @column_defaults = nil
+        @inheritance_column = nil unless defined?(@explicit_inheritance_column) && @explicit_inheritance_column
+        @attributes_builder = nil
+        @columns = nil
+        @columns_hash = nil
+        @schema_loaded = false
+        @attribute_names = nil
+        @yaml_encoder = nil
+        direct_descendants.each do |descendant|
+          descendant.send(:reload_schema_from_cache)
+        end
+      end
 
-            load_schema!
+      # Guesses the table name, but does not decorate it with prefix and suffix information.
+      def undecorated_table_name(class_name = base_class.name)
+        table_name = class_name.to_s.demodulize.underscore
+        pluralize_table_names ? table_name.pluralize : table_name
+      end
 
-            @schema_loaded = true
+      # Computes and returns a table name according to default conventions.
+      def compute_table_name
+        if base_class?
+          # Nested classes are prefixed with singular parent table name.
+          if module_parent < Base && !module_parent.abstract_class?
+            contained = module_parent.table_name
+            contained = contained.singularize if module_parent.pluralize_table_names
+            contained += '_'
           end
-        end
 
-        def load_schema!
-          @columns_hash = connection.schema_cache.columns_hash(table_name).except(*ignored_columns)
-          @columns_hash.each do |name, column|
-            define_attribute(
-              name,
-              connection.lookup_cast_type_from_column(column),
-              default: column.default,
-              user_provided_default: false
-            )
-          end
+          "#{full_table_name_prefix}#{contained}#{undecorated_table_name(name)}#{full_table_name_suffix}"
+        else
+          # STI subclasses always use their superclass' table.
+          base_class.table_name
         end
-
-        def reload_schema_from_cache
-          @arel_table = nil
-          @column_names = nil
-          @symbol_column_to_string_name_hash = nil
-          @attribute_types = nil
-          @content_columns = nil
-          @default_attributes = nil
-          @column_defaults = nil
-          @inheritance_column = nil unless defined?(@explicit_inheritance_column) && @explicit_inheritance_column
-          @attributes_builder = nil
-          @columns = nil
-          @columns_hash = nil
-          @schema_loaded = false
-          @attribute_names = nil
-          @yaml_encoder = nil
-          direct_descendants.each do |descendant|
-            descendant.send(:reload_schema_from_cache)
-          end
-        end
-
-        # Guesses the table name, but does not decorate it with prefix and suffix information.
-        def undecorated_table_name(class_name = base_class.name)
-          table_name = class_name.to_s.demodulize.underscore
-          pluralize_table_names ? table_name.pluralize : table_name
-        end
-
-        # Computes and returns a table name according to default conventions.
-        def compute_table_name
-          if base_class?
-            # Nested classes are prefixed with singular parent table name.
-            if module_parent < Base && !module_parent.abstract_class?
-              contained = module_parent.table_name
-              contained = contained.singularize if module_parent.pluralize_table_names
-              contained += "_"
-            end
-
-            "#{full_table_name_prefix}#{contained}#{undecorated_table_name(name)}#{full_table_name_suffix}"
-          else
-            # STI subclasses always use their superclass' table.
-            base_class.table_name
-          end
-        end
+      end
     end
   end
 end

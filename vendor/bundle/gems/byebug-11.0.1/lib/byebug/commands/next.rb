@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "byebug/command"
-require "byebug/helpers/parse"
+require 'byebug/command'
+require 'byebug/helpers/parse'
 
 module Byebug
   #
@@ -26,11 +26,11 @@ module Byebug
     end
 
     def self.short_description
-      "Runs one or more lines of code"
+      'Runs one or more lines of code'
     end
 
     def execute
-      steps, err = parse_steps(@match[1], "Next")
+      steps, err = parse_steps(@match[1], 'Next')
       return errmsg(err) unless steps
 
       context.step_over(steps, context.frame.pos)

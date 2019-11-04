@@ -69,7 +69,7 @@ class Capybara::Selenium::ChromeNode < Capybara::Selenium::Node
     end
   end
 
-private
+  private
 
   def perform_legacy_drag(element)
     return super if chromedriver_fixed_actions_key_state? || !w3c? || element.obscured?

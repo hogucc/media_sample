@@ -23,15 +23,15 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-require "active_record"
-require "active_support"
-require "active_support/rails"
-require "active_support/core_ext/numeric/time"
+require 'active_record'
+require 'active_support'
+require 'active_support/rails'
+require 'active_support/core_ext/numeric/time'
 
-require "active_storage/version"
-require "active_storage/errors"
+require 'active_storage/version'
+require 'active_storage/errors'
 
-require "marcel"
+require 'marcel'
 
 module ActiveStorage
   extend ActiveSupport::Autoload
@@ -53,13 +53,13 @@ module ActiveStorage
   mattr_accessor :paths, default: {}
 
   mattr_accessor :variable_content_types,           default: []
-  mattr_accessor :binary_content_type,              default: "application/octet-stream"
+  mattr_accessor :binary_content_type,              default: 'application/octet-stream'
   mattr_accessor :content_types_to_serve_as_binary, default: []
   mattr_accessor :content_types_allowed_inline,     default: []
 
   mattr_accessor :service_urls_expire_in, default: 5.minutes
 
-  mattr_accessor :routes_prefix, default: "/rails/active_storage"
+  mattr_accessor :routes_prefix, default: '/rails/active_storage'
 
   mattr_accessor :replace_on_assign_to_many, default: false
 

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "active_record/explain_registry"
+require 'active_record/explain_registry'
 
 module ActiveRecord
   module Explain
@@ -20,7 +20,7 @@ module ActiveRecord
       str = queries.map do |sql, binds|
         msg = +"EXPLAIN for: #{sql}"
         unless binds.empty?
-          msg << " "
+          msg << ' '
           msg << binds.map { |attr| render_bind(attr) }.inspect
         end
         msg << "\n"
@@ -37,14 +37,14 @@ module ActiveRecord
 
     private
 
-      def render_bind(attr)
-        value = if attr.type.binary? && attr.value
-          "<#{attr.value_for_database.to_s.bytesize} bytes of binary data>"
-        else
-          connection.type_cast(attr.value_for_database)
-        end
-
-        [attr.name, value]
+    def render_bind(attr)
+      value = if attr.type.binary? && attr.value
+                "<#{attr.value_for_database.to_s.bytesize} bytes of binary data>"
+              else
+                connection.type_cast(attr.value_for_database)
       end
+
+      [attr.name, value]
+    end
   end
 end

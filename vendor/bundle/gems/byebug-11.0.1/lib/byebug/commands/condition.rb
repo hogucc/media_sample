@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "byebug/command"
-require "byebug/helpers/parse"
+require 'byebug/command'
+require 'byebug/helpers/parse'
 
 module Byebug
   #
@@ -32,22 +32,22 @@ module Byebug
     end
 
     def self.short_description
-      "Sets conditions on breakpoints"
+      'Sets conditions on breakpoints'
     end
 
     def execute
       return puts(help) unless @match[1]
 
       breakpoints = Byebug.breakpoints.sort_by(&:id)
-      return errmsg(pr("condition.errors.no_breakpoints")) if breakpoints.empty?
+      return errmsg(pr('condition.errors.no_breakpoints')) if breakpoints.empty?
 
-      pos, err = get_int(@match[1], "Condition", 1)
+      pos, err = get_int(@match[1], 'Condition', 1)
       return errmsg(err) if err
 
       breakpoint = breakpoints.find { |b| b.id == pos }
-      return errmsg(pr("break.errors.no_breakpoint")) unless breakpoint
+      return errmsg(pr('break.errors.no_breakpoint')) unless breakpoint
 
-      return errmsg(pr("break.errors.not_changed", expr: @match[2])) unless syntax_valid?(@match[2])
+      return errmsg(pr('break.errors.not_changed', expr: @match[2])) unless syntax_valid?(@match[2])
 
       breakpoint.expr = @match[2]
     end

@@ -22,28 +22,28 @@ module ActionDispatch
     #   headers["X_Custom_Header"] # => nil
     #   headers["X-Custom-Header"] # => "token"
     class Headers
-      CGI_VARIABLES = Set.new(%W[
-        AUTH_TYPE
-        CONTENT_LENGTH
-        CONTENT_TYPE
-        GATEWAY_INTERFACE
-        HTTPS
-        PATH_INFO
-        PATH_TRANSLATED
-        QUERY_STRING
-        REMOTE_ADDR
-        REMOTE_HOST
-        REMOTE_IDENT
-        REMOTE_USER
-        REQUEST_METHOD
-        SCRIPT_NAME
-        SERVER_NAME
-        SERVER_PORT
-        SERVER_PROTOCOL
-        SERVER_SOFTWARE
-      ]).freeze
+      CGI_VARIABLES = Set.new(%w[
+                                AUTH_TYPE
+                                CONTENT_LENGTH
+                                CONTENT_TYPE
+                                GATEWAY_INTERFACE
+                                HTTPS
+                                PATH_INFO
+                                PATH_TRANSLATED
+                                QUERY_STRING
+                                REMOTE_ADDR
+                                REMOTE_HOST
+                                REMOTE_IDENT
+                                REMOTE_USER
+                                REQUEST_METHOD
+                                SCRIPT_NAME
+                                SERVER_NAME
+                                SERVER_PORT
+                                SERVER_PROTOCOL
+                                SERVER_SOFTWARE
+                              ]).freeze
 
-      HTTP_HEADER = /\A[A-Za-z0-9-]+\z/
+      HTTP_HEADER = /\A[A-Za-z0-9-]+\z/.freeze
 
       include Enumerable
 
@@ -73,7 +73,7 @@ module ActionDispatch
       def key?(key)
         @req.has_header? env_name(key)
       end
-      alias :include? :key?
+      alias include? key?
 
       DEFAULT = Object.new # :nodoc:
 
@@ -88,6 +88,7 @@ module ActionDispatch
         @req.fetch_header(env_name(key)) do
           return default unless default == DEFAULT
           return yield if block_given?
+
           raise KeyError, key
         end
       end
@@ -113,20 +114,22 @@ module ActionDispatch
         end
       end
 
-      def env; @req.env.dup; end
+      def env
+        @req.env.dup
+      end
 
       private
 
-        # Converts an HTTP header name to an environment variable name if it is
-        # not contained within the headers hash.
-        def env_name(key)
-          key = key.to_s
-          if HTTP_HEADER.match?(key)
-            key = key.upcase.tr("-", "_")
-            key = "HTTP_" + key unless CGI_VARIABLES.include?(key)
-          end
-          key
+      # Converts an HTTP header name to an environment variable name if it is
+      # not contained within the headers hash.
+      def env_name(key)
+        key = key.to_s
+        if HTTP_HEADER.match?(key)
+          key = key.upcase.tr('-', '_')
+          key = 'HTTP_' + key unless CGI_VARIABLES.include?(key)
         end
+        key
+      end
     end
   end
 end

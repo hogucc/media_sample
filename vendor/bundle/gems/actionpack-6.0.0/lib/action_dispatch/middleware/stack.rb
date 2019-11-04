@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "active_support/inflector/methods"
-require "active_support/dependencies"
+require 'active_support/inflector/methods'
+require 'active_support/dependencies'
 
 module ActionDispatch
   class MiddlewareStack
@@ -14,7 +14,9 @@ module ActionDispatch
         @block = block
       end
 
-      def name; klass.name; end
+      def name
+        klass.name
+      end
 
       def ==(middleware)
         case middleware
@@ -46,13 +48,13 @@ module ActionDispatch
     # It proxies the `call` method transparently and instruments the method
     # call.
     class InstrumentationProxy
-      EVENT_NAME = "process_middleware.action_dispatch"
+      EVENT_NAME = 'process_middleware.action_dispatch'
 
       def initialize(middleware, class_name)
         @middleware = middleware
 
         @payload = {
-          middleware: class_name,
+          middleware: class_name
         }
       end
 
@@ -67,7 +69,7 @@ module ActionDispatch
 
     attr_accessor :middlewares
 
-    def initialize(*args)
+    def initialize(*_args)
       @middlewares = []
       yield(self) if block_given?
     end
@@ -101,7 +103,7 @@ module ActionDispatch
       middlewares.insert(index, build_middleware(klass, args, block))
     end
 
-    alias_method :insert_before, :insert
+    alias insert_before insert
 
     def insert_after(index, *args, &block)
       index = assert_index(index, :after)
@@ -135,14 +137,15 @@ module ActionDispatch
 
     private
 
-      def assert_index(index, where)
-        i = index.is_a?(Integer) ? index : middlewares.index { |m| m.klass == index }
-        raise "No such middleware to insert #{where}: #{index.inspect}" unless i
-        i
-      end
+    def assert_index(index, where)
+      i = index.is_a?(Integer) ? index : middlewares.index { |m| m.klass == index }
+      raise "No such middleware to insert #{where}: #{index.inspect}" unless i
 
-      def build_middleware(klass, args, block)
-        Middleware.new(klass, args, block)
-      end
+      i
+    end
+
+    def build_middleware(klass, args, block)
+      Middleware.new(klass, args, block)
+    end
   end
 end

@@ -1,18 +1,18 @@
 # frozen_string_literal: true
 
-gem "minitest" # make sure we get the gem, not stdlib
-require "minitest"
-require "active_support/testing/tagged_logging"
-require "active_support/testing/setup_and_teardown"
-require "active_support/testing/assertions"
-require "active_support/testing/deprecation"
-require "active_support/testing/declarative"
-require "active_support/testing/isolation"
-require "active_support/testing/constant_lookup"
-require "active_support/testing/time_helpers"
-require "active_support/testing/file_fixtures"
-require "active_support/testing/parallelization"
-require "concurrent/utility/processor_counter"
+gem 'minitest' # make sure we get the gem, not stdlib
+require 'minitest'
+require 'active_support/testing/tagged_logging'
+require 'active_support/testing/setup_and_teardown'
+require 'active_support/testing/assertions'
+require 'active_support/testing/deprecation'
+require 'active_support/testing/declarative'
+require 'active_support/testing/isolation'
+require 'active_support/testing/constant_lookup'
+require 'active_support/testing/time_helpers'
+require 'active_support/testing/file_fixtures'
+require 'active_support/testing/parallelization'
+require 'concurrent/utility/processor_counter'
 
 module ActiveSupport
   class TestCase < ::Minitest::Test
@@ -73,7 +73,7 @@ module ActiveSupport
       # The processes parallelization uses a Ruby DRb server.
       def parallelize(workers: :number_of_processors, with: :processes)
         workers = Concurrent.physical_processor_count if workers == :number_of_processors
-        workers = ENV["PARALLEL_WORKERS"].to_i if ENV["PARALLEL_WORKERS"]
+        workers = ENV['PARALLEL_WORKERS'].to_i if ENV['PARALLEL_WORKERS']
 
         return if workers <= 1
 
@@ -86,7 +86,7 @@ module ActiveSupport
                      raise ArgumentError, "#{with} is not a supported parallelization executor."
         end
 
-        self.lock_threads = false if defined?(self.lock_threads) && with == :threads
+        self.lock_threads = false if defined?(lock_threads) && with == :threads
 
         Minitest.parallel_executor = executor
 
@@ -106,7 +106,7 @@ module ActiveSupport
       #       # create databases
       #     end
       #   end
-      def parallelize_setup(&block)
+      def parallelize_setup
         ActiveSupport::Testing::Parallelization.after_fork_hook do |worker|
           yield worker
         end
@@ -125,14 +125,14 @@ module ActiveSupport
       #       # drop databases
       #     end
       #   end
-      def parallelize_teardown(&block)
+      def parallelize_teardown
         ActiveSupport::Testing::Parallelization.run_cleanup_hook do |worker|
           yield worker
         end
       end
     end
 
-    alias_method :method_name, :name
+    alias method_name name
 
     include ActiveSupport::Testing::TaggedLogging
     prepend ActiveSupport::Testing::SetupAndTeardown
@@ -143,20 +143,20 @@ module ActiveSupport
     extend ActiveSupport::Testing::Declarative
 
     # test/unit backwards compatibility methods
-    alias :assert_raise :assert_raises
-    alias :assert_not_empty :refute_empty
-    alias :assert_not_equal :refute_equal
-    alias :assert_not_in_delta :refute_in_delta
-    alias :assert_not_in_epsilon :refute_in_epsilon
-    alias :assert_not_includes :refute_includes
-    alias :assert_not_instance_of :refute_instance_of
-    alias :assert_not_kind_of :refute_kind_of
-    alias :assert_no_match :refute_match
-    alias :assert_not_nil :refute_nil
-    alias :assert_not_operator :refute_operator
-    alias :assert_not_predicate :refute_predicate
-    alias :assert_not_respond_to :refute_respond_to
-    alias :assert_not_same :refute_same
+    alias assert_raise assert_raises
+    alias assert_not_empty refute_empty
+    alias assert_not_equal refute_equal
+    alias assert_not_in_delta refute_in_delta
+    alias assert_not_in_epsilon refute_in_epsilon
+    alias assert_not_includes refute_includes
+    alias assert_not_instance_of refute_instance_of
+    alias assert_not_kind_of refute_kind_of
+    alias assert_no_match refute_match
+    alias assert_not_nil refute_nil
+    alias assert_not_operator refute_operator
+    alias assert_not_predicate refute_predicate
+    alias assert_not_respond_to refute_respond_to
+    alias assert_not_same refute_same
 
     ActiveSupport.run_load_hooks(:active_support_test_case, self)
   end

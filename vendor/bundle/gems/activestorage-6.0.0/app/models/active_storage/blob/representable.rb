@@ -38,7 +38,6 @@ module ActiveStorage::Blob::Representable
     ActiveStorage.variable_content_types.include?(content_type)
   end
 
-
   # Returns an ActiveStorage::Preview instance with the set of +transformations+ provided. A preview is an image generated
   # from a non-image blob. Active Storage comes with built-in previewers for videos and PDF documents. The video previewer
   # extracts the first frame from a video and the PDF previewer extracts the first page from a PDF document.
@@ -66,7 +65,6 @@ module ActiveStorage::Blob::Representable
     ActiveStorage.previewers.any? { |klass| klass.accept?(self) }
   end
 
-
   # Returns an ActiveStorage::Preview for a previewable blob or an ActiveStorage::Variant for a variable image blob.
   #
   #   blob.representation(resize_to_limit: [100, 100]).processed.service_url
@@ -76,10 +74,9 @@ module ActiveStorage::Blob::Representable
   #
   # See ActiveStorage::Blob#preview and ActiveStorage::Blob#variant for more information.
   def representation(transformations)
-    case
-    when previewable?
+    if previewable?
       preview transformations
-    when variable?
+    elsif variable?
       variant transformations
     else
       raise ActiveStorage::UnrepresentableError

@@ -41,12 +41,12 @@ module ActiveRecord
       end
 
       def rollback!
-        @children.each { |c| c.rollback! }
+        @children.each(&:rollback!)
         @state = :rolledback
       end
 
       def full_rollback!
-        @children.each { |c| c.rollback! }
+        @children.each(&:rollback!)
         @state = :fully_rolledback
       end
 
@@ -65,10 +65,21 @@ module ActiveRecord
 
     class NullTransaction #:nodoc:
       def initialize; end
+
       def state; end
-      def closed?; true; end
-      def open?; false; end
-      def joinable?; false; end
+
+      def closed?
+        true
+      end
+
+      def open?
+        false
+      end
+
+      def joinable?
+        false
+      end
+
       def add_record(record); end
     end
 
@@ -134,10 +145,21 @@ module ActiveRecord
         ite.each { |i| i.committed!(should_run_callbacks: false) }
       end
 
-      def full_rollback?; true; end
-      def joinable?; @joinable; end
-      def closed?; false; end
-      def open?; !closed?; end
+      def full_rollback?
+        true
+      end
+
+      def joinable?
+        @joinable
+      end
+
+      def closed?
+        false
+      end
+
+      def open?
+        !closed?
+      end
     end
 
     class SavepointTransaction < Transaction
@@ -146,9 +168,7 @@ module ActiveRecord
 
         parent_transaction.state.add_child(@state)
 
-        if isolation_level
-          raise ActiveRecord::TransactionIsolationError, "cannot set transaction isolation in a nested transaction"
-        end
+        raise ActiveRecord::TransactionIsolationError, 'cannot set transaction isolation in a nested transaction' if isolation_level
 
         @savepoint_name = savepoint_name
       end
@@ -168,7 +188,9 @@ module ActiveRecord
         @state.commit!
       end
 
-      def full_rollback?; false; end
+      def full_rollback?
+        false
+      end
     end
 
     class RealTransaction < Transaction
@@ -278,15 +300,15 @@ module ActiveRecord
         @connection.lock.synchronize do
           transaction = begin_transaction options
           yield
-        rescue Exception => error
+        rescue Exception => e
           if transaction
             rollback_transaction
-            after_failure_actions(transaction, error)
+            after_failure_actions(transaction, e)
           end
           raise
         ensure
           if !error && transaction
-            if Thread.current.status == "aborting"
+            if Thread.current.status == 'aborting'
               rollback_transaction
             else
               begin
@@ -310,14 +332,15 @@ module ActiveRecord
 
       private
 
-        NULL_TRANSACTION = NullTransaction.new
+      NULL_TRANSACTION = NullTransaction.new
 
-        # Deallocate invalidated prepared statements outside of the transaction
-        def after_failure_actions(transaction, error)
-          return unless transaction.is_a?(RealTransaction)
-          return unless error.is_a?(ActiveRecord::PreparedStatementCacheExpired)
-          @connection.clear_cache!
-        end
+      # Deallocate invalidated prepared statements outside of the transaction
+      def after_failure_actions(transaction, error)
+        return unless transaction.is_a?(RealTransaction)
+        return unless error.is_a?(ActiveRecord::PreparedStatementCacheExpired)
+
+        @connection.clear_cache!
+      end
     end
   end
 end

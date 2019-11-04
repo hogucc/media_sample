@@ -44,7 +44,7 @@ RSpec.shared_examples 'Capybara::Session' do |session, mode|
         skip 'Not setup for edge' if edge?(session)
 
         system(env, 'rspec spec/fixtures/selenium_driver_rspec_failure.rb', out: File::NULL, err: File::NULL)
-        expect($CHILD_STATUS.exitstatus).to eq(1)
+        expect($?.exitstatus).to eq(1)
       end
 
       it 'should have return code 0 when running selenium_driver_rspec_success.rb' do
@@ -52,7 +52,7 @@ RSpec.shared_examples 'Capybara::Session' do |session, mode|
         skip 'Not setup for edge' if edge?(session)
 
         system(env, 'rspec spec/fixtures/selenium_driver_rspec_success.rb', out: File::NULL, err: File::NULL)
-        expect($CHILD_STATUS.exitstatus).to eq(0)
+        expect($?.exitstatus).to eq(0)
       end
     end
 
@@ -309,7 +309,9 @@ RSpec.shared_examples 'Capybara::Session' do |session, mode|
       it 'can attach a directory' do
         pending "Geckodriver doesn't support uploading a directory" if firefox?(session)
         pending "Selenium remote doesn't support transferring a directory" if remote?(session)
-        pending "Headless Chrome doesn't support directory upload - https://bugs.chromium.org/p/chromedriver/issues/detail?id=2521&q=directory%20upload&colspec=ID%20Status%20Pri%20Owner%20Summary" if chrome?(session) && ENV['HEADLESS']
+        if chrome?(session) && ENV['HEADLESS']
+          pending "Headless Chrome doesn't support directory upload - https://bugs.chromium.org/p/chromedriver/issues/detail?id=2521&q=directory%20upload&colspec=ID%20Status%20Pri%20Owner%20Summary"
+        end
         pending "IE doesn't support uploading a directory" if ie?(session)
         pending 'Chrome/chromedriver 73 breaks this' if chrome?(session) && chrome_gte?(73, session) && chrome_lt?(75, session)
         pending "Safari doesn't support uploading a directory" if safari?(session)
@@ -339,11 +341,9 @@ RSpec.shared_examples 'Capybara::Session' do |session, mode|
         end.to raise_error(ArgumentError, 'Not allowed to close the primary window')
       end
     end
-
-    # rubocop:disable RSpec/InstanceVariable
     describe 'Capybara#disable_animation' do
       context 'when set to `true`' do
-        before(:context) do # rubocop:disable RSpec/BeforeAfterAll
+        before(:context) do
           skip "Safari doesn't support multiple sessions" if safari?(session)
           # NOTE: Although Capybara.SpecHelper.reset! sets Capybara.disable_animation to false,
           # it doesn't affect any of these tests because the settings are applied per-session
@@ -371,7 +371,7 @@ RSpec.shared_examples 'Capybara::Session' do |session, mode|
       end
 
       context 'if we pass in css that matches elements' do
-        before(:context) do # rubocop:disable RSpec/BeforeAfterAll
+        before(:context) do
           skip "safaridriver doesn't support multiple sessions" if safari?(session)
           # NOTE: Although Capybara.SpecHelper.reset! sets Capybara.disable_animation to false,
           # it doesn't affect any of these tests because the settings are applied per-session
@@ -393,7 +393,7 @@ RSpec.shared_examples 'Capybara::Session' do |session, mode|
       end
 
       context 'if we pass in css that does not match elements' do
-        before(:context) do # rubocop:disable RSpec/BeforeAfterAll
+        before(:context) do
           skip "Safari doesn't support multiple sessions" if safari?(session)
           # NOTE: Although Capybara.SpecHelper.reset! sets Capybara.disable_animation to false,
           # it doesn't affect any of these tests because the settings are applied per-session
@@ -418,7 +418,6 @@ RSpec.shared_examples 'Capybara::Session' do |session, mode|
         end
       end
     end
-    # rubocop:enable RSpec/InstanceVariable
 
     describe ':element selector' do
       it 'can find html5 svg elements' do

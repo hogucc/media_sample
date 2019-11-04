@@ -18,21 +18,24 @@ module ActionMailbox::InboundEmail::MessageId
       message_id = extract_message_id(source) || generate_missing_message_id(message_checksum)
 
       create! options.merge(message_id: message_id, message_checksum: message_checksum) do |inbound_email|
-        inbound_email.raw_email.attach io: StringIO.new(source), filename: "message.eml", content_type: "message/rfc822"
+        inbound_email.raw_email.attach io: StringIO.new(source), filename: 'message.eml', content_type: 'message/rfc822'
       end
     rescue ActiveRecord::RecordNotUnique
       nil
     end
 
     private
-      def extract_message_id(source)
-        Mail.from_source(source).message_id rescue nil
-      end
 
-      def generate_missing_message_id(message_checksum)
-        Mail::MessageIdField.new("<#{message_checksum}@#{::Socket.gethostname}.mail>").message_id.tap do |message_id|
-          logger.warn "Message-ID couldn't be parsed or is missing. Generated a new Message-ID: #{message_id}"
-        end
+    def extract_message_id(source)
+      Mail.from_source(source).message_id
+    rescue StandardError
+      nil
+    end
+
+    def generate_missing_message_id(message_checksum)
+      Mail::MessageIdField.new("<#{message_checksum}@#{::Socket.gethostname}.mail>").message_id.tap do |message_id|
+        logger.warn "Message-ID couldn't be parsed or is missing. Generated a new Message-ID: #{message_id}"
       end
+    end
   end
 end

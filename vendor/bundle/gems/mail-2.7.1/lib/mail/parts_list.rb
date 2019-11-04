@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 require 'delegate'
 
 module Mail
@@ -34,14 +35,14 @@ module Mail
         to_a
       end
     end
-    alias_method :map, :collect
+    alias map collect
 
     def map!
-      raise NoMethodError, "#map! is not defined, please call #collect and create a new PartsList"
+      raise NoMethodError, '#map! is not defined, please call #collect and create a new PartsList'
     end
 
     def collect!
-      raise NoMethodError, "#collect! is not defined, please call #collect and create a new PartsList"
+      raise NoMethodError, '#collect! is not defined, please call #collect and create a new PartsList'
     end
 
     def sort
@@ -50,7 +51,7 @@ module Mail
 
     def sort!(order)
       # stable sort should be used to maintain the relative order as the parts are added
-      i = 0;
+      i = 0
       sorted = @parts.sort_by do |a|
         # OK, 10000 is arbitrary... if anyone actually wants to explicitly sort 10000 parts of a
         # single email message... please show me a use case and I'll put more work into this method,
@@ -61,14 +62,13 @@ module Mail
       sorted.each { |p| @parts << p }
     end
 
-  private
+    private
 
     def get_order_value(part, order)
       is_attachment = part.respond_to?(:attachment?) && part.attachment?
       has_content_type = part.respond_to?(:content_type) && !part[:content_type].nil?
 
-      [is_attachment ? 1 : 0, (has_content_type ? order.index(part[:content_type].string.downcase) : nil) || 10000]
+      [is_attachment ? 1 : 0, (has_content_type ? order.index(part[:content_type].string.downcase) : nil) || 10_000]
     end
-
   end
 end

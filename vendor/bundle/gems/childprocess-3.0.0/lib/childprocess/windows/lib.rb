@@ -65,7 +65,8 @@ module ChildProcess
         :pointer,
         :pointer,
         :pointer,
-        :pointer], :bool
+        :pointer
+      ], :bool
 
       #
       #   DWORD WINAPI FormatMessage(
@@ -86,8 +87,8 @@ module ChildProcess
         :ulong,
         :pointer,
         :ulong,
-        :pointer], :ulong
-
+        :pointer
+      ], :ulong
 
       attach_function :close_handle, :CloseHandle, [:pointer], :bool
 
@@ -137,7 +138,7 @@ module ChildProcess
       # );
       #
 
-      attach_function :wait_for_single_object, :WaitForSingleObject, [:pointer, :ulong], :wait_status, :blocking => true
+      attach_function :wait_for_single_object, :WaitForSingleObject, [:pointer, :ulong], :wait_status, blocking: true
 
       #
       # BOOL WINAPI GetExitCodeProcess(
@@ -264,9 +265,7 @@ module ChildProcess
         end
 
         def dont_inherit(file)
-          unless file.respond_to?(:fileno)
-            raise ArgumentError, "expected #{file.inspect} to respond to :fileno"
-          end
+          raise ArgumentError, "expected #{file.inspect} to respond to :fileno" unless file.respond_to?(:fileno)
 
           set_handle_inheritance(handle_for(file.fileno), false)
         end
@@ -289,7 +288,7 @@ module ChildProcess
           end
         end
 
-        def each_child_of(pid, &blk)
+        def each_child_of(_pid)
           raise NotImplementedError
 
           # http://stackoverflow.com/questions/1173342/terminate-a-process-tree-c-for-windows?rq=1
@@ -302,38 +301,32 @@ module ChildProcess
         end
 
         def handle_for(fd_or_io)
-          if fd_or_io.kind_of?(IO) || fd_or_io.respond_to?(:fileno)
-            if ChildProcess.jruby?
-              handle = ChildProcess::JRuby.windows_handle_for(fd_or_io)
-            else
-              handle = get_osfhandle(fd_or_io.fileno)
-            end
-          elsif fd_or_io.kind_of?(Integer)
+          if fd_or_io.is_a?(IO) || fd_or_io.respond_to?(:fileno)
+            handle = if ChildProcess.jruby?
+                       ChildProcess::JRuby.windows_handle_for(fd_or_io)
+                     else
+                       get_osfhandle(fd_or_io.fileno)
+                     end
+          elsif fd_or_io.is_a?(Integer)
             handle = get_osfhandle(fd_or_io)
           elsif fd_or_io.respond_to?(:to_io)
             io = fd_or_io.to_io
 
-            unless io.kind_of?(IO)
-              raise TypeError, "expected #to_io to return an instance of IO"
-            end
+            raise TypeError, 'expected #to_io to return an instance of IO' unless io.is_a?(IO)
 
             handle = get_osfhandle(io.fileno)
           else
             raise TypeError, "invalid type: #{fd_or_io.inspect}"
           end
 
-          if handle == INVALID_HANDLE_VALUE
-            raise Error, last_error_message
-          end
+          raise Error, last_error_message if handle == INVALID_HANDLE_VALUE
 
           FFI::Pointer.new handle
         end
 
         def io_for(handle, flags = File::RDONLY)
           fd = open_osfhandle(handle, flags)
-          if fd == -1
-            raise Error, last_error_message
-          end
+          raise Error, last_error_message if fd == -1
 
           FFI::IO.for_fd fd, flags
         end
@@ -383,7 +376,7 @@ module ChildProcess
         end
 
         def check_error(bool)
-          bool or raise Error, last_error_message
+          bool || raise(Error, last_error_message)
         end
 
         def alive?(pid)
@@ -402,15 +395,14 @@ module ChildProcess
         end
 
         def wait_for_pid(pid, no_hang)
-          code = Handle.open(pid) { |handle|
+          code = Handle.open(pid) do |handle|
             handle.wait unless no_hang
             handle.exit_code
-          }
+          end
 
           code if code != PROCESS_STILL_ACTIVE
         end
       end
-
     end # Lib
   end # Windows
 end # ChildProcess

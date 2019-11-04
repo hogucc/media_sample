@@ -1,14 +1,12 @@
 # Ruby integration with Autoprefixer JS library, which parse CSS and adds
 # only actual prefixed
 module AutoprefixerRails
-  autoload :Sprockets, "autoprefixer-rails/sprockets"
+  autoload :Sprockets, 'autoprefixer-rails/sprockets'
 
   # Add prefixes to `css`. See `Processor#process` for options.
   def self.process(css, opts = {})
     params = {}
-    if opts.key?(:overrideBrowserslist)
-      params[:overrideBrowserslist] = opts.delete(:overrideBrowserslist)
-    end
+    params[:overrideBrowserslist] = opts.delete(:overrideBrowserslist) if opts.key?(:overrideBrowserslist)
     params[:browsers] = opts.delete(:browsers) if opts.key?(:browsers)
     params[:cascade]  = opts.delete(:cascade)  if opts.key?(:cascade)
     params[:remove]   = opts.delete(:remove)   if opts.key?(:remove)
@@ -34,8 +32,8 @@ module AutoprefixerRails
   end
 end
 
-require_relative "autoprefixer-rails/result"
-require_relative "autoprefixer-rails/version"
-require_relative "autoprefixer-rails/processor"
+require_relative 'autoprefixer-rails/result'
+require_relative 'autoprefixer-rails/version'
+require_relative 'autoprefixer-rails/processor'
 
-require_relative "autoprefixer-rails/railtie" if defined?(Rails)
+require_relative 'autoprefixer-rails/railtie' if defined?(Rails)

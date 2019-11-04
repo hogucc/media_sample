@@ -5,7 +5,9 @@ module ActiveStorage
     attr_reader :name, :record, :attachables
 
     def initialize(name, record, attachables)
-      @name, @record, @attachables = name, record, Array(attachables)
+      @name = name
+      @record = record
+      @attachables = Array(attachables)
     end
 
     def attachments
@@ -26,21 +28,21 @@ module ActiveStorage
     end
 
     private
-      def subchanges
-        @subchanges ||= attachables.collect { |attachable| build_subchange_from(attachable) }
-      end
 
-      def build_subchange_from(attachable)
-        ActiveStorage::Attached::Changes::CreateOneOfMany.new(name, record, attachable)
-      end
+    def subchanges
+      @subchanges ||= attachables.collect { |attachable| build_subchange_from(attachable) }
+    end
 
+    def build_subchange_from(attachable)
+      ActiveStorage::Attached::Changes::CreateOneOfMany.new(name, record, attachable)
+    end
 
-      def assign_associated_attachments
-        record.public_send("#{name}_attachments=", attachments)
-      end
+    def assign_associated_attachments
+      record.public_send("#{name}_attachments=", attachments)
+    end
 
-      def reset_associated_blobs
-        record.public_send("#{name}_blobs").reset
-      end
+    def reset_associated_blobs
+      record.public_send("#{name}_blobs").reset
+    end
   end
 end

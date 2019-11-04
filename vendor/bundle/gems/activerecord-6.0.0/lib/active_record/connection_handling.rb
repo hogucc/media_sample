@@ -2,8 +2,8 @@
 
 module ActiveRecord
   module ConnectionHandling
-    RAILS_ENV   = -> { (Rails.env if defined?(Rails.env)) || ENV["RAILS_ENV"].presence || ENV["RACK_ENV"].presence }
-    DEFAULT_ENV = -> { RAILS_ENV.call || "default_env" }
+    RAILS_ENV   = -> { (Rails.env if defined?(Rails.env)) || ENV['RAILS_ENV'].presence || ENV['RACK_ENV'].presence }
+    DEFAULT_ENV = -> { RAILS_ENV.call || 'default_env' }
 
     # Establishes the connection to the database. Accepts a hash as input where
     # the <tt>:adapter</tt> key must be specified with the name of a database adapter (in lower-case)
@@ -116,7 +116,7 @@ module ActiveRecord
     # When using the database key a new connection will be established every time.
     def connected_to(database: nil, role: nil, &blk)
       if database && role
-        raise ArgumentError, "connected_to can only accept a `database` or a `role` argument, but not both arguments."
+        raise ArgumentError, 'connected_to can only accept a `database` or a `role` argument, but not both arguments.'
       elsif database
         if database.is_a?(Hash)
           role, database = database.first
@@ -132,7 +132,7 @@ module ActiveRecord
       elsif role
         with_handler(role.to_sym, &blk)
       else
-        raise ArgumentError, "must provide a `database` or a `role`."
+        raise ArgumentError, 'must provide a `database` or a `role`.'
       end
     end
 
@@ -170,10 +170,10 @@ module ActiveRecord
     end
 
     def resolve_config_for_connection(config_or_env) # :nodoc:
-      raise "Anonymous class is not allowed." unless name
+      raise 'Anonymous class is not allowed.' unless name
 
       config_or_env ||= DEFAULT_ENV.call.to_sym
-      pool_name = primary_class? ? "primary" : name
+      pool_name = primary_class? ? 'primary' : name
       self.connection_specification_name = pool_name
 
       resolver = ConnectionAdapters::ConnectionSpecification::Resolver.new(Base.configurations)
@@ -204,8 +204,9 @@ module ActiveRecord
     # Return the specification name from the current class or its parent.
     def connection_specification_name
       if !defined?(@connection_specification_name) || @connection_specification_name.nil?
-        return primary_class? ? "primary" : superclass.connection_specification_name
+        return primary_class? ? 'primary' : superclass.connection_specification_name
       end
+
       @connection_specification_name
     end
 
@@ -241,9 +242,7 @@ module ActiveRecord
       # if removing a connection that has a pool, we reset the
       # connection_specification_name so it will use the parent
       # pool.
-      if connection_handler.retrieve_connection_pool(name)
-        self.connection_specification_name = nil
-      end
+      self.connection_specification_name = nil if connection_handler.retrieve_connection_pool(name)
 
       connection_handler.remove_connection(name)
     end
@@ -253,15 +252,16 @@ module ActiveRecord
     end
 
     delegate :clear_active_connections!, :clear_reloadable_connections!,
-      :clear_all_connections!, :flush_idle_connections!, to: :connection_handler
+             :clear_all_connections!, :flush_idle_connections!, to: :connection_handler
 
     private
 
-      def swap_connection_handler(handler, &blk) # :nodoc:
-        old_handler, ActiveRecord::Base.connection_handler = ActiveRecord::Base.connection_handler, handler
-        yield
-      ensure
-        ActiveRecord::Base.connection_handler = old_handler
-      end
+    def swap_connection_handler(handler) # :nodoc:
+      old_handler = ActiveRecord::Base.connection_handler
+      ActiveRecord::Base.connection_handler = handler
+      yield
+    ensure
+      ActiveRecord::Base.connection_handler = old_handler
+    end
   end
 end

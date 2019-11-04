@@ -2,7 +2,7 @@ module Skiptrace
   module FlatFixture
     def self.call
       raise
-    rescue => exc
+    rescue StandardError => e
       exc
     end
   end

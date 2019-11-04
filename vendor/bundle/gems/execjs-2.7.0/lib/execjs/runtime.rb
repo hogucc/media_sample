@@ -1,4 +1,4 @@
-require "execjs/encoding"
+require 'execjs/encoding'
 
 module ExecJS
   # Abstract base class for runtimes
@@ -6,18 +6,17 @@ module ExecJS
     class Context
       include Encoding
 
-      def initialize(runtime, source = "", options = {})
-      end
+      def initialize(runtime, source = '', options = {}); end
 
-      def exec(source, options = {})
+      def exec(_source, _options = {})
         raise NotImplementedError
       end
 
-      def eval(source, options = {})
+      def eval(_source, _options = {})
         raise NotImplementedError
       end
 
-      def call(properties, *args)
+      def call(_properties, *_args)
         raise NotImplementedError
       end
     end
@@ -31,7 +30,7 @@ module ExecJS
     end
 
     def exec(source, options = {})
-      context = compile("", options)
+      context = compile('', options)
 
       if context.method(:exec).arity == 1
         context.exec(source)
@@ -41,7 +40,7 @@ module ExecJS
     end
 
     def eval(source, options = {})
-      context = compile("", options)
+      context = compile('', options)
 
       if context.method(:eval).arity == 1
         context.eval(source)

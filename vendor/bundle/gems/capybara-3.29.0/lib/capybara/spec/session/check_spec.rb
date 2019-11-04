@@ -136,7 +136,8 @@ Capybara::SpecHelper.spec '#check' do
   context 'when checkbox hidden' do
     context 'with Capybara.automatic_label_click == true' do
       around do |spec|
-        old_click_label, Capybara.automatic_label_click = Capybara.automatic_label_click, true
+        old_click_label = Capybara.automatic_label_click
+        Capybara.automatic_label_click = true
         spec.run
         Capybara.automatic_label_click = old_click_label
       end
@@ -187,7 +188,8 @@ Capybara::SpecHelper.spec '#check' do
 
     context 'with Capybara.automatic_label_click == false' do
       around do |spec|
-        old_label_click, Capybara.automatic_label_click = Capybara.automatic_label_click, false
+        old_label_click = Capybara.automatic_label_click
+        Capybara.automatic_label_click = false
         spec.run
         Capybara.automatic_label_click = old_label_click
       end

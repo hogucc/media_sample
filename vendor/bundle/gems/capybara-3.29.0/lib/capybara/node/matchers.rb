@@ -199,12 +199,10 @@ module Capybara
         selector = extract_selector(args)
         synchronize(wait) do
           res = args.map do |locator|
-            begin
-              assert_selector(selector, locator, options, &optional_filter_block)
-              break nil
-            rescue Capybara::ExpectationNotMet => e
-              e.message
-            end
+            assert_selector(selector, locator, options, &optional_filter_block)
+            break nil
+          rescue Capybara::ExpectationNotMet => e
+            e.message
           end
           raise Capybara::ExpectationNotMet, res.join(' or ') if res
 
@@ -230,9 +228,7 @@ module Capybara
       #
       def assert_no_selector(*args, &optional_filter_block)
         _verify_selector_result(args, optional_filter_block) do |result, query|
-          if result.matches_count? && (!result.empty? || query.expects_none?)
-            raise Capybara::ExpectationNotMet, result.negative_failure_message
-          end
+          raise Capybara::ExpectationNotMet, result.negative_failure_message if result.matches_count? && (!result.empty? || query.expects_none?)
         end
       end
 
@@ -672,9 +668,7 @@ module Capybara
       #
       def assert_text(*args)
         _verify_text(args) do |count, query|
-          unless query.matches_count?(count) && (count.positive? || query.expects_none?)
-            raise Capybara::ExpectationNotMet, query.failure_message
-          end
+          raise Capybara::ExpectationNotMet, query.failure_message unless query.matches_count?(count) && (count.positive? || query.expects_none?)
         end
       end
 
@@ -688,9 +682,7 @@ module Capybara
       #
       def assert_no_text(*args)
         _verify_text(args) do |count, query|
-          if query.matches_count?(count) && (count.positive? || query.expects_none?)
-            raise Capybara::ExpectationNotMet, query.negative_failure_message
-          end
+          raise Capybara::ExpectationNotMet, query.negative_failure_message if query.matches_count?(count) && (count.positive? || query.expects_none?)
         end
       end
 
@@ -711,7 +703,7 @@ module Capybara
       def has_text?(*args, **options)
         make_predicate(options) { assert_text(*args, options) }
       end
-      alias_method :has_content?, :has_text?
+      alias has_content? has_text?
 
       ##
       # Checks if the page or current node does not have the given text
@@ -723,7 +715,7 @@ module Capybara
       def has_no_text?(*args, **options)
         make_predicate(options) { assert_no_text(*args, options) }
       end
-      alias_method :has_no_content?, :has_no_text?
+      alias has_no_content? has_no_text?
 
       ##
       #
@@ -744,9 +736,7 @@ module Capybara
 
       def assert_no_ancestor(*args, &optional_filter_block)
         _verify_selector_result(args, optional_filter_block, Capybara::Queries::AncestorQuery) do |result, query|
-          if result.matches_count? && (!result.empty? || query.expects_none?)
-            raise Capybara::ExpectationNotMet, result.negative_failure_message
-          end
+          raise Capybara::ExpectationNotMet, result.negative_failure_message if result.matches_count? && (!result.empty? || query.expects_none?)
         end
       end
 
@@ -785,9 +775,7 @@ module Capybara
 
       def assert_no_sibling(*args, &optional_filter_block)
         _verify_selector_result(args, optional_filter_block, Capybara::Queries::SiblingQuery) do |result, query|
-          if result.matches_count? && (!result.empty? || query.expects_none?)
-            raise Capybara::ExpectationNotMet, result.negative_failure_message
-          end
+          raise Capybara::ExpectationNotMet, result.negative_failure_message if result.matches_count? && (!result.empty? || query.expects_none?)
         end
       end
 
@@ -811,7 +799,7 @@ module Capybara
         eql?(other) || (other.respond_to?(:base) && base == other.base)
       end
 
-    private
+      private
 
       def extract_selector(args)
         args.first.is_a?(Symbol) ? args.shift : session_options.default_selector

@@ -11,7 +11,7 @@ module Enumerable
 
   # We can't use Refinements here because Refinements with Module which will be prepended
   # doesn't work well https://bugs.ruby-lang.org/issues/13446
-  alias :_original_sum_with_required_identity :sum
+  alias _original_sum_with_required_identity sum
   private :_original_sum_with_required_identity
 
   # :startdoc:
@@ -171,7 +171,7 @@ end
 # Using Refinements here in order not to expose our internal method
 using Module.new {
   refine Array do
-    alias :orig_sum :sum
+    alias_method :orig_sum, :sum
   end
 }
 

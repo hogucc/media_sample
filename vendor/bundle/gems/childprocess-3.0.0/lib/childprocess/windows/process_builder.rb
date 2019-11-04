@@ -5,7 +5,7 @@ module ChildProcess
       attr_reader :stdin
 
       def initialize(args)
-        @args        = args
+        @args = args
 
         @detach      = false
         @duplex      = false
@@ -43,23 +43,21 @@ module ChildProcess
         newstr = str + "\0".encode(str.encoding)
         newstr.encode!('UTF-16LE')
       end
-      
+
       def create_command_pointer
         string = @args.map { |arg| quote_if_necessary(arg.to_s) }.join(' ')
         @cmd_ptr = to_wide_string(string)
       end
 
       def create_environment_pointer
-        return unless @environment.kind_of?(Hash) && @environment.any?
+        return unless @environment.is_a?(Hash) && @environment.any?
 
         strings = []
 
         ENV.to_hash.merge(@environment).each do |key, val|
           next if val.nil?
 
-          if key.to_s =~ /=|\0/ || val.to_s.include?("\0")
-            raise InvalidEnvironmentVariable, "#{key.inspect} => #{val.inspect}"
-          end
+          raise InvalidEnvironmentVariable, "#{key.inspect} => #{val.inspect}" if key.to_s =~ /=|\0/ || val.to_s.include?("\0")
 
           strings << "#{key}=#{val}\0"
         end
@@ -86,7 +84,7 @@ module ChildProcess
           process_info  # process info
         )
 
-        ok or raise LaunchError, Lib.last_error_message
+        ok || raise(LaunchError, Lib.last_error_message)
 
         process_info[:dwProcessId]
       end
@@ -109,18 +107,14 @@ module ChildProcess
         startup_info[:dwFlags] ||= 0
         startup_info[:dwFlags] |= STARTF_USESTDHANDLES
 
-        if @stdout
-          startup_info[:hStdOutput] = std_stream_handle_for(@stdout)
-        end
+        startup_info[:hStdOutput] = std_stream_handle_for(@stdout) if @stdout
 
-        if @stderr
-          startup_info[:hStdError] = std_stream_handle_for(@stderr)
-        end
+        startup_info[:hStdError] = std_stream_handle_for(@stderr) if @stderr
 
         if @duplex
           read_pipe_ptr  = FFI::MemoryPointer.new(:pointer)
           write_pipe_ptr = FFI::MemoryPointer.new(:pointer)
-          sa             = SecurityAttributes.new(:inherit => true)
+          sa             = SecurityAttributes.new(inherit: true)
 
           ok = Lib.create_pipe(read_pipe_ptr, write_pipe_ptr, sa, 0)
           Lib.check_error ok

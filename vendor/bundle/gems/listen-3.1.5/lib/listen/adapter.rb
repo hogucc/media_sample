@@ -15,14 +15,16 @@ module Listen
       def select(options = {})
         _log :debug, 'Adapter: considering polling ...'
         return Polling if options[:force_polling]
+
         _log :debug, 'Adapter: considering optimized backend...'
         return _usable_adapter_class if _usable_adapter_class
+
         _log :debug, 'Adapter: falling back to polling...'
         _warn_polling_fallback(options)
         Polling
-      rescue
-        _log :warn, format('Adapter: failed: %s:%s', $ERROR_POSITION.inspect,
-                           $ERROR_POSITION * "\n")
+      rescue StandardError
+        _log :warn, format('Adapter: failed: %s:%s', $@.inspect,
+                           $@ * "\n")
         raise
       end
 

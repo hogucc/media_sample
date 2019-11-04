@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "active_support/callbacks"
+require 'active_support/callbacks'
 
 module ActiveSupport
   module Testing
@@ -44,8 +44,8 @@ module ActiveSupport
       def after_teardown # :nodoc:
         begin
           run_callbacks :teardown
-        rescue => e
-          self.failures << Minitest::UnexpectedError.new(e)
+        rescue StandardError => e
+          failures << Minitest::UnexpectedError.new(e)
         end
 
         super

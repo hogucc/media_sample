@@ -1,18 +1,18 @@
-require "foreman/vendor/thor/lib/thor"
-require "foreman/vendor/thor/lib/thor/group"
-require "foreman/vendor/thor/lib/thor/core_ext/io_binary_read"
+require 'foreman/vendor/thor/lib/thor'
+require 'foreman/vendor/thor/lib/thor/group'
+require 'foreman/vendor/thor/lib/thor/core_ext/io_binary_read'
 
-require "fileutils"
-require "open-uri"
-require "yaml"
-require "digest/md5"
-require "pathname"
+require 'fileutils'
+require 'open-uri'
+require 'yaml'
+require 'digest/md5'
+require 'pathname'
 
 class Foreman::Thor::Runner < Foreman::Thor #:nodoc: # rubocop:disable ClassLength
-  map "-T" => :list, "-i" => :install, "-u" => :update, "-v" => :version
+  map '-T' => :list, '-i' => :install, '-u' => :update, '-v' => :version
 
   def self.banner(command, all = false, subcommand = false)
-    "thor " + command.formatted_usage(self, all, subcommand)
+    'thor ' + command.formatted_usage(self, all, subcommand)
   end
 
   def self.exit_on_failure?
@@ -26,7 +26,7 @@ class Foreman::Thor::Runner < Foreman::Thor #:nodoc: # rubocop:disable ClassLeng
       initialize_thorfiles(meth)
       klass, command = Foreman::Thor::Util.find_class_and_command_by_namespace(meth)
       self.class.handle_no_command_error(command, false) if klass.nil?
-      klass.start(["-h", command].compact, :shell => shell)
+      klass.start(['-h', command].compact, shell: shell)
     else
       super
     end
@@ -41,11 +41,11 @@ class Foreman::Thor::Runner < Foreman::Thor #:nodoc: # rubocop:disable ClassLeng
     klass, command = Foreman::Thor::Util.find_class_and_command_by_namespace(meth)
     self.class.handle_no_command_error(command, false) if klass.nil?
     args.unshift(command) if command
-    klass.start(args, :shell => shell)
+    klass.start(args, shell: shell)
   end
 
-  desc "install NAME", "Install an optionally named Foreman::Thor file into your system commands"
-  method_options :as => :string, :relative => :boolean, :force => :boolean
+  desc 'install NAME', 'Install an optionally named Foreman::Thor file into your system commands'
+  method_options as: :string, relative: :boolean, force: :boolean
   def install(name) # rubocop:disable MethodLength
     initialize_thorfiles
 
@@ -53,7 +53,7 @@ class Foreman::Thor::Runner < Foreman::Thor #:nodoc: # rubocop:disable ClassLeng
     # command in said directory.
     begin
       if File.directory?(File.expand_path(name))
-        base = File.join(name, "main.thor")
+        base = File.join(name, 'main.thor')
         package = :directory
         contents = open(base, &:read)
       else
@@ -67,14 +67,14 @@ class Foreman::Thor::Runner < Foreman::Thor #:nodoc: # rubocop:disable ClassLeng
       raise Error, "Error opening file '#{name}'"
     end
 
-    say "Your Foreman::Thorfile contains:"
+    say 'Your Foreman::Thorfile contains:'
     say contents
 
-    unless options["force"]
-      return false if no?("Do you wish to continue [y/N]?")
+    unless options['force']
+      return false if no?('Do you wish to continue [y/N]?')
     end
 
-    as = options["as"] || begin
+    as = options['as'] || begin
       first_line = contents.split("\n")[0]
       (match = first_line.match(/\s*#\s*module:\s*([^\n]*)/)) ? match[1].strip : nil
     end
@@ -86,23 +86,23 @@ class Foreman::Thor::Runner < Foreman::Thor #:nodoc: # rubocop:disable ClassLeng
     end
 
     location = if options[:relative] || name =~ %r{^https?://}
-      name
-    else
-      File.expand_path(name)
+                 name
+               else
+                 File.expand_path(name)
     end
 
     thor_yaml[as] = {
-      :filename   => Digest::MD5.hexdigest(name + as),
-      :location   => location,
-      :namespaces => Foreman::Thor::Util.namespaces_in_content(contents, base)
+      filename: Digest::MD5.hexdigest(name + as),
+      location: location,
+      namespaces: Foreman::Thor::Util.namespaces_in_content(contents, base)
     }
 
     save_yaml(thor_yaml)
-    say "Storing thor file in your system repository"
+    say 'Storing thor file in your system repository'
     destination = File.join(thor_root, thor_yaml[as][:filename])
 
     if package == :file
-      File.open(destination, "w") { |f| f.puts contents }
+      File.open(destination, 'w') { |f| f.puts contents }
     else
       FileUtils.cp_r(name, destination)
     end
@@ -110,32 +110,33 @@ class Foreman::Thor::Runner < Foreman::Thor #:nodoc: # rubocop:disable ClassLeng
     thor_yaml[as][:filename] # Indicate success
   end
 
-  desc "version", "Show Foreman::Thor version"
+  desc 'version', 'Show Foreman::Thor version'
   def version
-    require "foreman/vendor/thor/lib/thor/version"
+    require 'foreman/vendor/thor/lib/thor/version'
     say "Foreman::Thor #{Foreman::Thor::VERSION}"
   end
 
-  desc "uninstall NAME", "Uninstall a named Foreman::Thor module"
+  desc 'uninstall NAME', 'Uninstall a named Foreman::Thor module'
   def uninstall(name)
     raise Error, "Can't find module '#{name}'" unless thor_yaml[name]
+
     say "Uninstalling #{name}."
     FileUtils.rm_rf(File.join(thor_root, (thor_yaml[name][:filename]).to_s))
 
     thor_yaml.delete(name)
     save_yaml(thor_yaml)
 
-    puts "Done."
+    puts 'Done.'
   end
 
-  desc "update NAME", "Update a Foreman::Thor file from its original location"
+  desc 'update NAME', 'Update a Foreman::Thor file from its original location'
   def update(name)
     raise Error, "Can't find module '#{name}'" if !thor_yaml[name] || !thor_yaml[name][:location]
 
     say "Updating '#{name}' from #{thor_yaml[name][:location]}"
 
     old_filename = thor_yaml[name][:filename]
-    self.options = options.merge("as" => name)
+    self.options = options.merge('as' => name)
 
     if File.directory? File.expand_path(name)
       FileUtils.rm_rf(File.join(thor_root, old_filename))
@@ -151,21 +152,21 @@ class Foreman::Thor::Runner < Foreman::Thor #:nodoc: # rubocop:disable ClassLeng
     File.delete(File.join(thor_root, old_filename)) unless filename == old_filename
   end
 
-  desc "installed", "List the installed Foreman::Thor modules and commands"
-  method_options :internal => :boolean
+  desc 'installed', 'List the installed Foreman::Thor modules and commands'
+  method_options internal: :boolean
   def installed
     initialize_thorfiles(nil, true)
-    display_klasses(true, options["internal"])
+    display_klasses(true, options['internal'])
   end
 
-  desc "list [SEARCH]", "List the available thor commands (--substring means .*SEARCH)"
-  method_options :substring => :boolean, :group => :string, :all => :boolean, :debug => :boolean
-  def list(search = "")
+  desc 'list [SEARCH]', 'List the available thor commands (--substring means .*SEARCH)'
+  method_options substring: :boolean, group: :string, all: :boolean, debug: :boolean
+  def list(search = '')
     initialize_thorfiles
 
-    search = ".*#{search}" if options["substring"]
+    search = ".*#{search}" if options['substring']
     search = /^#{search}.*/i
-    group  = options[:group] || "standard"
+    group  = options[:group] || 'standard'
 
     klasses = Foreman::Thor::Base.subclasses.select do |k|
       (options[:all] || k.group == group) && k.namespace =~ search
@@ -174,7 +175,7 @@ class Foreman::Thor::Runner < Foreman::Thor #:nodoc: # rubocop:disable ClassLeng
     display_klasses(false, false, klasses)
   end
 
-private
+  private
 
   def thor_root
     Foreman::Thor::Util.thor_root
@@ -182,7 +183,7 @@ private
 
   def thor_yaml
     @thor_yaml ||= begin
-      yaml_file = File.join(thor_root, "thor.yml")
+      yaml_file = File.join(thor_root, 'thor.yml')
       yaml = YAML.load_file(yaml_file) if File.exist?(yaml_file)
       yaml || {}
     end
@@ -191,15 +192,15 @@ private
   # Save the yaml file. If none exists in thor root, creates one.
   #
   def save_yaml(yaml)
-    yaml_file = File.join(thor_root, "thor.yml")
+    yaml_file = File.join(thor_root, 'thor.yml')
 
     unless File.exist?(yaml_file)
       FileUtils.mkdir_p(thor_root)
-      yaml_file = File.join(thor_root, "thor.yml")
+      yaml_file = File.join(thor_root, 'thor.yml')
       FileUtils.touch(yaml_file)
     end
 
-    File.open(yaml_file, "w") { |f| f.puts yaml.to_yaml }
+    File.open(yaml_file, 'w') { |f| f.puts yaml.to_yaml }
   end
 
   # Load the Foreman::Thorfiles. If relevant_to is supplied, looks for specific files
@@ -252,7 +253,7 @@ private
     files -= ["#{thor_root}/thor.yml"]
 
     files.map! do |file|
-      File.directory?(file) ? File.join(file, "main.thor") : file
+      File.directory?(file) ? File.join(file, 'main.thor') : file
     end
   end
 
@@ -261,7 +262,7 @@ private
   # namespaces registered.
   #
   def thorfiles_relevant_to(meth)
-    lookup = [meth, meth.split(":")[0...-1].join(":")]
+    lookup = [meth, meth.split(':')[0...-1].join(':')]
 
     files = thor_yaml.select do |_, v|
       v[:namespaces] && !(v[:namespaces] & lookup).empty?
@@ -276,21 +277,22 @@ private
   def display_klasses(with_modules = false, show_internal = false, klasses = Foreman::Thor::Base.subclasses)
     klasses -= [Foreman::Thor, Foreman::Thor::Runner, Foreman::Thor::Group] unless show_internal
 
-    raise Error, "No Foreman::Thor commands available" if klasses.empty?
+    raise Error, 'No Foreman::Thor commands available' if klasses.empty?
+
     show_modules if with_modules && !thor_yaml.empty?
 
     list = Hash.new { |h, k| h[k] = [] }
     groups = klasses.select { |k| k.ancestors.include?(Foreman::Thor::Group) }
 
     # Get classes which inherit from Foreman::Thor
-    (klasses - groups).each { |k| list[k.namespace.split(":").first] += k.printable_commands(false) }
+    (klasses - groups).each { |k| list[k.namespace.split(':').first] += k.printable_commands(false) }
 
     # Get classes which inherit from Foreman::Thor::Base
     groups.map! { |k| k.printable_commands(false).first }
-    list["root"] = groups
+    list['root'] = groups
 
     # Order namespaces with default coming first
-    list = list.sort { |a, b| a[0].sub(/^default/, "") <=> b[0].sub(/^default/, "") }
+    list = list.sort { |a, b| a[0].sub(/^default/, '') <=> b[0].sub(/^default/, '') }
     list.each { |n, commands| display_commands(n, commands) unless commands.empty? }
   end
 
@@ -298,25 +300,25 @@ private
     list.sort! { |a, b| a[0] <=> b[0] }
 
     say shell.set_color(namespace, :blue, true)
-    say "-" * namespace.size
+    say '-' * namespace.size
 
-    print_table(list, :truncate => true)
+    print_table(list, truncate: true)
     say
   end
-  alias_method :display_tasks, :display_commands
+  alias display_tasks display_commands
 
   def show_modules #:nodoc:
     info = []
-    labels = %w(Modules Namespaces)
+    labels = %w[Modules Namespaces]
 
     info << labels
-    info << ["-" * labels[0].size, "-" * labels[1].size]
+    info << ['-' * labels[0].size, '-' * labels[1].size]
 
     thor_yaml.each do |name, hash|
-      info << [name, hash[:namespaces].join(", ")]
+      info << [name, hash[:namespaces].join(', ')]
     end
 
     print_table info
-    say ""
+    say ''
   end
 end

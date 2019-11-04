@@ -28,12 +28,12 @@ module Listen
       # Options:
       # * to: a state or array of states this state can transition to
       def state(*args, &block)
-        if args.last.is_a? Hash
-          # Stringify keys :/
-          options = args.pop.each_with_object({}) { |(k, v), h| h[k.to_s] = v }
-        else
-          options = {}
-        end
+        options = if args.last.is_a? Hash
+                    # Stringify keys :/
+                    args.pop.each_with_object({}) { |(k, v), h| h[k.to_s] = v }
+                  else
+                    {}
+                  end
 
         args.each do |name|
           name = name.to_sym
@@ -54,6 +54,7 @@ module Listen
     def transition(state_name)
       new_state = validate_and_sanitize_new_state(state_name)
       return unless new_state
+
       transition_with_callbacks!(new_state)
     end
 
@@ -73,14 +74,15 @@ module Listen
         valid = current_state.transitions.map(&:to_s).join(', ')
         msg = "#{self.class} can't change state from '#{@state}'"\
           " to '#{state_name}', only to: #{valid}"
-        fail ArgumentError, msg
+        raise ArgumentError, msg
       end
 
       new_state = states[state_name]
 
       unless new_state
         return if state_name == default_state
-        fail ArgumentError, "invalid state for #{self.class}: #{state_name}"
+
+        raise ArgumentError, "invalid state for #{self.class}: #{state_name}"
       end
 
       new_state
@@ -104,7 +106,7 @@ module Listen
     end
 
     def current_state_name
-      current_state && current_state.name || ''
+      current_state&.name || ''
     end
 
     class State

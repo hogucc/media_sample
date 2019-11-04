@@ -1,28 +1,26 @@
 # frozen_string_literal: true
 
-require "active_support/core_ext/range"
+require 'active_support/core_ext/range'
 
 module ActiveModel
   module Validations
     module Clusivity #:nodoc:
-      ERROR_MESSAGE = "An object with the method #include? or a proc, lambda or symbol is required, " \
-                      "and must be supplied as the :in (or :within) option of the configuration hash"
+      ERROR_MESSAGE = 'An object with the method #include? or a proc, lambda or symbol is required, ' \
+                      'and must be supplied as the :in (or :within) option of the configuration hash'
 
       def check_validity!
-        unless delimiter.respond_to?(:include?) || delimiter.respond_to?(:call) || delimiter.respond_to?(:to_sym)
-          raise ArgumentError, ERROR_MESSAGE
-        end
+        raise ArgumentError, ERROR_MESSAGE unless delimiter.respond_to?(:include?) || delimiter.respond_to?(:call) || delimiter.respond_to?(:to_sym)
       end
 
-    private
+      private
 
       def include?(record, value)
         members = if delimiter.respond_to?(:call)
-          delimiter.call(record)
-        elsif delimiter.respond_to?(:to_sym)
-          record.send(delimiter)
-        else
-          delimiter
+                    delimiter.call(record)
+                  elsif delimiter.respond_to?(:to_sym)
+                    record.send(delimiter)
+                  else
+                    delimiter
         end
 
         members.send(inclusion_method(members), value)

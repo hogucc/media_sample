@@ -29,8 +29,8 @@ module Arel # :nodoc: all
         @source.left = value
       end
 
-      alias :froms= :from=
-      alias :froms :from
+      alias froms= from=
+      alias froms from
 
       def initialize_copy(other)
         super
@@ -51,17 +51,17 @@ module Arel # :nodoc: all
 
       def eql?(other)
         self.class == other.class &&
-          self.source == other.source &&
-          self.set_quantifier == other.set_quantifier &&
-          self.optimizer_hints == other.optimizer_hints &&
-          self.projections == other.projections &&
-          self.wheres == other.wheres &&
-          self.groups == other.groups &&
-          self.havings == other.havings &&
-          self.windows == other.windows &&
-          self.comment == other.comment
+          source == other.source &&
+          set_quantifier == other.set_quantifier &&
+          optimizer_hints == other.optimizer_hints &&
+          projections == other.projections &&
+          wheres == other.wheres &&
+          groups == other.groups &&
+          havings == other.havings &&
+          windows == other.windows &&
+          comment == other.comment
       end
-      alias :== :eql?
+      alias == eql?
     end
   end
 end

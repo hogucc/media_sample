@@ -1,22 +1,22 @@
-$LOAD_PATH.unshift(File.expand_path(File.dirname(__FILE__))) unless $LOAD_PATH.include?(File.expand_path(File.dirname(__FILE__)))
+$:.unshift(__dir__) unless $:.include?(__dir__)
 
-require "nokogiri"
+require 'nokogiri'
 
-require "loofah/metahelpers"
-require "loofah/elements"
+require 'loofah/metahelpers'
+require 'loofah/elements'
 
-require "loofah/html5/safelist"
-require "loofah/html5/libxml2_workarounds"
-require "loofah/html5/scrub"
+require 'loofah/html5/safelist'
+require 'loofah/html5/libxml2_workarounds'
+require 'loofah/html5/scrub'
 
-require "loofah/scrubber"
-require "loofah/scrubbers"
+require 'loofah/scrubber'
+require 'loofah/scrubbers'
 
-require "loofah/instance_methods"
-require "loofah/xml/document"
-require "loofah/xml/document_fragment"
-require "loofah/html/document"
-require "loofah/html/document_fragment"
+require 'loofah/instance_methods'
+require 'loofah/xml/document'
+require 'loofah/xml/document_fragment'
+require 'loofah/html/document'
+require 'loofah/html/document_fragment'
 
 # == Strings and IO Objects as Input
 #
@@ -28,7 +28,7 @@ require "loofah/html/document_fragment"
 #
 module Loofah
   # The version of Loofah you are using
-  VERSION = "2.3.0"
+  VERSION = '2.3.0'.freeze
 
   class << self
     # Shortcut for Loofah::HTML::Document.parse

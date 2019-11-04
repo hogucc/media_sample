@@ -33,7 +33,7 @@ class Foreman::Thor
       #
       def initialize(base, destination, config = {})
         @base = base
-        @config = {:verbose => true}.merge(config)
+        @config = { verbose: true }.merge(config)
         self.destination = destination
       end
 
@@ -58,7 +58,7 @@ class Foreman::Thor
         given_destination
       end
 
-    protected
+      protected
 
       # Shortcut for pretend.
       #
@@ -82,6 +82,7 @@ class Foreman::Thor
       #
       def destination=(destination)
         return unless destination
+
         @given_destination = convert_encoded_instructions(destination.to_s)
         @destination = ::File.expand_path(@given_destination, base.destination_root)
         @relative_destination = base.relative_to_original_destination_root(@destination)
@@ -100,7 +101,7 @@ class Foreman::Thor
       #
       def convert_encoded_instructions(filename)
         filename.gsub(/%(.*?)%/) do |initial_string|
-          method = $1.strip
+          method = Regexp.last_match(1).strip
           base.respond_to?(method, true) ? base.send(method) : initial_string
         end
       end

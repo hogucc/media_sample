@@ -1,31 +1,31 @@
 # frozen_string_literal: true
 
-require "active_job/railtie"
-require "action_mailer"
-require "rails"
-require "abstract_controller/railties/routes_helpers"
+require 'active_job/railtie'
+require 'action_mailer'
+require 'rails'
+require 'abstract_controller/railties/routes_helpers'
 
 module ActionMailer
   class Railtie < Rails::Railtie # :nodoc:
     config.action_mailer = ActiveSupport::OrderedOptions.new
     config.eager_load_namespaces << ActionMailer
 
-    initializer "action_mailer.logger" do
+    initializer 'action_mailer.logger' do
       ActiveSupport.on_load(:action_mailer) { self.logger ||= Rails.logger }
     end
 
-    initializer "action_mailer.set_configs" do |app|
+    initializer 'action_mailer.set_configs' do |app|
       paths   = app.config.paths
       options = app.config.action_mailer
 
       if app.config.force_ssl
         options.default_url_options ||= {}
-        options.default_url_options[:protocol] ||= "https"
+        options.default_url_options[:protocol] ||= 'https'
       end
 
-      options.assets_dir      ||= paths["public"].first
-      options.javascripts_dir ||= paths["public/javascripts"].first
-      options.stylesheets_dir ||= paths["public/stylesheets"].first
+      options.assets_dir      ||= paths['public'].first
+      options.javascripts_dir ||= paths['public/javascripts'].first
+      options.stylesheets_dir ||= paths['public/stylesheets'].first
       options.show_previews = Rails.env.development? if options.show_previews.nil?
       options.cache_store ||= Rails.cache
 
@@ -59,21 +59,19 @@ module ActionMailer
       end
     end
 
-    initializer "action_mailer.set_autoload_paths" do |app|
+    initializer 'action_mailer.set_autoload_paths' do |app|
       options = app.config.action_mailer
 
-      if options.show_previews && options.preview_path
-        ActiveSupport::Dependencies.autoload_paths << options.preview_path
-      end
+      ActiveSupport::Dependencies.autoload_paths << options.preview_path if options.show_previews && options.preview_path
     end
 
-    initializer "action_mailer.compile_config_methods" do
+    initializer 'action_mailer.compile_config_methods' do
       ActiveSupport.on_load(:action_mailer) do
         config.compile_methods! if config.respond_to?(:compile_methods!)
       end
     end
 
-    initializer "action_mailer.eager_load_actions" do
+    initializer 'action_mailer.eager_load_actions' do
       ActiveSupport.on_load(:after_initialize) do
         ActionMailer::Base.descendants.each(&:action_methods) if config.eager_load
       end
@@ -84,8 +82,8 @@ module ActionMailer
 
       if options.show_previews
         app.routes.prepend do
-          get "/rails/mailers"       => "rails/mailers#index", internal: true
-          get "/rails/mailers/*path" => "rails/mailers#preview", internal: true
+          get '/rails/mailers'       => 'rails/mailers#index', internal: true
+          get '/rails/mailers/*path' => 'rails/mailers#preview', internal: true
         end
       end
     end

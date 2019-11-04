@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require "socket"
-require "byebug/processors/control_processor"
-require "byebug/remote/server"
-require "byebug/remote/client"
+require 'socket'
+require 'byebug/processors/control_processor'
+require 'byebug/remote/server'
+require 'byebug/remote/client'
 
 #
 # Remote debugging functionality.
@@ -52,13 +52,13 @@ module Byebug
     #
     # Connects to the remote byebug
     #
-    def start_client(host = "localhost", port = PORT)
+    def start_client(host = 'localhost', port = PORT)
       client.start(host, port)
     end
 
     def parse_host_and_port(host_port_spec)
-      location = host_port_spec.split(":")
-      location[1] ? [location[0], location[1].to_i] : ["localhost", location[0]]
+      location = host_port_spec.split(':')
+      location[1] ? [location[0], location[1].to_i] : ['localhost', location[0]]
     end
 
     private

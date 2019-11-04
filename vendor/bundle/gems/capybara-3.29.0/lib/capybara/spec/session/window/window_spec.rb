@@ -94,7 +94,7 @@ Capybara::SpecHelper.spec Capybara::Window, requires: [:windows] do
       @session.evaluate_script('[window.outerWidth || window.innerWidth, window.outerHeight || window.innerHeight]')
     end
 
-    it 'should return size of whole window', requires: %i[windows js] do
+    it 'should return size of whole window', requires: [:windows, :js] do
       expect(@session.current_window.size).to eq win_size
     end
 
@@ -119,14 +119,14 @@ Capybara::SpecHelper.spec Capybara::Window, requires: [:windows] do
       sleep 1
     end
 
-    it 'should be able to resize window', requires: %i[windows js] do
+    it 'should be able to resize window', requires: [:windows, :js] do
       width, height = initial_size
       @session.current_window.resize_to(width - 100, height - 100)
       sleep 1
       expect(@session.current_window.size).to eq([width - 100, height - 100])
     end
 
-    it 'should stay on current window if invoked not for current window', requires: %i[windows js] do
+    it 'should stay on current window if invoked not for current window', requires: [:windows, :js] do
       other_window = @session.window_opened_by do
         @session.find(:css, '#openWindow').click
       end
@@ -150,8 +150,9 @@ Capybara::SpecHelper.spec Capybara::Window, requires: [:windows] do
       sleep 0.5
     end
 
-    it 'should be able to maximize window', requires: %i[windows js] do
-      start_width, start_height = 400, 300
+    it 'should be able to maximize window', requires: [:windows, :js] do
+      start_width = 400
+      start_height = 300
       @session.current_window.resize_to(start_width, start_height)
       sleep 0.5
 
@@ -165,7 +166,7 @@ Capybara::SpecHelper.spec Capybara::Window, requires: [:windows] do
       expect(max_height).to be > start_height
     end
 
-    it 'should stay on current window if invoked not for current window', requires: %i[windows js] do
+    it 'should stay on current window if invoked not for current window', requires: [:windows, :js] do
       other_window = @session.window_opened_by do
         @session.find(:css, '#openWindow').click
       end

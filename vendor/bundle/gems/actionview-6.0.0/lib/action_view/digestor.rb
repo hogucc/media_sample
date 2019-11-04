@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "action_view/dependency_tracker"
+require 'action_view/dependency_tracker'
 
 module ActionView
   class Digestor
@@ -14,21 +14,21 @@ module ActionView
       # * <tt>finder</tt>       - An instance of <tt>ActionView::LookupContext</tt>
       # * <tt>dependencies</tt> - An array of dependent views
       def digest(name:, format: nil, finder:, dependencies: nil)
-        if dependencies.nil? || dependencies.empty?
-          cache_key = "#{name}.#{format}"
-        else
-          cache_key = [ name, format, dependencies ].flatten.compact.join(".")
-        end
+        cache_key = if dependencies.nil? || dependencies.empty?
+                      "#{name}.#{format}"
+                    else
+                      [name, format, dependencies].flatten.compact.join('.')
+                    end
 
         # this is a correctly done double-checked locking idiom
         # (Concurrent::Map's lookups have volatile semantics)
         finder.digest_cache[cache_key] || @@digest_mutex.synchronize do
           finder.digest_cache.fetch(cache_key) do # re-check under lock
-            partial = name.include?("/_")
+            partial = name.include?('/_')
             root = tree(name, finder, partial)
-            dependencies.each do |injected_dep|
+            dependencies&.each do |injected_dep|
               root.children << Injected.new(injected_dep, nil, nil)
-            end if dependencies
+            end
             finder.digest_cache[cache_key] = root.digest(finder)
           end
         end
@@ -40,7 +40,7 @@ module ActionView
 
       # Create a dependency tree for template named +name+.
       def tree(name, finder, partial = false, seen = {})
-        logical_name = name.gsub(%r|/_|, "/")
+        logical_name = name.gsub(%r{/_}, '/')
 
         if template = find_template(finder, logical_name, [], partial, [])
           if node = seen[template.identifier] # handle cycles in the tree
@@ -49,26 +49,25 @@ module ActionView
             node = seen[template.identifier] = Node.create(name, logical_name, template, partial)
 
             deps = DependencyTracker.find_dependencies(name, template, finder.view_paths)
-            deps.uniq { |n| n.gsub(%r|/_|, "/") }.each do |dep_file|
+            deps.uniq { |n| n.gsub(%r{/_}, '/') }.each do |dep_file|
               node.children << tree(dep_file, finder, true, seen)
             end
             node
           end
         else
-          unless name.include?("#") # Dynamic template partial names can never be tracked
-            logger.error "  Couldn't find template for digesting: #{name}"
-          end
+          logger.error "  Couldn't find template for digesting: #{name}" unless name.include?('#') # Dynamic template partial names can never be tracked
 
           seen[name] ||= Missing.new(name, logical_name, nil)
         end
       end
 
       private
-        def find_template(finder, name, prefixes, partial, keys)
-          finder.disable_cache do
-            finder.find_all(name, prefixes, partial, keys).first
-          end
+
+      def find_template(finder, name, prefixes, partial, keys)
+        finder.disable_cache do
+          finder.find_all(name, prefixes, partial, keys).first
         end
+      end
     end
 
     class Node
@@ -100,7 +99,7 @@ module ActionView
                                                  node.digest(finder, stack).tap { stack.pop }
                                                end
           end
-        end.join("-")
+        end.join('-')
       end
 
       def to_dep_map
@@ -111,15 +110,20 @@ module ActionView
     class Partial < Node; end
 
     class Missing < Node
-      def digest(finder, _ = []) "" end
+      def digest(_finder, _ = [])
+        ''
+      end
     end
 
     class Injected < Node
-      def digest(finder, _ = []) name end
+      def digest(_finder, _ = [])
+        name
+      end
     end
 
     class NullLogger
       def self.debug(_); end
+
       def self.error(_); end
     end
   end

@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-require "date"
-require "active_support/duration"
-require "active_support/core_ext/object/acts_like"
-require "active_support/core_ext/date/zones"
-require "active_support/core_ext/time/zones"
-require "active_support/core_ext/date_and_time/calculations"
+require 'date'
+require 'active_support/duration'
+require 'active_support/core_ext/object/acts_like'
+require 'active_support/core_ext/date/zones'
+require 'active_support/core_ext/time/zones'
+require 'active_support/core_ext/date_and_time/calculations'
 
 class Date
   include DateAndTime::Calculations
@@ -31,6 +31,7 @@ class Date
     # Returns week start day symbol (e.g. :monday), or raises an +ArgumentError+ for invalid day symbol.
     def find_beginning_of_week!(week_start)
       raise ArgumentError, "Invalid beginning of week: #{week_start}" unless ::Date::DAYS_INTO_WEEK.key?(week_start)
+
       week_start
     end
 
@@ -61,31 +62,31 @@ class Date
   def since(seconds)
     in_time_zone.since(seconds)
   end
-  alias :in :since
+  alias in since
 
   # Converts Date to a Time (or DateTime if necessary) with the time portion set to the beginning of the day (0:00)
   def beginning_of_day
     in_time_zone
   end
-  alias :midnight :beginning_of_day
-  alias :at_midnight :beginning_of_day
-  alias :at_beginning_of_day :beginning_of_day
+  alias midnight beginning_of_day
+  alias at_midnight beginning_of_day
+  alias at_beginning_of_day beginning_of_day
 
   # Converts Date to a Time (or DateTime if necessary) with the time portion set to the middle of the day (12:00)
   def middle_of_day
     in_time_zone.middle_of_day
   end
-  alias :midday :middle_of_day
-  alias :noon :middle_of_day
-  alias :at_midday :middle_of_day
-  alias :at_noon :middle_of_day
-  alias :at_middle_of_day :middle_of_day
+  alias midday middle_of_day
+  alias noon middle_of_day
+  alias at_midday middle_of_day
+  alias at_noon middle_of_day
+  alias at_middle_of_day middle_of_day
 
   # Converts Date to a Time (or DateTime if necessary) with the time portion set to the end of the day (23:59:59)
   def end_of_day
     in_time_zone.end_of_day
   end
-  alias :at_end_of_day :end_of_day
+  alias at_end_of_day end_of_day
 
   def plus_with_duration(other) #:nodoc:
     if ActiveSupport::Duration === other
@@ -94,8 +95,8 @@ class Date
       plus_without_duration(other)
     end
   end
-  alias_method :plus_without_duration, :+
-  alias_method :+, :plus_with_duration
+  alias plus_without_duration +
+  alias + plus_with_duration
 
   def minus_with_duration(other) #:nodoc:
     if ActiveSupport::Duration === other
@@ -104,8 +105,8 @@ class Date
       minus_without_duration(other)
     end
   end
-  alias_method :minus_without_duration, :-
-  alias_method :-, :minus_with_duration
+  alias minus_without_duration -
+  alias - minus_with_duration
 
   # Provides precise Date calculations for years, months, and days. The +options+ parameter takes a hash with
   # any of these keys: <tt>:years</tt>, <tt>:months</tt>, <tt>:weeks</tt>, <tt>:days</tt>.
@@ -114,8 +115,8 @@ class Date
 
     d = d >> options[:years] * 12 if options[:years]
     d = d >> options[:months] if options[:months]
-    d = d + options[:weeks] * 7 if options[:weeks]
-    d = d + options[:days] if options[:days]
+    d += options[:weeks] * 7 if options[:weeks]
+    d += options[:days] if options[:days]
 
     d
   end
@@ -141,6 +142,6 @@ class Date
       compare_without_coercion(other)
     end
   end
-  alias_method :compare_without_coercion, :<=>
-  alias_method :<=>, :compare_with_coercion
+  alias compare_without_coercion <=>
+  alias <=> compare_with_coercion
 end

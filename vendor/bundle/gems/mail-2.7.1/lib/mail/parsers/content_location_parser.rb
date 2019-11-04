@@ -1,7 +1,7 @@
-
 # frozen_string_literal: true
-require "mail/utilities"
-require "mail/parser_tools"
+
+require 'mail/utilities'
+require 'mail/parser_tools'
 
 module Mail::Parsers
   module ContentLocationParser
@@ -29,7 +29,7 @@ module Mail::Parsers
       9, 126, 9, 40, 9, 40,
       1, 244, 1, 244, 1,
       244, 1, 244, 9, 126,
-      0, 0, 0,
+      0, 0, 0
     ]
 
     class << self
@@ -42,7 +42,7 @@ module Mail::Parsers
       16, 1, 24, 118, 244, 244, 1, 24,
       245, 64, 32, 64, 32, 48, 64, 16,
       118, 32, 32, 244, 244, 244, 244, 118,
-      0,
+      0
     ]
 
     class << self
@@ -55,7 +55,7 @@ module Mail::Parsers
       1001, 1018, 1020, 1045, 1164, 1409, 1654, 1656,
       1681, 1927, 1992, 2025, 2090, 2123, 2172, 2237,
       2254, 2373, 2406, 2439, 2684, 2929, 3174, 3419,
-      3538,
+      3538
     ]
 
     class << self
@@ -505,7 +505,7 @@ module Mail::Parsers
       55, 55, 55, 55, 55, 55, 55, 55,
       55, 55, 55, 55, 55, 55, 55, 55,
       55, 55, 55, 55, 55, 55, 55, 55,
-      55, 1, 1, 0,
+      55, 1, 1, 0
     ]
 
     class << self
@@ -523,7 +523,7 @@ module Mail::Parsers
       34, 4, 34, 33, 4, 34, 6, 36,
       17, 38, 39, 37, 9, 10, 11, 12,
       13, 14, 15, 16, 17, 37, 36, 17,
-      37, 36, 17, 38, 39, 37, 34,
+      37, 36, 17, 38, 39, 37, 34
     ]
 
     class << self
@@ -541,7 +541,7 @@ module Mail::Parsers
       12, 0, 2, 4, 4, 6, 13, 14,
       14, 13, 15, 16, 13, 13, 13, 13,
       13, 13, 13, 13, 0, 2, 4, 4,
-      6, 11, 11, 0, 3, 12, 17,
+      6, 11, 11, 0, 3, 12, 17
     ]
 
     class << self
@@ -554,7 +554,7 @@ module Mail::Parsers
       0, 0, 0, 0, 0, 0, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 0,
       11, 0, 4, 11, 0, 4, 11, 11,
-      0,
+      0
     ]
 
     class << self
@@ -609,7 +609,7 @@ module Mail::Parsers
         _again = 20
         _test_eof = 30
         _out = 40
-        while true
+        loop do
           if _goto_level <= 0
             if p == pe
               _goto_level = _test_eof
@@ -625,9 +625,9 @@ module Mail::Parsers
             _inds = _index_offsets[cs]
             _slen = _key_spans[cs]
             _wide = data[p].ord
-            _trans = if (_slen > 0 &&
-                         _trans_keys[_keys] <= _wide &&
-                         _wide <= _trans_keys[_keys + 1])
+            _trans = if _slen > 0 &&
+                        _trans_keys[_keys] <= _wide &&
+                        _wide <= _trans_keys[_keys + 1]
                        _indicies[_inds + _wide - _trans_keys[_keys]]
                      else
                        _indicies[_inds + _slen]
@@ -800,15 +800,11 @@ module Mail::Parsers
               end
             end
           end
-          if _goto_level <= _out
-            break
-          end
+          break if _goto_level <= _out
         end
       end
 
-      if p != eof || cs < 32
-        raise Mail::Field::IncompleteParseError.new(Mail::ContentLocationElement, data, p)
-      end
+      raise Mail::Field::IncompleteParseError.new(Mail::ContentLocationElement, data, p) if p != eof || cs < 32
 
       content_location
     end

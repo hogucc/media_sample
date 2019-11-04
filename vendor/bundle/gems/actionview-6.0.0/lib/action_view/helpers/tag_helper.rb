@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "active_support/core_ext/string/output_safety"
-require "set"
+require 'active_support/core_ext/string/output_safety'
+require 'set'
 
 module ActionView
   # = Action View Tag Helpers
@@ -13,7 +13,7 @@ module ActionView
       include CaptureHelper
       include OutputSafetyHelper
 
-      BOOLEAN_ATTRIBUTES = %w(allowfullscreen async autofocus autoplay checked
+      BOOLEAN_ATTRIBUTES = %w[allowfullscreen async autofocus autoplay checked
                               compact controls declare default defaultchecked
                               defaultmuted defaultselected defer disabled
                               enabled formnovalidate hidden indeterminate inert
@@ -21,21 +21,21 @@ module ActionView
                               noresize noshade novalidate nowrap open
                               pauseonexit readonly required reversed scoped
                               seamless selected sortable truespeed typemustmatch
-                              visible).to_set
+                              visible].to_set
 
       BOOLEAN_ATTRIBUTES.merge(BOOLEAN_ATTRIBUTES.map(&:to_sym))
 
-      TAG_PREFIXES = ["aria", "data", :aria, :data].to_set
+      TAG_PREFIXES = ['aria', 'data', :aria, :data].to_set
 
-      PRE_CONTENT_STRINGS             = Hash.new { "" }
+      PRE_CONTENT_STRINGS             = Hash.new { '' }
       PRE_CONTENT_STRINGS[:textarea]  = "\n"
-      PRE_CONTENT_STRINGS["textarea"] = "\n"
+      PRE_CONTENT_STRINGS['textarea'] = "\n"
 
       class TagBuilder #:nodoc:
         include CaptureHelper
         include OutputSafetyHelper
 
-        VOID_ELEMENTS = %i(area base br col embed hr img input keygen link meta param source track wbr).to_set
+        VOID_ELEMENTS = [:area, :base, :br, :col, :embed, :hr, :img, :input, :keygen, :link, :meta, :param, :source, :track, :wbr].to_set
 
         def initialize(view_context)
           @view_context = view_context
@@ -46,7 +46,7 @@ module ActionView
           if VOID_ELEMENTS.include?(name) && content.nil?
             "<#{name.to_s.dasherize}#{tag_options(options, escape_attributes)}>".html_safe
           else
-            content_tag_string(name.to_s.dasherize, content || "", options, escape_attributes)
+            content_tag_string(name.to_s.dasherize, content || '', options, escape_attributes)
           end
         end
 
@@ -58,12 +58,14 @@ module ActionView
 
         def tag_options(options, escape = true)
           return if options.blank?
-          output = +""
-          sep    = " "
+
+          output = +''
+          sep    = ' '
           options.each_pair do |key, value|
             if TAG_PREFIXES.include?(key) && value.is_a?(Hash)
               value.each_pair do |k, v|
                 next if v.nil?
+
                 output << sep
                 output << prefix_tag_option(key, k, v, escape)
               end
@@ -85,31 +87,30 @@ module ActionView
         end
 
         def tag_option(key, value, escape)
-          if value.is_a?(Array)
-            value = escape ? safe_join(value, " ") : value.join(" ")
-          else
-            value = escape ? ERB::Util.unwrapped_html_escape(value) : value.to_s.dup
-          end
-          value.gsub!('"', "&quot;")
+          value = if value.is_a?(Array)
+                    escape ? safe_join(value, ' ') : value.join(' ')
+                  else
+                    escape ? ERB::Util.unwrapped_html_escape(value) : value.to_s.dup
+                  end
+          value.gsub!('"', '&quot;')
           %(#{key}="#{value}")
         end
 
         private
-          def prefix_tag_option(prefix, key, value, escape)
-            key = "#{prefix}-#{key.to_s.dasherize}"
-            unless value.is_a?(String) || value.is_a?(Symbol) || value.is_a?(BigDecimal)
-              value = value.to_json
-            end
-            tag_option(key, value, escape)
-          end
 
-          def respond_to_missing?(*args)
-            true
-          end
+        def prefix_tag_option(prefix, key, value, escape)
+          key = "#{prefix}-#{key.to_s.dasherize}"
+          value = value.to_json unless value.is_a?(String) || value.is_a?(Symbol) || value.is_a?(BigDecimal)
+          tag_option(key, value, escape)
+        end
 
-          def method_missing(called, *args, &block)
-            tag_string(called, *args, &block)
-          end
+        def respond_to_missing?(*_args)
+          true
+        end
+
+        def method_missing(called, *args, &block)
+          tag_string(called, *args, &block)
+        end
       end
 
       # Returns an HTML tag.
@@ -237,7 +238,7 @@ module ActionView
         if name.nil?
           tag_builder
         else
-          "<#{name}#{tag_builder.tag_options(options, escape) if options}#{open ? ">" : " />"}".html_safe
+          "<#{name}#{tag_builder.tag_options(options, escape) if options}#{open ? '>' : ' />'}".html_safe
         end
       end
 
@@ -290,7 +291,7 @@ module ActionView
       #   cdata_section("hello]]>world")
       #   # => <![CDATA[hello]]]]><![CDATA[>world]]>
       def cdata_section(content)
-        splitted = content.to_s.gsub(/\]\]\>/, "]]]]><![CDATA[>")
+        splitted = content.to_s.gsub(/\]\]\>/, ']]]]><![CDATA[>')
         "<![CDATA[#{splitted}]]>".html_safe
       end
 
@@ -306,9 +307,10 @@ module ActionView
       end
 
       private
-        def tag_builder
-          @tag_builder ||= TagBuilder.new(self)
-        end
+
+      def tag_builder
+        @tag_builder ||= TagBuilder.new(self)
+      end
     end
   end
 end

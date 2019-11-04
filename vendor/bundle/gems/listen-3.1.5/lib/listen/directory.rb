@@ -36,25 +36,24 @@ module Listen
       previous = previous.reject { |entry, _| current.include? path + entry }
 
       _async_changes(snapshot, Pathname.new(rel_path), previous, options)
-
     rescue Errno::ENOENT, Errno::EHOSTDOWN
       record.unset_path(rel_path)
       _async_changes(snapshot, Pathname.new(rel_path), previous, options)
-
     rescue Errno::ENOTDIR
       # TODO: path not tested
       record.unset_path(rel_path)
       _async_changes(snapshot, path, previous, options)
       _change(snapshot, :file, rel_path, options)
-    rescue
+    rescue StandardError
       Listen::Logger.warn do
-        format('scan DIED: %s:%s', $ERROR_INFO, $ERROR_POSITION * "\n")
+        format('scan DIED: %s:%s', $!, $@ * "\n")
       end
       raise
     end
 
     def self._async_changes(snapshot, path, previous, options)
-      fail "Not a Pathname: #{path.inspect}" unless path.respond_to?(:children)
+      raise "Not a Pathname: #{path.inspect}" unless path.respond_to?(:children)
+
       previous.each do |entry, data|
         # TODO: this is a hack with insufficient testing
         type = data.key?(:mtime) ? :file : :dir
@@ -81,6 +80,7 @@ module Listen
       exists = path.exist?
       directory = path.directory?
       return path.children unless exists && !directory
+
       raise Errno::ENOTDIR, path.to_s
     end
   end

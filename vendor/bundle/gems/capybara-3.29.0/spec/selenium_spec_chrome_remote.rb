@@ -54,7 +54,7 @@ module TestSessions
   Chrome = Capybara::Session.new(CHROME_REMOTE_DRIVER, TestApp)
 end
 
-skipped_tests = %i[response_headers status_code trigger download]
+skipped_tests = [:response_headers, :status_code, :trigger, :download]
 
 Capybara::SpecHelper.run_specs TestSessions::Chrome, CHROME_REMOTE_DRIVER.to_s, capybara_skip: skipped_tests do |example|
   case example.metadata[:full_description]

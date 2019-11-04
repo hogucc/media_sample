@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "active_support/core_ext/numeric/time"
+require 'active_support/core_ext/numeric/time'
 
 module ActiveJob
   # Provides behavior for retrying and discarding jobs on exceptions.
@@ -121,37 +121,38 @@ module ActiveJob
     end
 
     private
-      def determine_delay(seconds_or_duration_or_algorithm:, executions:)
-        case seconds_or_duration_or_algorithm
-        when :exponentially_longer
-          (executions**4) + 2
-        when ActiveSupport::Duration
-          duration = seconds_or_duration_or_algorithm
-          duration.to_i
-        when Integer
-          seconds = seconds_or_duration_or_algorithm
-          seconds
-        when Proc
-          algorithm = seconds_or_duration_or_algorithm
-          algorithm.call(executions)
-        else
-          raise "Couldn't determine a delay based on #{seconds_or_duration_or_algorithm.inspect}"
-        end
-      end
 
-      def instrument(name, error: nil, wait: nil, &block)
-        payload = { job: self, adapter: self.class.queue_adapter, error: error, wait: wait }
-
-        ActiveSupport::Notifications.instrument("#{name}.active_job", payload, &block)
+    def determine_delay(seconds_or_duration_or_algorithm:, executions:)
+      case seconds_or_duration_or_algorithm
+      when :exponentially_longer
+        (executions**4) + 2
+      when ActiveSupport::Duration
+        duration = seconds_or_duration_or_algorithm
+        duration.to_i
+      when Integer
+        seconds = seconds_or_duration_or_algorithm
+        seconds
+      when Proc
+        algorithm = seconds_or_duration_or_algorithm
+        algorithm.call(executions)
+      else
+        raise "Couldn't determine a delay based on #{seconds_or_duration_or_algorithm.inspect}"
       end
+    end
 
-      def executions_for(exceptions)
-        if exception_executions
-          exception_executions[exceptions.to_s] = (exception_executions[exceptions.to_s] || 0) + 1
-        else
-          # Guard against jobs that were persisted before we started having individual executions counters per retry_on
-          executions
-        end
+    def instrument(name, error: nil, wait: nil, &block)
+      payload = { job: self, adapter: self.class.queue_adapter, error: error, wait: wait }
+
+      ActiveSupport::Notifications.instrument("#{name}.active_job", payload, &block)
+    end
+
+    def executions_for(exceptions)
+      if exception_executions
+        exception_executions[exceptions.to_s] = (exception_executions[exceptions.to_s] || 0) + 1
+      else
+        # Guard against jobs that were persisted before we started having individual executions counters per retry_on
+        executions
       end
+    end
   end
 end

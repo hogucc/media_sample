@@ -1,6 +1,6 @@
 # frozen_string_literal: true
-module Mail
 
+module Mail
   # A delivery method implementation which sends via exim.
   #
   # To use this, first find out where the exim binary is on your computer,
@@ -38,11 +38,11 @@ module Mail
   #   mail.deliver!
   class Exim < Sendmail
     DEFAULTS = {
-      :location   => '/usr/sbin/exim',
-      :arguments  => '-i -t'
-    }
+      location: '/usr/sbin/exim',
+      arguments: '-i -t'
+    }.freeze
 
-    def self.call(path, arguments, destinations, encoded_message)
+    def self.call(path, arguments, _destinations, encoded_message)
       super path, arguments, nil, encoded_message
     end
   end

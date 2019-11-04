@@ -4,7 +4,7 @@ module Skiptrace
 
     def self.call
       raise Error
-    rescue => exc
+    rescue StandardError => e
       exc
     end
   end

@@ -1,7 +1,7 @@
-
 # frozen_string_literal: true
-require "mail/utilities"
-require "mail/parser_tools"
+
+require 'mail/utilities'
+require 'mail/parser_tools'
 
 module Mail::Parsers
   module MimeVersionParser
@@ -24,7 +24,7 @@ module Mail::Parsers
       128, 159, 144, 191, 128,
       191, 128, 143, 9, 57,
       9, 40, 9, 40, 0, 0,
-      0,
+      0
     ]
 
     class << self
@@ -35,7 +35,7 @@ module Mail::Parsers
       0, 49, 1, 24, 49, 18, 1, 18,
       10, 1, 24, 244, 244, 1, 24, 245,
       64, 32, 64, 32, 48, 64, 16, 49,
-      32, 32, 0,
+      32, 32, 0
     ]
 
     class << self
@@ -46,7 +46,7 @@ module Mail::Parsers
       0, 0, 50, 52, 77, 127, 146, 148,
       167, 178, 180, 205, 450, 695, 697, 722,
       968, 1033, 1066, 1131, 1164, 1213, 1278, 1295,
-      1345, 1378, 1411,
+      1345, 1378, 1411
     ]
 
     class << self
@@ -230,7 +230,7 @@ module Mail::Parsers
       1, 1, 1, 1, 1, 1, 1, 1,
       1, 1, 1, 1, 1, 1, 1, 1,
       1, 50, 1, 1, 1, 1, 1, 1,
-      1, 52, 1, 1, 0,
+      1, 52, 1, 1, 0
     ]
 
     class << self
@@ -244,7 +244,7 @@ module Mail::Parsers
       16, 17, 18, 19, 20, 21, 22, 12,
       13, 12, 26, 15, 16, 17, 18, 19,
       20, 21, 22, 14, 24, 9, 25, 23,
-      9, 25, 24, 9, 25,
+      9, 25, 24, 9, 25
     ]
 
     class << self
@@ -258,7 +258,7 @@ module Mail::Parsers
       10, 10, 10, 10, 10, 10, 10, 0,
       0, 1, 13, 0, 0, 0, 0, 0,
       0, 0, 0, 0, 14, 14, 15, 0,
-      0, 1, 3, 3, 4,
+      0, 1, 3, 3, 4
     ]
 
     class << self
@@ -269,7 +269,7 @@ module Mail::Parsers
       0, 0, 0, 0, 0, 0, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 14,
-      0, 3, 0,
+      0, 3, 0
     ]
 
     class << self
@@ -297,7 +297,7 @@ module Mail::Parsers
     def self.parse(data)
       data = data.dup.force_encoding(Encoding::ASCII_8BIT) if data.respond_to?(:force_encoding)
 
-      return MimeVersionStruct.new("", nil) if Mail::Utilities.blank?(data)
+      return MimeVersionStruct.new('', nil) if Mail::Utilities.blank?(data)
 
       # Parser state
       mime_version = MimeVersionStruct.new
@@ -324,7 +324,7 @@ module Mail::Parsers
         _again = 20
         _test_eof = 30
         _out = 40
-        while true
+        loop do
           if _goto_level <= 0
             if p == pe
               _goto_level = _test_eof
@@ -340,9 +340,9 @@ module Mail::Parsers
             _inds = _index_offsets[cs]
             _slen = _key_spans[cs]
             _wide = data[p].ord
-            _trans = if (_slen > 0 &&
-                         _trans_keys[_keys] <= _wide &&
-                         _wide <= _trans_keys[_keys + 1])
+            _trans = if _slen > 0 &&
+                        _trans_keys[_keys] <= _wide &&
+                        _wide <= _trans_keys[_keys + 1]
                        _indicies[_inds + _wide - _trans_keys[_keys]]
                      else
                        _indicies[_inds + _slen]
@@ -491,15 +491,11 @@ module Mail::Parsers
               end
             end
           end
-          if _goto_level <= _out
-            break
-          end
+          break if _goto_level <= _out
         end
       end
 
-      if p != eof || cs < 23
-        raise Mail::Field::IncompleteParseError.new(Mail::MimeVersionElement, data, p)
-      end
+      raise Mail::Field::IncompleteParseError.new(Mail::MimeVersionElement, data, p) if p != eof || cs < 23
 
       mime_version
     end

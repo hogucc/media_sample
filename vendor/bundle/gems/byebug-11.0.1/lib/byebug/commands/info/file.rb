@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "byebug/helpers/file"
+require 'byebug/helpers/file'
 
 module Byebug
   #
@@ -32,12 +32,12 @@ module Byebug
       end
 
       def self.short_description
-        "Information about a particular source file."
+        'Information about a particular source file.'
       end
 
       def execute
         file = @match[1] || frame.file
-        return errmsg(pr("info.errors.undefined_file", file: file)) unless File.exist?(file)
+        return errmsg(pr('info.errors.undefined_file', file: file)) unless File.exist?(file)
 
         puts prettify <<-RUBY
           File #{info_file_basic(file)}
@@ -56,7 +56,7 @@ module Byebug
         path = File.expand_path(file)
         return unless File.exist?(path)
 
-        s = n_lines(path) == 1 ? "" : "s"
+        s = n_lines(path) == 1 ? '' : 's'
         "#{path} (#{n_lines(path)} line#{s})"
       end
 
@@ -64,7 +64,7 @@ module Byebug
         breakpoints = Breakpoint.potential_lines(file)
         return unless breakpoints
 
-        breakpoints.to_a.sort.join(" ")
+        breakpoints.to_a.sort.join(' ')
       end
 
       def info_file_mtime(file)
@@ -72,7 +72,7 @@ module Byebug
       end
 
       def info_file_sha1(file)
-        require "digest/sha1"
+        require 'digest/sha1'
         Digest::SHA1.hexdigest(file)
       end
     end

@@ -1,7 +1,7 @@
 require 'rake/testtask'
-require "rake/clean"
+require 'rake/clean'
 
-CLOBBER.include "pkg"
+CLOBBER.include 'pkg'
 
 Bundler::GemHelper.install_tasks name: ENV.fetch('GEM_NAME', 'skiptrace')
 

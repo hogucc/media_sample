@@ -56,15 +56,17 @@ module Listen
       else
         change = File.change(record, rel_path)
         return if !change || options[:silence]
+
         config.queue(:file, change, watched_dir, rel_path)
       end
-    rescue RuntimeError => ex
+    rescue RuntimeError => e
       msg = format(
         '%s#%s crashed %s:%s',
         self.class,
         __method__,
         exinspect,
-        ex.backtrace * "\n")
+        e.backtrace * "\n"
+      )
       Listen::Logger.error(msg)
       raise
     end

@@ -23,11 +23,11 @@ Gem::Specification.new do |s|
   # Add libffi git files
   lfs = `git --git-dir ext/ffi_c/libffi/.git ls-files -z`.split("\x0")
   # Add autoconf generated files of libffi
-  lfs += %w[ configure config.guess config.sub install-sh ltmain.sh missing fficonfig.h.in ]
+  lfs += %w[configure config.guess config.sub install-sh ltmain.sh missing fficonfig.h.in]
   # Add automake generated files of libffi
   lfs += `git --git-dir ext/ffi_c/libffi/.git ls-files -z *.am */*.am`.gsub(".am\0", ".in\0").split("\x0")
   s.files += lfs.map do |f|
-    File.join("ext/ffi_c/libffi", f)
+    File.join('ext/ffi_c/libffi', f)
   end
 
   s.extensions << 'ext/ffi_c/extconf.rb'
@@ -39,5 +39,5 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'rake-compiler', '~> 1.0'
   s.add_development_dependency 'rake-compiler-dock', '~> 0.7.0'
   s.add_development_dependency 'rspec', '~> 2.14.1'
-  s.add_development_dependency 'rubygems-tasks', "~> 0.2.4"
+  s.add_development_dependency 'rubygems-tasks', '~> 0.2.4'
 end

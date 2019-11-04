@@ -3,12 +3,10 @@ if Concurrent.on_jruby?
   require 'concurrent/executor/java_executor_service'
 
   module Concurrent
-
     # @!macro thread_pool_executor
     # @!macro thread_pool_options
     # @!visibility private
     class JavaThreadPoolExecutor < JavaExecutorService
-
       # @!macro thread_pool_executor_constant_default_max_pool_size
       DEFAULT_MAX_POOL_SIZE = java.lang.Integer::MAX_VALUE # 2147483647
 
@@ -96,25 +94,26 @@ if Concurrent.on_jruby?
         @max_queue       = opts.fetch(:max_queue, DEFAULT_MAX_QUEUE_SIZE).to_i
         @fallback_policy = opts.fetch(:fallback_policy, :abort)
 
-        raise ArgumentError.new("`max_threads` cannot be less than #{DEFAULT_MIN_POOL_SIZE}") if max_length < DEFAULT_MIN_POOL_SIZE
-        raise ArgumentError.new("`max_threads` cannot be greater than #{DEFAULT_MAX_POOL_SIZE}") if max_length > DEFAULT_MAX_POOL_SIZE
-        raise ArgumentError.new("`min_threads` cannot be less than #{DEFAULT_MIN_POOL_SIZE}") if min_length < DEFAULT_MIN_POOL_SIZE
-        raise ArgumentError.new("`min_threads` cannot be more than `max_threads`") if min_length > max_length
-        raise ArgumentError.new("#{fallback_policy} is not a valid fallback policy") unless FALLBACK_POLICY_CLASSES.include?(@fallback_policy)
+        raise ArgumentError, "`max_threads` cannot be less than #{DEFAULT_MIN_POOL_SIZE}" if max_length < DEFAULT_MIN_POOL_SIZE
+        raise ArgumentError, "`max_threads` cannot be greater than #{DEFAULT_MAX_POOL_SIZE}" if max_length > DEFAULT_MAX_POOL_SIZE
+        raise ArgumentError, "`min_threads` cannot be less than #{DEFAULT_MIN_POOL_SIZE}" if min_length < DEFAULT_MIN_POOL_SIZE
+        raise ArgumentError, '`min_threads` cannot be more than `max_threads`' if min_length > max_length
+        raise ArgumentError, "#{fallback_policy} is not a valid fallback policy" unless FALLBACK_POLICY_CLASSES.include?(@fallback_policy)
 
-        if @max_queue == 0
-          queue = java.util.concurrent.LinkedBlockingQueue.new
-        else
-          queue = java.util.concurrent.LinkedBlockingQueue.new(@max_queue)
-        end
+        queue = if @max_queue == 0
+                  java.util.concurrent.LinkedBlockingQueue.new
+                else
+                  java.util.concurrent.LinkedBlockingQueue.new(@max_queue)
+                end
 
         @executor = java.util.concurrent.ThreadPoolExecutor.new(
-            min_length,
-            max_length,
-            idletime,
-            java.util.concurrent.TimeUnit::SECONDS,
-            queue,
-            FALLBACK_POLICY_CLASSES[@fallback_policy].new)
+          min_length,
+          max_length,
+          idletime,
+          java.util.concurrent.TimeUnit::SECONDS,
+          queue,
+          FALLBACK_POLICY_CLASSES[@fallback_policy].new
+        )
 
         self.auto_terminate = opts.fetch(:auto_terminate, true)
       end

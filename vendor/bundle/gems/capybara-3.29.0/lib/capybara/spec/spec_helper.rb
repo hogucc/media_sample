@@ -57,10 +57,9 @@ module Capybara
 
       def run_specs(session, name, **options, &filter_block)
         specs = @specs
-        RSpec.describe Capybara::Session, name, options do # rubocop:disable RSpec/EmptyExampleGroup
+        RSpec.describe Capybara::Session, name, options do
           include Capybara::SpecHelper
           include Capybara::RSpecMatchers
-          # rubocop:disable RSpec/ScatteredSetup
           before do |example|
             @session = session
             instance_exec(example, &filter_block) if filter_block
@@ -81,10 +80,9 @@ module Capybara
           before :each, :exact_false do
             Capybara.exact = false
           end
-          # rubocop:enable RSpec/ScatteredSetup
 
           specs.each do |spec_name, spec_options, block|
-            describe spec_name, *spec_options do # rubocop:disable RSpec/EmptyExampleGroup
+            describe spec_name, *spec_options do
               class_eval(&block)
             end
           end
@@ -119,7 +117,7 @@ module Capybara
     def extract_results(session)
       expect(session).to have_xpath("//pre[@id='results']")
       # YAML.load Nokogiri::HTML(session.body).xpath("//pre[@id='results']").first.inner_html.lstrip
-      YAML.load Capybara::HTML(session.body).xpath("//pre[@id='results']").first.inner_html.lstrip
+      YAML.safe_load Capybara::HTML(session.body).xpath("//pre[@id='results']").first.inner_html.lstrip
     end
 
     def be_an_invalid_element_error(session)

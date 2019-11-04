@@ -8,8 +8,8 @@
 module I18n
   module Locale
     module Tag
-      RFC4646_SUBTAGS = [ :language, :script, :region, :variant, :extension, :privateuse, :grandfathered ]
-      RFC4646_FORMATS = { :language => :downcase, :script => :capitalize, :region => :upcase, :variant => :downcase }
+      RFC4646_SUBTAGS = [:language, :script, :region, :variant, :extension, :privateuse, :grandfathered].freeze
+      RFC4646_FORMATS = { language: :downcase, script: :capitalize, region: :upcase, variant: :downcase }.freeze
 
       class Rfc4646 < Struct.new(*RFC4646_SUBTAGS)
         class << self
@@ -32,7 +32,7 @@ module I18n
         include Parents
 
         RFC4646_FORMATS.each do |name, format|
-          define_method(name) { self[name].send(format) unless self[name].nil? }
+          define_method(name) { self[name]&.send(format) }
         end
 
         def to_sym
@@ -40,11 +40,11 @@ module I18n
         end
 
         def to_s
-          @tag ||= to_a.compact.join("-")
+          @tag ||= to_a.compact.join('-')
         end
 
         def to_a
-          members.collect { |attr| self.send(attr) }
+          members.collect { |attr| send(attr) }
         end
 
         module Parser
@@ -57,13 +57,13 @@ module I18n
             (?:-(x(?:-[0-9a-z]{1,8})+))?|                           # privateuse subtag
             (x(?:-[0-9a-z]{1,8})+)|                                 # privateuse tag
             /* ([a-z]{1,3}(?:-[0-9a-z]{2,8}){1,2}) */               # grandfathered
-            )\z}xi
+            )\z}xi.freeze
 
           class << self
             def match(tag)
               c = PATTERN.match(tag.to_s).captures
-              c[0..4] << (c[5].nil? ? c[6] : c[5])  << c[7] # TODO c[7] is grandfathered, throw a NotImplemented exception here?
-            rescue
+              c[0..4] << (c[5].nil? ? c[6] : c[5]) << c[7] # TODO: c[7] is grandfathered, throw a NotImplemented exception here?
+            rescue StandardError
               false
             end
           end

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 begin
-  require "readline"
+  require 'readline'
 rescue LoadError
   warn <<-MESSAGE
     Sorry, you can't use byebug without Readline. To solve this, you need to
@@ -45,7 +45,7 @@ module Byebug
     def save
       n_cmds = Setting[:histsize] > size ? size : Setting[:histsize]
 
-      File.open(Setting[:histfile], "w") do |file|
+      File.open(Setting[:histfile], 'w') do |file|
         n_cmds.times { file.puts(pop) }
       end
 
@@ -86,7 +86,7 @@ module Byebug
       commands = buffer.last(show_size)
 
       last_ids(show_size).zip(commands).map do |l|
-        format("%<position>5d  %<command>s", position: l[0], command: l[1])
+        format('%<position>5d  %<command>s', position: l[0], command: l[1])
       end.join("\n") + "\n"
     end
 

@@ -5,7 +5,7 @@
 module Listen
   module Adapter
     class BSD < Base
-      OS_REGEXP = /bsd|dragonfly/i
+      OS_REGEXP = /bsd|dragonfly/i.freeze
 
       DEFAULTS = {
         events: [
@@ -28,6 +28,7 @@ module Listen
 
       def self.usable?
         return false unless super
+
         require 'rb-kqueue'
         require 'find'
         true
@@ -70,9 +71,8 @@ module Listen
 
       def _change(event_flags)
         { modified: [:attrib, :extend],
-          added:    [:write],
-          removed:  [:rename, :delete]
-        }.each do |change, flags|
+          added: [:write],
+          removed: [:rename, :delete] }.each do |change, flags|
           return change unless (flags & event_flags).empty?
         end
         nil
@@ -85,9 +85,7 @@ module Listen
       def _watch_for_new_file(event)
         queue = event.watcher.queue
         _find(_event_path(event).to_s) do |file_path|
-          unless queue.watchers.detect { |_, v| v.path == file_path.to_s }
-            _watch_file(file_path, queue)
-          end
+          _watch_file(file_path, queue) unless queue.watchers.detect { |_, v| v.path == file_path.to_s }
         end
       end
 

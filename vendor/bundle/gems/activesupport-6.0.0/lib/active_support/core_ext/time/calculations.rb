@@ -1,16 +1,16 @@
 # frozen_string_literal: true
 
-require "active_support/duration"
-require "active_support/core_ext/time/conversions"
-require "active_support/time_with_zone"
-require "active_support/core_ext/time/zones"
-require "active_support/core_ext/date_and_time/calculations"
-require "active_support/core_ext/date/calculations"
+require 'active_support/duration'
+require 'active_support/core_ext/time/conversions'
+require 'active_support/time_with_zone'
+require 'active_support/core_ext/time/zones'
+require 'active_support/core_ext/date_and_time/calculations'
+require 'active_support/core_ext/date/calculations'
 
 class Time
   include DateAndTime::Calculations
 
-  COMMON_YEAR_DAYS_IN_MONTH = [nil, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+  COMMON_YEAR_DAYS_IN_MONTH = [nil, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31].freeze
 
   class << self
     # Overriding case equality method so that it returns true for ActiveSupport::TimeWithZone instances
@@ -53,8 +53,8 @@ class Time
         at_without_coercion(time_or_number)
       end
     end
-    alias_method :at_without_coercion, :at
-    alias_method :at, :at_with_coercion
+    alias at_without_coercion at
+    alias at at_with_coercion
 
     # Creates a +Time+ instance from an RFC 3339 string.
     #
@@ -66,7 +66,7 @@ class Time
     def rfc3339(str)
       parts = Date._rfc3339(str)
 
-      raise ArgumentError, "invalid date" if parts.empty?
+      raise ArgumentError, 'invalid date' if parts.empty?
 
       Time.new(
         parts.fetch(:year),
@@ -123,19 +123,20 @@ class Time
     new_day    = options.fetch(:day, day)
     new_hour   = options.fetch(:hour, hour)
     new_min    = options.fetch(:min, options[:hour] ? 0 : min)
-    new_sec    = options.fetch(:sec, (options[:hour] || options[:min]) ? 0 : sec)
+    new_sec    = options.fetch(:sec, options[:hour] || options[:min] ? 0 : sec)
     new_offset = options.fetch(:offset, nil)
 
     if new_nsec = options[:nsec]
       raise ArgumentError, "Can't change both :nsec and :usec at the same time: #{options.inspect}" if options[:usec]
+
       new_usec = Rational(new_nsec, 1000)
     else
-      new_usec = options.fetch(:usec, (options[:hour] || options[:min] || options[:sec]) ? 0 : Rational(nsec, 1000))
+      new_usec = options.fetch(:usec, options[:hour] || options[:min] || options[:sec] ? 0 : Rational(nsec, 1000))
     end
 
-    raise ArgumentError, "argument out of range" if new_usec >= 1000000
+    raise ArgumentError, 'argument out of range' if new_usec >= 1_000_000
 
-    new_sec += Rational(new_usec, 1000000)
+    new_sec += Rational(new_usec, 1_000_000)
 
     if new_offset
       ::Time.new(new_year, new_month, new_day, new_hour, new_min, new_sec, new_offset)
@@ -192,28 +193,28 @@ class Time
   # Returns a new Time representing the time a number of seconds since the instance time
   def since(seconds)
     self + seconds
-  rescue
+  rescue StandardError
     to_datetime.since(seconds)
   end
-  alias :in :since
+  alias in since
 
   # Returns a new Time representing the start of the day (0:00)
   def beginning_of_day
     change(hour: 0)
   end
-  alias :midnight :beginning_of_day
-  alias :at_midnight :beginning_of_day
-  alias :at_beginning_of_day :beginning_of_day
+  alias midnight beginning_of_day
+  alias at_midnight beginning_of_day
+  alias at_beginning_of_day beginning_of_day
 
   # Returns a new Time representing the middle of the day (12:00)
   def middle_of_day
     change(hour: 12)
   end
-  alias :midday :middle_of_day
-  alias :noon :middle_of_day
-  alias :at_midday :middle_of_day
-  alias :at_noon :middle_of_day
-  alias :at_middle_of_day :middle_of_day
+  alias midday middle_of_day
+  alias noon middle_of_day
+  alias at_midday middle_of_day
+  alias at_noon middle_of_day
+  alias at_middle_of_day middle_of_day
 
   # Returns a new Time representing the end of the day, 23:59:59.999999
   def end_of_day
@@ -221,41 +222,41 @@ class Time
       hour: 23,
       min: 59,
       sec: 59,
-      usec: Rational(999999999, 1000)
+      usec: Rational(999_999_999, 1000)
     )
   end
-  alias :at_end_of_day :end_of_day
+  alias at_end_of_day end_of_day
 
   # Returns a new Time representing the start of the hour (x:00)
   def beginning_of_hour
     change(min: 0)
   end
-  alias :at_beginning_of_hour :beginning_of_hour
+  alias at_beginning_of_hour beginning_of_hour
 
   # Returns a new Time representing the end of the hour, x:59:59.999999
   def end_of_hour
     change(
       min: 59,
       sec: 59,
-      usec: Rational(999999999, 1000)
+      usec: Rational(999_999_999, 1000)
     )
   end
-  alias :at_end_of_hour :end_of_hour
+  alias at_end_of_hour end_of_hour
 
   # Returns a new Time representing the start of the minute (x:xx:00)
   def beginning_of_minute
     change(sec: 0)
   end
-  alias :at_beginning_of_minute :beginning_of_minute
+  alias at_beginning_of_minute beginning_of_minute
 
   # Returns a new Time representing the end of the minute, x:xx:59.999999
   def end_of_minute
     change(
       sec: 59,
-      usec: Rational(999999999, 1000)
+      usec: Rational(999_999_999, 1000)
     )
   end
-  alias :at_end_of_minute :end_of_minute
+  alias at_end_of_minute end_of_minute
 
   def plus_with_duration(other) #:nodoc:
     if ActiveSupport::Duration === other
@@ -264,8 +265,8 @@ class Time
       plus_without_duration(other)
     end
   end
-  alias_method :plus_without_duration, :+
-  alias_method :+, :plus_with_duration
+  alias plus_without_duration +
+  alias + plus_with_duration
 
   def minus_with_duration(other) #:nodoc:
     if ActiveSupport::Duration === other
@@ -274,8 +275,8 @@ class Time
       minus_without_duration(other)
     end
   end
-  alias_method :minus_without_duration, :-
-  alias_method :-, :minus_with_duration
+  alias minus_without_duration -
+  alias - minus_with_duration
 
   # Time#- can also be used to determine the number of seconds between two Time instances.
   # We're layering on additional behavior so that ActiveSupport::TimeWithZone instances
@@ -284,8 +285,8 @@ class Time
     other = other.comparable_time if other.respond_to?(:comparable_time)
     other.is_a?(DateTime) ? to_f - other.to_f : minus_without_coercion(other)
   end
-  alias_method :minus_without_coercion, :-
-  alias_method :-, :minus_with_coercion
+  alias minus_without_coercion -
+  alias - minus_with_coercion
 
   # Layers additional behavior on Time#<=> so that DateTime and ActiveSupport::TimeWithZone instances
   # can be chronologically compared with a Time
@@ -299,8 +300,8 @@ class Time
       to_datetime <=> other
     end
   end
-  alias_method :compare_without_coercion, :<=>
-  alias_method :<=>, :compare_with_coercion
+  alias compare_without_coercion <=>
+  alias <=> compare_with_coercion
 
   # Layers additional behavior on Time#eql? so that ActiveSupport::TimeWithZone instances
   # can be eql? to an equivalent Time
@@ -309,8 +310,8 @@ class Time
     other = other.comparable_time if other.respond_to?(:comparable_time)
     eql_without_coercion(other)
   end
-  alias_method :eql_without_coercion, :eql?
-  alias_method :eql?, :eql_with_coercion
+  alias eql_without_coercion eql?
+  alias eql? eql_with_coercion
 
   # Returns a new time the specified number of days ago.
   def prev_day(days = 1)

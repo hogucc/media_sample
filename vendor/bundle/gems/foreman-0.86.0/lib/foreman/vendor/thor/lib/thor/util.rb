@@ -1,4 +1,4 @@
-require "rbconfig"
+require 'rbconfig'
 
 class Foreman::Thor
   module Sandbox #:nodoc:
@@ -41,8 +41,8 @@ class Foreman::Thor
       # String:: If we receive Foo::Bar::Baz it returns "foo:bar:baz"
       #
       def namespace_from_thor_class(constant)
-        constant = constant.to_s.gsub(/^Foreman::Thor::Sandbox::/, "")
-        constant = snake_case(constant).squeeze(":")
+        constant = constant.to_s.gsub(/^Foreman::Thor::Sandbox::/, '')
+        constant = snake_case(constant).squeeze(':')
         constant
       end
 
@@ -75,7 +75,8 @@ class Foreman::Thor
         stringfied_constants = klass.constants.map(&:to_s)
         Foreman::Thor::Base.subclasses.select do |subclass|
           next unless subclass.name
-          stringfied_constants.include?(subclass.name.gsub("#{klass.name}::", ""))
+
+          stringfied_constants.include?(subclass.name.gsub("#{klass.name}::", ''))
         end
       end
 
@@ -89,7 +90,8 @@ class Foreman::Thor
       #
       def snake_case(str)
         return str.downcase if str =~ /^[A-Z_]+$/
-        str.gsub(/\B[A-Z]/, '_\&').squeeze("_") =~ /_*(.*)/
+
+        str.gsub(/\B[A-Z]/, '_\&').squeeze('_') =~ /_*(.*)/
         $+.downcase
       end
 
@@ -103,7 +105,8 @@ class Foreman::Thor
       #
       def camel_case(str)
         return str if str !~ /_/ && str =~ /[A-Z]+.*/
-        str.split("_").map(&:capitalize).join
+
+        str.split('_').map(&:capitalize).join
       end
 
       # Receives a namespace and tries to retrieve a Foreman::Thor or Foreman::Thor::Group class
@@ -129,10 +132,10 @@ class Foreman::Thor
       # namespace<String>
       #
       def find_class_and_command_by_namespace(namespace, fallback = true)
-        if namespace.include?(":") # look for a namespaced command
-          pieces  = namespace.split(":")
+        if namespace.include?(':') # look for a namespaced command
+          pieces  = namespace.split(':')
           command = pieces.pop
-          klass   = Foreman::Thor::Util.find_by_namespace(pieces.join(":"))
+          klass   = Foreman::Thor::Util.find_by_namespace(pieces.join(':'))
         end
         unless klass # look for a Foreman::Thor::Group with the right name
           klass = Foreman::Thor::Util.find_by_namespace(namespace)
@@ -140,11 +143,11 @@ class Foreman::Thor
         end
         if !klass && fallback # try a command in the default namespace
           command = namespace
-          klass   = Foreman::Thor::Util.find_by_namespace("")
+          klass   = Foreman::Thor::Util.find_by_namespace('')
         end
         [klass, command]
       end
-      alias_method :find_class_and_task_by_namespace, :find_class_and_command_by_namespace
+      alias find_class_and_task_by_namespace find_class_and_command_by_namespace
 
       # Receives a path and load the thor file in the path. The file is evaluated
       # inside the sandbox to avoid namespacing conflicts.
@@ -155,41 +158,41 @@ class Foreman::Thor
         begin
           Foreman::Thor::Sandbox.class_eval(content, path)
         rescue StandardError => e
-          $stderr.puts("WARNING: unable to load thorfile #{path.inspect}: #{e.message}")
+          warn("WARNING: unable to load thorfile #{path.inspect}: #{e.message}")
           if debug
-            $stderr.puts(*e.backtrace)
+            warn(*e.backtrace)
           else
-            $stderr.puts(e.backtrace.first)
+            warn(e.backtrace.first)
           end
         end
       end
 
       def user_home
-        @@user_home ||= if ENV["HOME"]
-          ENV["HOME"]
-        elsif ENV["USERPROFILE"]
-          ENV["USERPROFILE"]
-        elsif ENV["HOMEDRIVE"] && ENV["HOMEPATH"]
-          File.join(ENV["HOMEDRIVE"], ENV["HOMEPATH"])
-        elsif ENV["APPDATA"]
-          ENV["APPDATA"]
-        else
-          begin
-            File.expand_path("~")
-          rescue
-            if File::ALT_SEPARATOR
-              "C:/"
-            else
-              "/"
-            end
-          end
+        @@user_home ||= if ENV['HOME']
+                          ENV['HOME']
+                        elsif ENV['USERPROFILE']
+                          ENV['USERPROFILE']
+                        elsif ENV['HOMEDRIVE'] && ENV['HOMEPATH']
+                          File.join(ENV['HOMEDRIVE'], ENV['HOMEPATH'])
+                        elsif ENV['APPDATA']
+                          ENV['APPDATA']
+                        else
+                          begin
+                            File.expand_path('~')
+                          rescue StandardError
+                            if File::ALT_SEPARATOR
+                              'C:/'
+                            else
+                              '/'
+                            end
+                          end
         end
       end
 
       # Returns the root where thor files are located, depending on the OS.
       #
       def thor_root
-        File.join(user_home, ".thor").tr('\\', "/")
+        File.join(user_home, '.thor').tr('\\', '/')
       end
 
       # Returns the files in the thor root. On Windows thor_root will be something
@@ -203,7 +206,7 @@ class Foreman::Thor
         files = Dir["#{escape_globs(thor_root)}/*"]
 
         files.map! do |file|
-          File.directory?(file) ? File.join(file, "main.thor") : file
+          File.directory?(file) ? File.join(file, 'main.thor') : file
         end
       end
 
@@ -219,15 +222,15 @@ class Foreman::Thor
       #
       def ruby_command
         @ruby_command ||= begin
-          ruby_name = RbConfig::CONFIG["ruby_install_name"]
-          ruby = File.join(RbConfig::CONFIG["bindir"], ruby_name)
-          ruby << RbConfig::CONFIG["EXEEXT"]
+          ruby_name = RbConfig::CONFIG['ruby_install_name']
+          ruby = File.join(RbConfig::CONFIG['bindir'], ruby_name)
+          ruby << RbConfig::CONFIG['EXEEXT']
 
           # avoid using different name than ruby (on platforms supporting links)
-          if ruby_name != "ruby" && File.respond_to?(:readlink)
+          if ruby_name != 'ruby' && File.respond_to?(:readlink)
             begin
-              alternate_ruby = File.join(RbConfig::CONFIG["bindir"], "ruby")
-              alternate_ruby << RbConfig::CONFIG["EXEEXT"]
+              alternate_ruby = File.join(RbConfig::CONFIG['bindir'], 'ruby')
+              alternate_ruby << RbConfig::CONFIG['EXEEXT']
 
               # ruby is a symlink
               if File.symlink? alternate_ruby

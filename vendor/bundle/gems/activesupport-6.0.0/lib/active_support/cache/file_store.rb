@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require "active_support/core_ext/marshal"
-require "active_support/core_ext/file/atomic"
-require "active_support/core_ext/string/conversions"
-require "uri/common"
+require 'active_support/core_ext/marshal'
+require 'active_support/core_ext/file/atomic'
+require 'active_support/core_ext/string/conversions'
+require 'uri/common'
 
 module ActiveSupport
   module Cache
@@ -15,10 +15,10 @@ module ActiveSupport
       prepend Strategy::LocalCache
       attr_reader :cache_path
 
-      DIR_FORMATTER = "%03X"
+      DIR_FORMATTER = '%03X'
       FILENAME_MAX_SIZE = 228 # max filename size on file system is 255, minus room for timestamp and random characters appended by Tempfile (used by atomic write)
       FILEPATH_MAX_SIZE = 900 # max is 1024, plus some room
-      GITKEEP_FILES = [".gitkeep", ".keep"].freeze
+      GITKEEP_FILES = ['.gitkeep', '.keep'].freeze
 
       def initialize(cache_path, options = nil)
         super(options)
@@ -33,7 +33,7 @@ module ActiveSupport
       # Deletes all items from the cache. In this case it deletes all the entries in the specified
       # file store directory except for .keep or .gitkeep. Be careful which directory is specified in your
       # config file when using +FileStore+ because everything in that directory will be deleted.
-      def clear(options = nil)
+      def clear(_options = nil)
         root_dirs = (Dir.children(cache_path) - GITKEEP_FILES)
         FileUtils.rm_r(root_dirs.collect { |f| File.join(cache_path, f) })
       rescue Errno::ENOENT
@@ -44,7 +44,7 @@ module ActiveSupport
         options = merged_options(options)
         search_dir(cache_path) do |fname|
           entry = read_entry(fname, options)
-          delete_entry(fname, options) if entry && entry.expired?
+          delete_entry(fname, options) if entry&.expired?
         end
       end
 
@@ -73,124 +73,128 @@ module ActiveSupport
 
       private
 
-        def read_entry(key, options)
-          if File.exist?(key)
-            File.open(key) { |f| Marshal.load(f) }
+      def read_entry(key, _options)
+        File.open(key) { |f| Marshal.load(f) } if File.exist?(key)
+      rescue StandardError => e
+        logger&.error("FileStoreError (#{e}): #{e.message}")
+        nil
+      end
+
+      def write_entry(key, entry, options)
+        return false if options[:unless_exist] && File.exist?(key)
+
+        ensure_cache_path(File.dirname(key))
+        File.atomic_write(key, cache_path) { |f| Marshal.dump(entry, f) }
+        true
+      end
+
+      def delete_entry(key, _options)
+        if File.exist?(key)
+          begin
+            File.delete(key)
+            delete_empty_directories(File.dirname(key))
+            true
+          rescue StandardError => e
+            # Just in case the error was caused by another process deleting the file first.
+            raise e if File.exist?(key)
+
+            false
           end
-        rescue => e
-          logger.error("FileStoreError (#{e}): #{e.message}") if logger
-          nil
         end
+      end
 
-        def write_entry(key, entry, options)
-          return false if options[:unless_exist] && File.exist?(key)
-          ensure_cache_path(File.dirname(key))
-          File.atomic_write(key, cache_path) { |f| Marshal.dump(entry, f) }
-          true
-        end
-
-        def delete_entry(key, options)
-          if File.exist?(key)
-            begin
-              File.delete(key)
-              delete_empty_directories(File.dirname(key))
-              true
-            rescue => e
-              # Just in case the error was caused by another process deleting the file first.
-              raise e if File.exist?(key)
-              false
-            end
-          end
-        end
-
-        # Lock a file for a block so only one process can modify it at a time.
-        def lock_file(file_name, &block)
-          if File.exist?(file_name)
-            File.open(file_name, "r+") do |f|
-              f.flock File::LOCK_EX
-              yield
-            ensure
-              f.flock File::LOCK_UN
-            end
-          else
+      # Lock a file for a block so only one process can modify it at a time.
+      def lock_file(file_name)
+        if File.exist?(file_name)
+          File.open(file_name, 'r+') do |f|
+            f.flock File::LOCK_EX
             yield
+          ensure
+            f.flock File::LOCK_UN
           end
+        else
+          yield
+        end
+      end
+
+      # Translate a key into a file path.
+      def normalize_key(key, options)
+        key = super
+        fname = URI.encode_www_form_component(key)
+
+        fname = ActiveSupport::Digest.hexdigest(key) if fname.size > FILEPATH_MAX_SIZE
+
+        hash = Zlib.adler32(fname)
+        hash, dir_1 = hash.divmod(0x1000)
+        dir_2 = hash.modulo(0x1000)
+
+        # Make sure file name doesn't exceed file system limits.
+        if fname.length < FILENAME_MAX_SIZE
+          fname_paths = fname
+        else
+          fname_paths = []
+          begin
+            fname_paths << fname[0, FILENAME_MAX_SIZE]
+            fname = fname[FILENAME_MAX_SIZE..-1]
+          end until fname.blank?
         end
 
-        # Translate a key into a file path.
-        def normalize_key(key, options)
-          key = super
-          fname = URI.encode_www_form_component(key)
+        File.join(cache_path, DIR_FORMATTER % dir_1, DIR_FORMATTER % dir_2, fname_paths)
+      end
 
-          if fname.size > FILEPATH_MAX_SIZE
-            fname = ActiveSupport::Digest.hexdigest(key)
-          end
+      # Translate a file path into a key.
+      def file_path_key(path)
+        fname = path[cache_path.to_s.size..-1].split(File::SEPARATOR, 4).last
+        URI.decode_www_form_component(fname, Encoding::UTF_8)
+      end
 
-          hash = Zlib.adler32(fname)
-          hash, dir_1 = hash.divmod(0x1000)
-          dir_2 = hash.modulo(0x1000)
+      # Delete empty directories in the cache.
+      def delete_empty_directories(dir)
+        return if File.realpath(dir) == File.realpath(cache_path)
 
-          # Make sure file name doesn't exceed file system limits.
-          if fname.length < FILENAME_MAX_SIZE
-            fname_paths = fname
+        if Dir.children(dir).empty?
+          begin
+              Dir.delete(dir)
+          rescue StandardError
+            nil
+            end
+          delete_empty_directories(File.dirname(dir))
+        end
+      end
+
+      # Make sure a file path's directories exist.
+      def ensure_cache_path(path)
+        FileUtils.makedirs(path) unless File.exist?(path)
+      end
+
+      def search_dir(dir, &callback)
+        return unless File.exist?(dir)
+
+        Dir.each_child(dir) do |d|
+          name = File.join(dir, d)
+          if File.directory?(name)
+            search_dir(name, &callback)
           else
-            fname_paths = []
-            begin
-              fname_paths << fname[0, FILENAME_MAX_SIZE]
-              fname = fname[FILENAME_MAX_SIZE..-1]
-            end until fname.blank?
-          end
-
-          File.join(cache_path, DIR_FORMATTER % dir_1, DIR_FORMATTER % dir_2, fname_paths)
-        end
-
-        # Translate a file path into a key.
-        def file_path_key(path)
-          fname = path[cache_path.to_s.size..-1].split(File::SEPARATOR, 4).last
-          URI.decode_www_form_component(fname, Encoding::UTF_8)
-        end
-
-        # Delete empty directories in the cache.
-        def delete_empty_directories(dir)
-          return if File.realpath(dir) == File.realpath(cache_path)
-          if Dir.children(dir).empty?
-            Dir.delete(dir) rescue nil
-            delete_empty_directories(File.dirname(dir))
+            callback.call name
           end
         end
+      end
 
-        # Make sure a file path's directories exist.
-        def ensure_cache_path(path)
-          FileUtils.makedirs(path) unless File.exist?(path)
-        end
+      # Modifies the amount of an already existing integer value that is stored in the cache.
+      # If the key is not found nothing is done.
+      def modify_value(name, amount, options)
+        file_name = normalize_key(name, options)
 
-        def search_dir(dir, &callback)
-          return if !File.exist?(dir)
-          Dir.each_child(dir) do |d|
-            name = File.join(dir, d)
-            if File.directory?(name)
-              search_dir(name, &callback)
-            else
-              callback.call name
-            end
+        lock_file(file_name) do
+          options = merged_options(options)
+
+          if num = read(name, options)
+            num = num.to_i + amount
+            write(name, num, options)
+            num
           end
         end
-
-        # Modifies the amount of an already existing integer value that is stored in the cache.
-        # If the key is not found nothing is done.
-        def modify_value(name, amount, options)
-          file_name = normalize_key(name, options)
-
-          lock_file(file_name) do
-            options = merged_options(options)
-
-            if num = read(name, options)
-              num = num.to_i + amount
-              write(name, num, options)
-              num
-            end
-          end
-        end
+      end
     end
   end
 end

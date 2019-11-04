@@ -1,6 +1,5 @@
 module Concurrent
   module Synchronization
-
     # @!visibility private
     # @!macro internal_implementation_note
     class RbxLockableObject < AbstractLockableObject
@@ -14,18 +13,16 @@ module Concurrent
 
       protected
 
-      def synchronize(&block)
+      def synchronize
         if @__owner__ == Thread.current
           yield
         else
           result = nil
           Rubinius.synchronize(self) do
-            begin
-              @__owner__ = Thread.current
-              result     = yield
-            ensure
-              @__owner__ = nil
-            end
+            @__owner__ = Thread.current
+            result     = yield
+          ensure
+            @__owner__ = nil
           end
           result
         end

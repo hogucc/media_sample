@@ -40,9 +40,7 @@ module ChildProcess
     #
 
     def initialize(args)
-      unless args.all? { |e| e.kind_of?(String) }
-        raise ArgumentError, "all arguments must be String: #{args.inspect}"
-      end
+      raise ArgumentError, "all arguments must be String: #{args.inspect}" unless args.all? { |e| e.is_a?(String) }
 
       @args        = args
       @started     = false
@@ -60,7 +58,7 @@ module ChildProcess
     #
 
     def io
-      raise SubclassResponsibility, "io"
+      raise SubclassResponsibility, 'io'
     end
 
     #
@@ -68,7 +66,7 @@ module ChildProcess
     #
 
     def pid
-      raise SubclassResponsibility, "pid"
+      raise SubclassResponsibility, 'pid'
     end
 
     #
@@ -90,8 +88,8 @@ module ChildProcess
     # @param [Integer] timeout (3) Seconds to wait before trying the next method.
     #
 
-    def stop(timeout = 3)
-      raise SubclassResponsibility, "stop"
+    def stop(_timeout = 3)
+      raise SubclassResponsibility, 'stop'
     end
 
     #
@@ -101,7 +99,7 @@ module ChildProcess
     #
 
     def wait
-      raise SubclassResponsibility, "wait"
+      raise SubclassResponsibility, 'wait'
     end
 
     #
@@ -111,7 +109,7 @@ module ChildProcess
     #
 
     def exited?
-      raise SubclassResponsibility, "exited?"
+      raise SubclassResponsibility, 'exited?'
     end
 
     #
@@ -157,15 +155,13 @@ module ChildProcess
         sleep POLL_INTERVAL
       end
 
-      unless ok
-        raise TimeoutError, "process still alive after #{timeout} seconds"
-      end
+      raise TimeoutError, "process still alive after #{timeout} seconds" unless ok
     end
 
     private
 
     def launch_process
-      raise SubclassResponsibility, "launch_process"
+      raise SubclassResponsibility, 'launch_process'
     end
 
     def detach?
@@ -181,12 +177,11 @@ module ChildProcess
     end
 
     def log(*args)
-      ChildProcess.logger.debug "#{self.inspect} : #{args.inspect}"
+      ChildProcess.logger.debug "#{inspect} : #{args.inspect}"
     end
 
     def assert_started
-      raise Error, "process not started" unless started?
+      raise Error, 'process not started' unless started?
     end
-
   end # AbstractProcess
 end # ChildProcess

@@ -7,10 +7,8 @@ require 'concurrent/thread_safe/util/volatile'
 require 'concurrent/thread_safe/util/xor_shift_random'
 
 module Concurrent
-
   # @!visibility private
   module Collection
-
     # A Ruby port of the Doug Lea's jsr166e.ConcurrentHashMapV8 class version 1.59
     # available in public domain.
     #
@@ -192,7 +190,6 @@ module Concurrent
     #
     # @!visibility private
     class AtomicReferenceMapBackend
-
       # @!visibility private
       class Table < Concurrent::ThreadSafe::Util::PowerOfTwoTuple
         def cas_new_node(i, hash, key, value)
@@ -216,7 +213,7 @@ module Concurrent
               new_node.unlock_via_hash(locked_hash, hash)
             end
           end
-          return succeeded, new_value
+          [succeeded, new_value]
         end
 
         def try_lock_via_hash(i, node, node_hash)
@@ -261,8 +258,8 @@ module Concurrent
         def initialize(hash, key, value, next_node = nil)
           super()
           @key = key
-          self.lazy_set_hash(hash)
-          self.lazy_set_value(value)
+          lazy_set_hash(hash)
+          lazy_set_value(value)
           self.next = next_node
         end
 
@@ -330,6 +327,7 @@ module Concurrent
         end
 
         private
+
         def force_acquire_lock(table, i)
           cheap_synchronize do
             if equal?(table.volatile_get(i)) && (hash & WAITING) == WAITING
@@ -364,18 +362,17 @@ module Concurrent
 
       extend Concurrent::ThreadSafe::Util::Volatile
       attr_volatile :table, # The array of bins. Lazily initialized upon first insertion. Size is always a power of two.
-
-        # Table initialization and resizing control.  When negative, the
-        # table is being initialized or resized. Otherwise, when table is
-        # null, holds the initial table size to use upon creation, or 0
-        # for default. After initialization, holds the next element count
-        # value upon which to resize the table.
-        :size_control
+                    # Table initialization and resizing control.  When negative, the
+                    # table is being initialized or resized. Otherwise, when table is
+                    # null, holds the initial table size to use upon creation, or 0
+                    # for default. After initialization, holds the next element count
+                    # value upon which to resize the table.
+                    :size_control
 
       def initialize(options = nil)
         super()
         @counter = Concurrent::ThreadSafe::Util::Adder.new
-        initial_capacity  = options && options[:initial_capacity] || DEFAULT_CAPACITY
+        initial_capacity = options && options[:initial_capacity] || DEFAULT_CAPACITY
         self.size_control = (capacity = table_size_for(initial_capacity)) > MAX_CAPACITY ? MAX_CAPACITY : capacity
       end
 
@@ -391,6 +388,7 @@ module Concurrent
               elsif (node_hash & HASH_BITS) == hash && node.key?(key) && NULL != (value = node.value)
                 return value
               end
+
               node = node.next
             end
         end
@@ -413,7 +411,7 @@ module Concurrent
       def compute_if_absent(key)
         hash          = key_hash(key)
         current_table = table || initialize_table
-        while true
+        loop do
           if !(node = current_table.volatile_get(i = current_table.hash_to_index(hash)))
             succeeded, new_value = current_table.try_to_cas_in_computed(i, hash, key) { yield }
             if succeeded
@@ -478,7 +476,7 @@ module Concurrent
       def get_and_set(key, value) # internalPut in the original CHMV8
         hash          = key_hash(key)
         current_table = table || initialize_table
-        while true
+        loop do
           if !(node = current_table.volatile_get(i = current_table.hash_to_index(hash)))
             if current_table.cas_new_node(i, hash, key, value)
               increment_size
@@ -510,6 +508,7 @@ module Concurrent
 
       def each_pair
         return self unless current_table = table
+
         current_table_size = base_size = current_table.size
         i = base_index = 0
         while base_index < base_size
@@ -526,11 +525,11 @@ module Concurrent
             end
           end
 
-          if (i_with_base = i + base_size) < current_table_size
-            i = i_with_base # visit upper slots if present
-          else
-            i = base_index += 1
-          end
+          i = if (i_with_base = i + base_size) < current_table_size
+                i_with_base # visit upper slots if present
+              else
+                base_index += 1
+              end
         end
         self
       end
@@ -546,6 +545,7 @@ module Concurrent
       # Implementation for clear. Steps through each bin, removing all nodes.
       def clear
         return self unless current_table = table
+
         current_table_size = current_table.size
         deleted_count = i = 0
         while i < current_table_size
@@ -574,6 +574,7 @@ module Concurrent
       end
 
       private
+
       # Internal versions of the insertion methods, each a
       # little more complicated than the last. All have
       # the same basic structure:
@@ -634,7 +635,7 @@ module Concurrent
 
       def find_value_in_node_list(node, key, hash, pure_hash)
         do_check_for_resize = false
-        while true
+        loop do
           if pure_hash == hash && node.key?(key) && NULL != (value = node.value)
             return value
           elsif node = node.next
@@ -651,7 +652,7 @@ module Concurrent
       def internal_compute(key, &block)
         hash          = key_hash(key)
         current_table = table || initialize_table
-        while true
+        loop do
           if !(node = current_table.volatile_get(i = current_table.hash_to_index(hash)))
             succeeded, new_value = current_table.try_to_cas_in_computed(i, hash, key, &block)
             if succeeded
@@ -676,17 +677,18 @@ module Concurrent
       def attempt_internal_compute_if_absent(key, hash, current_table, i, node, node_hash)
         added = false
         current_table.try_lock_via_hash(i, node, node_hash) do
-          while true
+          loop do
             if node.matches?(key, hash) && NULL != (value = node.value)
               return true, value
             end
+
             last = node
-            unless node = node.next
-              last.next = Node.new(hash, key, value = yield)
-              added = true
-              increment_size
-              return true, value
-            end
+            next if node = node.next
+
+            last.next = Node.new(hash, key, value = yield)
+            added = true
+            increment_size
+            return true, value
           end
         end
       ensure
@@ -697,7 +699,7 @@ module Concurrent
         added = false
         current_table.try_lock_via_hash(i, node, node_hash) do
           predecessor_node = nil
-          while true
+          loop do
             if node.matches?(key, hash) && NULL != (value = node.value)
               if NULL == (node.value = value = yield(value))
                 current_table.delete_node_at(i, node, predecessor_node)
@@ -707,16 +709,16 @@ module Concurrent
               return true, value
             end
             predecessor_node = node
-            unless node = node.next
-              if NULL == (value = yield(NULL))
-                value = nil
-              else
-                predecessor_node.next = Node.new(hash, key, value)
-                added = true
-                increment_size
-              end
-              return true, value
+            next if node = node.next
+
+            if NULL == (value = yield(NULL))
+              value = nil
+            else
+              predecessor_node.next = Node.new(hash, key, value)
+              added = true
+              increment_size
             end
+            return true, value
           end
         end
       ensure
@@ -744,6 +746,7 @@ module Concurrent
           end
 
           return true, old_value if found_old_value
+
           increment_size
           true
         end
@@ -826,10 +829,10 @@ module Concurrent
         locked_arr_idx = 0
         bin            = old_table_size - 1
         i              = bin
-        while true
+        loop do
           if !(node = table.volatile_get(i))
             # no lock needed (or available) if bin >= 0, because we're not popping values from locked_indexes until we've run through the whole table
-            redo unless (bin >= 0 ? table.cas(i, nil, forwarder) : lock_and_clean_up_reverse_forwarders(table, old_table_size, new_table, i, forwarder))
+            redo unless bin >= 0 ? table.cas(i, nil, forwarder) : lock_and_clean_up_reverse_forwarders(table, old_table_size, new_table, i, forwarder)
           elsif Node.locked_hash?(node_hash = node.hash)
             locked_indexes ||= ::Array.new
             if bin < 0 && locked_arr_idx > 0

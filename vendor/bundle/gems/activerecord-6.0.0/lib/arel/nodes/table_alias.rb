@@ -3,9 +3,9 @@
 module Arel # :nodoc: all
   module Nodes
     class TableAlias < Arel::Nodes::Binary
-      alias :name :right
-      alias :relation :left
-      alias :table_alias :name
+      alias name right
+      alias relation left
+      alias table_alias name
 
       def [](name)
         Attribute.new(self, name)

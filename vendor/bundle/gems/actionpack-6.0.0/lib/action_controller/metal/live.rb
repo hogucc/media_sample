@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require "action_dispatch/http/response"
-require "delegate"
-require "active_support/json"
+require 'action_dispatch/http/response'
+require 'delegate'
+require 'active_support/json'
 
 module ActionController
   # Mix this module into your controller, and all actions in that controller
@@ -39,7 +39,7 @@ module ActionController
 
     module ClassMethods
       def make_response!(request)
-        if request.get_header("HTTP_VERSION") == "HTTP/1.0"
+        if request.get_header('HTTP_VERSION') == 'HTTP/1.0'
           super
         else
           Live::Response.new.tap do |res|
@@ -86,7 +86,7 @@ module ActionController
     # Note: SSEs are not currently supported by IE. However, they are supported
     # by Chrome, Firefox, Opera, and Safari.
     class SSE
-      PERMITTED_OPTIONS = %w( retry event id )
+      PERMITTED_OPTIONS = %w[retry event id].freeze
 
       def initialize(stream, options = {})
         @stream = stream
@@ -108,18 +108,18 @@ module ActionController
 
       private
 
-        def perform_write(json, options)
-          current_options = @options.merge(options).stringify_keys
+      def perform_write(json, options)
+        current_options = @options.merge(options).stringify_keys
 
-          PERMITTED_OPTIONS.each do |option_name|
-            if (option_value = current_options[option_name])
-              @stream.write "#{option_name}: #{option_value}\n"
-            end
+        PERMITTED_OPTIONS.each do |option_name|
+          if (option_value = current_options[option_name])
+            @stream.write "#{option_name}: #{option_value}\n"
           end
-
-          message = json.gsub("\n", "\ndata: ")
-          @stream.write "data: #{message}\n\n"
         end
+
+        message = json.gsub("\n", "\ndata: ")
+        @stream.write "data: #{message}\n\n"
+      end
     end
 
     class ClientDisconnected < RuntimeError
@@ -137,7 +137,7 @@ module ActionController
       attr_accessor :ignore_disconnect
 
       def initialize(response)
-        @error_callback = lambda { true }
+        @error_callback = -> { true }
         @cv = new_cond
         @aborted = false
         @ignore_disconnect = false
@@ -146,8 +146,8 @@ module ActionController
 
       def write(string)
         unless @response.committed?
-          @response.headers["Cache-Control"] ||= "no-cache"
-          @response.delete_header "Content-Length"
+          @response.headers['Cache-Control'] ||= 'no-cache'
+          @response.delete_header 'Content-Length'
         end
 
         super
@@ -159,7 +159,7 @@ module ActionController
             # Raise ClientDisconnected, which is a RuntimeError (not an
             # IOError), because that's more appropriate for something beyond
             # the developer's control.
-            raise ClientDisconnected, "client disconnected"
+            raise ClientDisconnected, 'client disconnected'
           end
         end
       end
@@ -206,33 +206,34 @@ module ActionController
 
       private
 
-        def each_chunk(&block)
-          loop do
-            str = nil
-            ActiveSupport::Dependencies.interlock.permit_concurrent_loads do
-              str = @buf.pop
-            end
-            break unless str
-            yield str
+      def each_chunk
+        loop do
+          str = nil
+          ActiveSupport::Dependencies.interlock.permit_concurrent_loads do
+            str = @buf.pop
           end
+          break unless str
+
+          yield str
         end
+      end
     end
 
     class Response < ActionDispatch::Response #:nodoc: all
       private
 
-        def before_committed
-          super
-          jar = request.cookie_jar
-          # The response can be committed multiple times
-          jar.write self unless committed?
-        end
+      def before_committed
+        super
+        jar = request.cookie_jar
+        # The response can be committed multiple times
+        jar.write self unless committed?
+      end
 
-        def build_buffer(response, body)
-          buf = Live::Buffer.new response
-          body.each { |part| buf.write part }
-          buf
-        end
+      def build_buffer(response, body)
+        buf = Live::Buffer.new response
+        body.each { |part| buf.write part }
+        buf
+      end
     end
 
     def process(name)
@@ -243,7 +244,7 @@ module ActionController
       # This processes the action in a child thread. It lets us return the
       # response code and headers back up the Rack stack, and still process
       # the body in parallel with sending data to the client.
-      new_controller_thread {
+      new_controller_thread do
         ActiveSupport::Dependencies.interlock.running do
           t2 = Thread.current
 
@@ -253,13 +254,13 @@ module ActionController
 
           begin
             super(name)
-          rescue => e
+          rescue StandardError => e
             if @_response.committed?
               begin
                 @_response.stream.write(ActionView::Base.streaming_completion_on_exception) if request.format == :html
                 @_response.stream.call_on_error
-              rescue => exception
-                log_error(exception)
+              rescue StandardError => e
+                log_error(e)
               ensure
                 log_error(e)
                 @_response.stream.close
@@ -271,7 +272,7 @@ module ActionController
             @_response.commit!
           end
         end
-      }
+      end
 
       ActiveSupport::Dependencies.interlock.permit_concurrent_loads do
         @_response.await_commit
@@ -282,33 +283,33 @@ module ActionController
 
     def response_body=(body)
       super
-      response.close if response
+      response&.close
     end
 
     private
 
-      # Spawn a new thread to serve up the controller in. This is to get
-      # around the fact that Rack isn't based around IOs and we need to use
-      # a thread to stream data from the response bodies. Nobody should call
-      # this method except in Rails internals. Seriously!
-      def new_controller_thread # :nodoc:
-        Thread.new {
-          t2 = Thread.current
-          t2.abort_on_exception = true
-          yield
-        }
+    # Spawn a new thread to serve up the controller in. This is to get
+    # around the fact that Rack isn't based around IOs and we need to use
+    # a thread to stream data from the response bodies. Nobody should call
+    # this method except in Rails internals. Seriously!
+    def new_controller_thread # :nodoc:
+      Thread.new do
+        t2 = Thread.current
+        t2.abort_on_exception = true
+        yield
       end
+    end
 
-      def log_error(exception)
-        logger = ActionController::Base.logger
-        return unless logger
+    def log_error(exception)
+      logger = ActionController::Base.logger
+      return unless logger
 
-        logger.fatal do
-          message = +"\n#{exception.class} (#{exception.message}):\n"
-          message << exception.annotated_source_code.to_s if exception.respond_to?(:annotated_source_code)
-          message << "  " << exception.backtrace.join("\n  ")
-          "#{message}\n\n"
-        end
+      logger.fatal do
+        message = +"\n#{exception.class} (#{exception.message}):\n"
+        message << exception.annotated_source_code.to_s if exception.respond_to?(:annotated_source_code)
+        message << '  ' << exception.backtrace.join("\n  ")
+        "#{message}\n\n"
       end
+    end
   end
 end

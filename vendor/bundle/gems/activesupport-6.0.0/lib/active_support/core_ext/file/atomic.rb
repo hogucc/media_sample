@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "fileutils"
+require 'fileutils'
 
 class File
   # Write to a file atomically. Useful for situations where you don't
@@ -19,7 +19,7 @@ class File
   #     file.write('hello')
   #   end
   def self.atomic_write(file_name, temp_dir = dirname(file_name))
-    require "tempfile" unless defined?(Tempfile)
+    require 'tempfile' unless defined?(Tempfile)
 
     Tempfile.open(".#{basename(file_name)}", temp_dir) do |temp_file|
       temp_file.binmode
@@ -27,12 +27,12 @@ class File
       temp_file.close
 
       old_stat = if exist?(file_name)
-        # Get original file permissions
-        stat(file_name)
-      else
-        # If not possible, probe which are the default permissions in the
-        # destination directory.
-        probe_stat_in(dirname(file_name))
+                   # Get original file permissions
+                   stat(file_name)
+                 else
+                   # If not possible, probe which are the default permissions in the
+                   # destination directory.
+                   probe_stat_in(dirname(file_name))
       end
 
       if old_stat
@@ -55,11 +55,11 @@ class File
   # Private utility method.
   def self.probe_stat_in(dir) #:nodoc:
     basename = [
-      ".permissions_check",
+      '.permissions_check',
       Thread.current.object_id,
       Process.pid,
-      rand(1000000)
-    ].join(".")
+      rand(1_000_000)
+    ].join('.')
 
     file_name = join(dir, basename)
     FileUtils.touch(file_name)

@@ -1,15 +1,15 @@
 # frozen_string_literal: true
 
-require "active_support/core_ext/hash/keys"
-require "active_support/key_generator"
-require "active_support/message_verifier"
-require "active_support/json"
-require "rack/utils"
+require 'active_support/core_ext/hash/keys'
+require 'active_support/key_generator'
+require 'active_support/message_verifier'
+require 'active_support/json'
+require 'rack/utils'
 
 module ActionDispatch
   class Request
     def cookie_jar
-      fetch_header("action_dispatch.cookies") do
+      fetch_header('action_dispatch.cookies') do
         self.cookie_jar = Cookies::CookieJar.build(self, cookies)
       end
     end
@@ -22,11 +22,11 @@ module ActionDispatch
     }
 
     def have_cookie_jar?
-      has_header? "action_dispatch.cookies"
+      has_header? 'action_dispatch.cookies'
     end
 
     def cookie_jar=(jar)
-      set_header "action_dispatch.cookies", jar
+      set_header 'action_dispatch.cookies', jar
     end
 
     def key_generator
@@ -168,20 +168,20 @@ module ActionDispatch
   # * <tt>:httponly</tt> - Whether this cookie is accessible via scripting or
   #   only HTTP. Defaults to +false+.
   class Cookies
-    HTTP_HEADER   = "Set-Cookie"
-    GENERATOR_KEY = "action_dispatch.key_generator"
-    SIGNED_COOKIE_SALT = "action_dispatch.signed_cookie_salt"
-    ENCRYPTED_COOKIE_SALT = "action_dispatch.encrypted_cookie_salt"
-    ENCRYPTED_SIGNED_COOKIE_SALT = "action_dispatch.encrypted_signed_cookie_salt"
-    AUTHENTICATED_ENCRYPTED_COOKIE_SALT = "action_dispatch.authenticated_encrypted_cookie_salt"
-    USE_AUTHENTICATED_COOKIE_ENCRYPTION = "action_dispatch.use_authenticated_cookie_encryption"
-    ENCRYPTED_COOKIE_CIPHER = "action_dispatch.encrypted_cookie_cipher"
-    SIGNED_COOKIE_DIGEST = "action_dispatch.signed_cookie_digest"
-    SECRET_KEY_BASE = "action_dispatch.secret_key_base"
-    COOKIES_SERIALIZER = "action_dispatch.cookies_serializer"
-    COOKIES_DIGEST = "action_dispatch.cookies_digest"
-    COOKIES_ROTATIONS = "action_dispatch.cookies_rotations"
-    USE_COOKIES_WITH_METADATA = "action_dispatch.use_cookies_with_metadata"
+    HTTP_HEADER   = 'Set-Cookie'
+    GENERATOR_KEY = 'action_dispatch.key_generator'
+    SIGNED_COOKIE_SALT = 'action_dispatch.signed_cookie_salt'
+    ENCRYPTED_COOKIE_SALT = 'action_dispatch.encrypted_cookie_salt'
+    ENCRYPTED_SIGNED_COOKIE_SALT = 'action_dispatch.encrypted_signed_cookie_salt'
+    AUTHENTICATED_ENCRYPTED_COOKIE_SALT = 'action_dispatch.authenticated_encrypted_cookie_salt'
+    USE_AUTHENTICATED_COOKIE_ENCRYPTION = 'action_dispatch.use_authenticated_cookie_encryption'
+    ENCRYPTED_COOKIE_CIPHER = 'action_dispatch.encrypted_cookie_cipher'
+    SIGNED_COOKIE_DIGEST = 'action_dispatch.signed_cookie_digest'
+    SECRET_KEY_BASE = 'action_dispatch.secret_key_base'
+    COOKIES_SERIALIZER = 'action_dispatch.cookies_serializer'
+    COOKIES_DIGEST = 'action_dispatch.cookies_digest'
+    COOKIES_ROTATIONS = 'action_dispatch.cookies_rotations'
+    USE_COOKIES_WITH_METADATA = 'action_dispatch.use_cookies_with_metadata'
 
     # Cookies can typically store 4096 bytes.
     MAX_COOKIE_SIZE = 4096
@@ -253,24 +253,25 @@ module ActionDispatch
 
       private
 
-        def upgrade_legacy_hmac_aes_cbc_cookies?
-          request.secret_key_base.present? &&
-            request.encrypted_signed_cookie_salt.present? &&
-            request.encrypted_cookie_salt.present? &&
-            request.use_authenticated_cookie_encryption
-        end
+      def upgrade_legacy_hmac_aes_cbc_cookies?
+        request.secret_key_base.present? &&
+          request.encrypted_signed_cookie_salt.present? &&
+          request.encrypted_cookie_salt.present? &&
+          request.use_authenticated_cookie_encryption
+      end
 
-        def encrypted_cookie_cipher
-          request.encrypted_cookie_cipher || "aes-256-gcm"
-        end
+      def encrypted_cookie_cipher
+        request.encrypted_cookie_cipher || 'aes-256-gcm'
+      end
 
-        def signed_cookie_digest
-          request.signed_cookie_digest || "SHA1"
-        end
+      def signed_cookie_digest
+        request.signed_cookie_digest || 'SHA1'
+      end
     end
 
     class CookieJar #:nodoc:
-      include Enumerable, ChainedCookieJars
+      include ChainedCookieJars
+      include Enumerable
 
       # This regular expression is used to split the levels of a domain.
       # The top level domain can be any string without a period or
@@ -284,7 +285,7 @@ module ActionDispatch
       #
       # lots.of.subdomains.example.local gives:
       # $& => example.local
-      DOMAIN_REGEXP = /[^.]*\.([^.]*|..\...|...\...)$/
+      DOMAIN_REGEXP = /[^.]*\.([^.]*|..\...|...\...)$/.freeze
 
       def self.build(req, cookies)
         new(req).tap do |hash|
@@ -302,7 +303,9 @@ module ActionDispatch
         @committed = false
       end
 
-      def committed?; @committed; end
+      def committed?
+        @committed
+      end
 
       def commit!
         @committed = true
@@ -326,10 +329,10 @@ module ActionDispatch
       def key?(name)
         @cookies.key?(name.to_s)
       end
-      alias :has_key? :key?
+      alias has_key? key?
 
       # Returns the cookies as Hash.
-      alias :to_hash :to_h
+      alias to_hash to_h
 
       def update(other_hash)
         @cookies.update other_hash.stringify_keys
@@ -344,28 +347,24 @@ module ActionDispatch
       end
 
       def to_header
-        @cookies.map { |k, v| "#{escape(k)}=#{escape(v)}" }.join "; "
+        @cookies.map { |k, v| "#{escape(k)}=#{escape(v)}" }.join '; '
       end
 
       def handle_options(options) # :nodoc:
-        if options[:expires].respond_to?(:from_now)
-          options[:expires] = options[:expires].from_now
-        end
+        options[:expires] = options[:expires].from_now if options[:expires].respond_to?(:from_now)
 
-        options[:path] ||= "/"
+        options[:path] ||= '/'
 
-        if options[:domain] == :all || options[:domain] == "all"
+        if options[:domain] == :all || options[:domain] == 'all'
           # If there is a provided tld length then we use it otherwise default domain regexp.
           domain_regexp = options[:tld_length] ? /([^.]+\.?){#{options[:tld_length]}}$/ : DOMAIN_REGEXP
 
           # If host is not ip and matches domain regexp.
           # (ip confirms to domain regexp so we explicitly check for ip)
-          options[:domain] = if (request.host !~ /^[\d.]+$/) && (request.host =~ domain_regexp)
-            ".#{$&}"
-          end
+          options[:domain] = (".#{$&}" if (request.host !~ /^[\d.]+$/) && (request.host =~ domain_regexp))
         elsif options[:domain].is_a? Array
           # If host matches one of the supplied domains without a dot in front of it.
-          options[:domain] = options[:domain].find { |domain| request.host.include? domain.sub(/^\./, "") }
+          options[:domain] = options[:domain].find { |domain| request.host.include? domain.sub(/^\./, '') }
         end
       end
 
@@ -395,7 +394,7 @@ module ActionDispatch
       # and the expiration date in the past. Like <tt>[]=</tt>, you can pass in
       # an options hash to delete cookies with extra data such as a <tt>:path</tt>.
       def delete(name, options = {})
-        return unless @cookies.has_key? name.to_s
+        return unless @cookies.key? name.to_s
 
         options.symbolize_keys!
         handle_options(options)
@@ -429,26 +428,26 @@ module ActionDispatch
 
       private
 
-        def escape(string)
-          ::Rack::Utils.escape(string)
-        end
+      def escape(string)
+        ::Rack::Utils.escape(string)
+      end
 
-        def make_set_cookie_header(header)
-          header = @set_cookies.inject(header) { |m, (k, v)|
-            if write_cookie?(v)
-              ::Rack::Utils.add_cookie_to_header(m, k, v)
-            else
-              m
-            end
-          }
-          @delete_cookies.inject(header) { |m, (k, v)|
-            ::Rack::Utils.add_remove_cookie_to_header(m, k, v)
-          }
+      def make_set_cookie_header(header)
+        header = @set_cookies.inject(header) do |m, (k, v)|
+          if write_cookie?(v)
+            ::Rack::Utils.add_cookie_to_header(m, k, v)
+          else
+            m
+          end
         end
+        @delete_cookies.inject(header) do |m, (k, v)|
+          ::Rack::Utils.add_remove_cookie_to_header(m, k, v)
+        end
+      end
 
-        def write_cookie?(cookie)
-          request.ssl? || !cookie[:secure] || always_write_cookie
-        end
+      def write_cookie?(cookie)
+        request.ssl? || !cookie[:secure] || always_write_cookie
+      end
     end
 
     class AbstractCookieJar # :nodoc:
@@ -476,32 +475,40 @@ module ActionDispatch
       end
 
       protected
-        def request; @parent_jar.request; end
+
+      def request
+        @parent_jar.request
+        end
 
       private
-        def expiry_options(options)
-          if options[:expires].respond_to?(:from_now)
-            { expires_in: options[:expires] }
-          else
-            { expires_at: options[:expires] }
-          end
+
+      def expiry_options(options)
+        if options[:expires].respond_to?(:from_now)
+          { expires_in: options[:expires] }
+        else
+          { expires_at: options[:expires] }
+        end
+      end
+
+      def cookie_metadata(name, options)
+        expiry_options(options).tap do |metadata|
+          metadata[:purpose] = "cookie.#{name}" if request.use_cookies_with_metadata
+        end
+      end
+
+      def parse(_name, data, purpose: nil)
+        data
         end
 
-        def cookie_metadata(name, options)
-          expiry_options(options).tap do |metadata|
-            metadata[:purpose] = "cookie.#{name}" if request.use_cookies_with_metadata
-          end
-        end
-
-        def parse(name, data, purpose: nil); data; end
-        def commit(name, options); end
+      def commit(name, options); end
     end
 
     class PermanentCookieJar < AbstractCookieJar # :nodoc:
       private
-        def commit(name, options)
-          options[:expires] = 20.years.from_now
-        end
+
+      def commit(_name, options)
+        options[:expires] = 20.years.from_now
+      end
     end
 
     class JsonSerializer # :nodoc:
@@ -519,49 +526,49 @@ module ActionDispatch
       SERIALIZER = ActiveSupport::MessageEncryptor::NullSerializer
 
       protected
-        def needs_migration?(value)
-          request.cookies_serializer == :hybrid && value.start_with?(MARSHAL_SIGNATURE)
-        end
 
-        def serialize(value)
-          serializer.dump(value)
-        end
+      def needs_migration?(value)
+        request.cookies_serializer == :hybrid && value.start_with?(MARSHAL_SIGNATURE)
+      end
 
-        def deserialize(name)
-          rotate = false
-          value  = yield -> { rotate = true }
+      def serialize(value)
+        serializer.dump(value)
+      end
 
-          if value
-            case
-            when needs_migration?(value)
-              Marshal.load(value).tap do |v|
-                self[name] = { value: v }
-              end
-            when rotate
-              serializer.load(value).tap do |v|
-                self[name] = { value: v }
-              end
-            else
-              serializer.load(value)
+      def deserialize(name)
+        rotate = false
+        value  = yield -> { rotate = true }
+
+        if value
+          if needs_migration?(value)
+            Marshal.load(value).tap do |v|
+              self[name] = { value: v }
             end
-          end
-        end
-
-        def serializer
-          serializer = request.cookies_serializer || :marshal
-          case serializer
-          when :marshal
-            Marshal
-          when :json, :hybrid
-            JsonSerializer
+          elsif rotate
+            serializer.load(value).tap do |v|
+              self[name] = { value: v }
+            end
           else
-            serializer
+            serializer.load(value)
           end
         end
+      end
 
-        def digest
-          request.cookies_digest || "SHA1"
+      def serializer
+        serializer = request.cookies_serializer || :marshal
+        case serializer
+        when :marshal
+          Marshal
+        when :json, :hybrid
+          JsonSerializer
+        else
+          serializer
         end
+      end
+
+      def digest
+        request.cookies_digest || 'SHA1'
+      end
     end
 
     class SignedKeyRotatingCookieJar < AbstractCookieJar # :nodoc:
@@ -579,17 +586,18 @@ module ActionDispatch
       end
 
       private
-        def parse(name, signed_message, purpose: nil)
-          deserialize(name) do |rotate|
-            @verifier.verified(signed_message, on_rotation: rotate, purpose: purpose)
-          end
-        end
 
-        def commit(name, options)
-          options[:value] = @verifier.generate(serialize(options[:value]), cookie_metadata(name, options))
-
-          raise CookieOverflow if options[:value].bytesize > MAX_COOKIE_SIZE
+      def parse(name, signed_message, purpose: nil)
+        deserialize(name) do |rotate|
+          @verifier.verified(signed_message, on_rotation: rotate, purpose: purpose)
         end
+      end
+
+      def commit(name, options)
+        options[:value] = @verifier.generate(serialize(options[:value]), cookie_metadata(name, options))
+
+        raise CookieOverflow if options[:value].bytesize > MAX_COOKIE_SIZE
+      end
     end
 
     class EncryptedKeyRotatingCookieJar < AbstractCookieJar # :nodoc:
@@ -603,10 +611,10 @@ module ActionDispatch
           secret = request.key_generator.generate_key(request.authenticated_encrypted_cookie_salt, key_len)
           @encryptor = ActiveSupport::MessageEncryptor.new(secret, cipher: encrypted_cookie_cipher, serializer: SERIALIZER)
         else
-          key_len = ActiveSupport::MessageEncryptor.key_len("aes-256-cbc")
+          key_len = ActiveSupport::MessageEncryptor.key_len('aes-256-cbc')
           secret = request.key_generator.generate_key(request.encrypted_cookie_salt, key_len)
           sign_secret = request.key_generator.generate_key(request.encrypted_signed_cookie_salt)
-          @encryptor = ActiveSupport::MessageEncryptor.new(secret, sign_secret, cipher: "aes-256-cbc", serializer: SERIALIZER)
+          @encryptor = ActiveSupport::MessageEncryptor.new(secret, sign_secret, cipher: 'aes-256-cbc', serializer: SERIALIZER)
         end
 
         request.cookies_rotations.encrypted.each do |*secrets, **options|
@@ -614,7 +622,7 @@ module ActionDispatch
         end
 
         if upgrade_legacy_hmac_aes_cbc_cookies?
-          legacy_cipher = "aes-256-cbc"
+          legacy_cipher = 'aes-256-cbc'
           secret = request.key_generator.generate_key(request.encrypted_cookie_salt, ActiveSupport::MessageEncryptor.key_len(legacy_cipher))
           sign_secret = request.key_generator.generate_key(request.encrypted_signed_cookie_salt)
 
@@ -623,19 +631,20 @@ module ActionDispatch
       end
 
       private
-        def parse(name, encrypted_message, purpose: nil)
-          deserialize(name) do |rotate|
-            @encryptor.decrypt_and_verify(encrypted_message, on_rotation: rotate, purpose: purpose)
-          end
-        rescue ActiveSupport::MessageEncryptor::InvalidMessage, ActiveSupport::MessageVerifier::InvalidSignature
-          nil
-        end
 
-        def commit(name, options)
-          options[:value] = @encryptor.encrypt_and_sign(serialize(options[:value]), cookie_metadata(name, options))
-
-          raise CookieOverflow if options[:value].bytesize > MAX_COOKIE_SIZE
+      def parse(name, encrypted_message, purpose: nil)
+        deserialize(name) do |rotate|
+          @encryptor.decrypt_and_verify(encrypted_message, on_rotation: rotate, purpose: purpose)
         end
+      rescue ActiveSupport::MessageEncryptor::InvalidMessage, ActiveSupport::MessageVerifier::InvalidSignature
+        nil
+      end
+
+      def commit(name, options)
+        options[:value] = @encryptor.encrypt_and_sign(serialize(options[:value]), cookie_metadata(name, options))
+
+        raise CookieOverflow if options[:value].bytesize > MAX_COOKIE_SIZE
+      end
     end
 
     def initialize(app)
@@ -651,9 +660,7 @@ module ActionDispatch
         cookie_jar = request.cookie_jar
         unless cookie_jar.committed?
           cookie_jar.write(headers)
-          if headers[HTTP_HEADER].respond_to?(:join)
-            headers[HTTP_HEADER] = headers[HTTP_HEADER].join("\n")
-          end
+          headers[HTTP_HEADER] = headers[HTTP_HEADER].join("\n") if headers[HTTP_HEADER].respond_to?(:join)
         end
       end
 

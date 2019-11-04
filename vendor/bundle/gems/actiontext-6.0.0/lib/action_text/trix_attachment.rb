@@ -2,18 +2,36 @@
 
 module ActionText
   class TrixAttachment
-    TAG_NAME = "figure"
-    SELECTOR = "[data-trix-attachment]"
+    TAG_NAME = 'figure'
+    SELECTOR = '[data-trix-attachment]'
 
-    COMPOSED_ATTRIBUTES = %w( caption presentation )
-    ATTRIBUTES = %w( sgid contentType url href filename filesize width height previewable content ) + COMPOSED_ATTRIBUTES
+    COMPOSED_ATTRIBUTES = %w[caption presentation].freeze
+    ATTRIBUTES = %w[sgid contentType url href filename filesize width height previewable content] + COMPOSED_ATTRIBUTES
     ATTRIBUTE_TYPES = {
-      "previewable" => ->(value) { value.to_s == "true" },
-      "filesize"    => ->(value) { Integer(value.to_s) rescue value },
-      "width"       => ->(value) { Integer(value.to_s) rescue nil },
-      "height"      => ->(value) { Integer(value.to_s) rescue nil },
-      :default      => ->(value) { value.to_s }
-    }
+      'previewable' => ->(value) { value.to_s == 'true' },
+      'filesize' => lambda { |value|
+                      begin
+                                     Integer(value.to_s)
+                      rescue StandardError
+                        value
+                                   end
+                    },
+      'width' => lambda { |value|
+                   begin
+                                     Integer(value.to_s)
+                   rescue StandardError
+                     nil
+                                   end
+                 },
+      'height' => lambda { |value|
+                    begin
+                                     Integer(value.to_s)
+                    rescue StandardError
+                      nil
+                                   end
+                  },
+      :default => ->(value) { value.to_s }
+    }.freeze
 
     class << self
       def from_attributes(attributes)
@@ -23,27 +41,28 @@ module ActionText
         trix_attributes = attributes.slice(*COMPOSED_ATTRIBUTES)
 
         node = ActionText::HtmlConversion.create_element(TAG_NAME)
-        node["data-trix-attachment"] = JSON.generate(trix_attachment_attributes)
-        node["data-trix-attributes"] = JSON.generate(trix_attributes) if trix_attributes.any?
+        node['data-trix-attachment'] = JSON.generate(trix_attachment_attributes)
+        node['data-trix-attributes'] = JSON.generate(trix_attributes) if trix_attributes.any?
 
         new(node)
       end
 
       private
-        def process_attributes(attributes)
-          typecast_attribute_values(transform_attribute_keys(attributes))
-        end
 
-        def transform_attribute_keys(attributes)
-          attributes.transform_keys { |key| key.to_s.underscore.camelize(:lower) }
-        end
+      def process_attributes(attributes)
+        typecast_attribute_values(transform_attribute_keys(attributes))
+      end
 
-        def typecast_attribute_values(attributes)
-          attributes.map do |key, value|
-            typecast = ATTRIBUTE_TYPES[key] || ATTRIBUTE_TYPES[:default]
-            [key, typecast.call(value)]
-          end.to_h
-        end
+      def transform_attribute_keys(attributes)
+        attributes.transform_keys { |key| key.to_s.underscore.camelize(:lower) }
+      end
+
+      def typecast_attribute_values(attributes)
+        attributes.map do |key, value|
+          typecast = ATTRIBUTE_TYPES[key] || ATTRIBUTE_TYPES[:default]
+          [key, typecast.call(value)]
+        end.to_h
+      end
     end
 
     attr_reader :node
@@ -65,28 +84,29 @@ module ActionText
     end
 
     private
-      def attachment_attributes
-        read_json_object_attribute("data-trix-attachment")
-      end
 
-      def composed_attributes
-        read_json_object_attribute("data-trix-attributes")
-      end
+    def attachment_attributes
+      read_json_object_attribute('data-trix-attachment')
+    end
 
-      def read_json_object_attribute(name)
-        read_json_attribute(name) || {}
-      end
+    def composed_attributes
+      read_json_object_attribute('data-trix-attributes')
+    end
 
-      def read_json_attribute(name)
-        if value = node[name]
-          begin
-            JSON.parse(value)
-          rescue => e
-            Rails.logger.error "[#{self.class.name}] Couldn't parse JSON #{value} from NODE #{node.inspect}"
-            Rails.logger.error "[#{self.class.name}] Failed with #{e.class}: #{e.backtrace}"
-            nil
-          end
+    def read_json_object_attribute(name)
+      read_json_attribute(name) || {}
+    end
+
+    def read_json_attribute(name)
+      if value = node[name]
+        begin
+          JSON.parse(value)
+        rescue StandardError => e
+          Rails.logger.error "[#{self.class.name}] Couldn't parse JSON #{value} from NODE #{node.inspect}"
+          Rails.logger.error "[#{self.class.name}] Failed with #{e.class}: #{e.backtrace}"
+          nil
         end
       end
+    end
   end
 end

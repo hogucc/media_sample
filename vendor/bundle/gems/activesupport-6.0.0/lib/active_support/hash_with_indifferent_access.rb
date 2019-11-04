@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require "active_support/core_ext/hash/keys"
-require "active_support/core_ext/hash/reverse_merge"
-require "active_support/core_ext/hash/except"
+require 'active_support/core_ext/hash/keys'
+require 'active_support/core_ext/hash/reverse_merge'
+require 'active_support/core_ext/hash/except'
 
 module ActiveSupport
   # Implements a hash where keys <tt>:foo</tt> and <tt>"foo"</tt> are considered
@@ -81,8 +81,8 @@ module ActiveSupport
       new.merge!(Hash[*args])
     end
 
-    alias_method :regular_writer, :[]= unless method_defined?(:regular_writer)
-    alias_method :regular_update, :update unless method_defined?(:regular_update)
+    alias regular_writer []= unless method_defined?(:regular_writer)
+    alias regular_update update unless method_defined?(:regular_update)
 
     # Assigns a new value to the hash:
     #
@@ -94,7 +94,7 @@ module ActiveSupport
       regular_writer(convert_key(key), convert_value(value, for: :assignment))
     end
 
-    alias_method :store, :[]=
+    alias store []=
 
     # Updates the receiver in-place, merging in the hash passed as argument:
     #
@@ -126,16 +126,14 @@ module ActiveSupport
         super(other_hash)
       else
         other_hash.to_hash.each_pair do |key, value|
-          if block_given? && key?(key)
-            value = yield(convert_key(key), self[key], value)
-          end
+          value = yield(convert_key(key), self[key], value) if block_given? && key?(key)
           regular_writer(convert_key(key), convert_value(value))
         end
         self
       end
     end
 
-    alias_method :merge!, :update
+    alias merge! update
 
     # Checks the hash for a key matching the argument passed in:
     #
@@ -147,9 +145,9 @@ module ActiveSupport
       super(convert_key(key))
     end
 
-    alias_method :include?, :key?
-    alias_method :has_key?, :key?
-    alias_method :member?, :key?
+    alias include? key?
+    alias has_key? key?
+    alias member? key?
 
     # Same as <tt>Hash#[]</tt> where the key passed as argument can be
     # either a string or a symbol:
@@ -201,7 +199,7 @@ module ActiveSupport
     #   counters.dig(:foo, :bar)       # => 1
     #   counters.dig(:zoo)             # => nil
     def dig(*args)
-      args[0] = convert_key(args[0]) if args.size > 0
+      args[0] = convert_key(args[0]) unless args.empty?
       super(*args)
     end
 
@@ -272,13 +270,13 @@ module ActiveSupport
     def reverse_merge(other_hash)
       super(self.class.new(other_hash))
     end
-    alias_method :with_defaults, :reverse_merge
+    alias with_defaults reverse_merge
 
     # Same semantics as +reverse_merge+ but modifies the receiver in-place.
     def reverse_merge!(other_hash)
       super(self.class.new(other_hash))
     end
-    alias_method :with_defaults!, :reverse_merge!
+    alias with_defaults! reverse_merge!
 
     # Replaces the contents of this hash with other_hash.
     #
@@ -296,41 +294,64 @@ module ActiveSupport
     def except(*keys)
       slice(*self.keys - keys.map { |key| convert_key(key) })
     end
-    alias_method :without, :except
+    alias without except
 
-    def stringify_keys!; self end
-    def deep_stringify_keys!; self end
-    def stringify_keys; dup end
-    def deep_stringify_keys; dup end
+    def stringify_keys!
+      self
+    end
+
+    def deep_stringify_keys!
+      self
+    end
+
+    def stringify_keys
+      dup
+    end
+
+    def deep_stringify_keys
+      dup
+    end
     undef :symbolize_keys!
     undef :deep_symbolize_keys!
-    def symbolize_keys; to_hash.symbolize_keys! end
-    alias_method :to_options, :symbolize_keys
-    def deep_symbolize_keys; to_hash.deep_symbolize_keys! end
-    def to_options!; self end
+    def symbolize_keys
+      to_hash.symbolize_keys!
+    end
+    alias to_options symbolize_keys
+    def deep_symbolize_keys
+      to_hash.deep_symbolize_keys!
+    end
+
+    def to_options!
+      self
+    end
 
     def select(*args, &block)
       return to_enum(:select) unless block_given?
+
       dup.tap { |hash| hash.select!(*args, &block) }
     end
 
     def reject(*args, &block)
       return to_enum(:reject) unless block_given?
+
       dup.tap { |hash| hash.reject!(*args, &block) }
     end
 
     def transform_values(*args, &block)
       return to_enum(:transform_values) unless block_given?
+
       dup.tap { |hash| hash.transform_values!(*args, &block) }
     end
 
     def transform_keys(*args, &block)
       return to_enum(:transform_keys) unless block_given?
+
       dup.tap { |hash| hash.transform_keys!(*args, &block) }
     end
 
     def transform_keys!
       return enum_for(:transform_keys!) { size } unless block_given?
+
       keys.each do |key|
         self[yield(key)] = delete(key)
       end
@@ -353,7 +374,7 @@ module ActiveSupport
 
     # Convert to a regular hash with string keys.
     def to_hash
-      _new_hash = Hash.new
+      _new_hash = {}
       set_defaults(_new_hash)
 
       each do |key, value|
@@ -363,34 +384,33 @@ module ActiveSupport
     end
 
     private
-      def convert_key(key) # :doc:
-        key.kind_of?(Symbol) ? key.to_s : key
-      end
 
-      def convert_value(value, options = {}) # :doc:
-        if value.is_a? Hash
-          if options[:for] == :to_hash
-            value.to_hash
-          else
-            value.nested_under_indifferent_access
-          end
-        elsif value.is_a?(Array)
-          if options[:for] != :assignment || value.frozen?
-            value = value.dup
-          end
-          value.map! { |e| convert_value(e, options) }
-        else
-          value
-        end
-      end
+    def convert_key(key) # :doc:
+      key.is_a?(Symbol) ? key.to_s : key
+    end
 
-      def set_defaults(target) # :doc:
-        if default_proc
-          target.default_proc = default_proc.dup
+    def convert_value(value, options = {}) # :doc:
+      if value.is_a? Hash
+        if options[:for] == :to_hash
+          value.to_hash
         else
-          target.default = default
+          value.nested_under_indifferent_access
         end
+      elsif value.is_a?(Array)
+        value = value.dup if options[:for] != :assignment || value.frozen?
+        value.map! { |e| convert_value(e, options) }
+      else
+        value
       end
+    end
+
+    def set_defaults(target) # :doc:
+      if default_proc
+        target.default_proc = default_proc.dup
+      else
+        target.default = default
+      end
+    end
   end
 end
 

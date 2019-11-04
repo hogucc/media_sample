@@ -126,7 +126,7 @@ class Foreman::Thor
         command.run(self, *args)
       end
     end
-    alias_method :invoke_task, :invoke_command
+    alias invoke_task invoke_command
 
     # Invoke all commands for the current instance.
     def invoke_all #:nodoc:
@@ -138,11 +138,11 @@ class Foreman::Thor
       with_padding { invoke(*args) }
     end
 
-  protected
+    protected
 
     # Configuration values that are shared between invocations.
     def _shared_configuration #:nodoc:
-      {:invocations => @_invocations}
+      { invocations: @_invocations }
     end
 
     # This method simply retrieves the class and command to be invoked.
@@ -159,7 +159,7 @@ class Foreman::Thor
         [klass, command || sent_command]
       end
     end
-    alias_method :_retrieve_class_and_task, :_retrieve_class_and_command
+    alias _retrieve_class_and_task _retrieve_class_and_command
 
     # Initialize klass using values stored in the @_initializer.
     def _parse_initialization_options(args, opts, config) #:nodoc:

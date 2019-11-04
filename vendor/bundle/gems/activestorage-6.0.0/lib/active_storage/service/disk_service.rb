@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require "fileutils"
-require "pathname"
-require "digest/md5"
-require "active_support/core_ext/numeric/bytes"
+require 'fileutils'
+require 'pathname'
+require 'digest/md5'
+require 'active_support/core_ext/numeric/bytes'
 
 module ActiveStorage
   # Wraps a local disk path as an Active Storage service. See ActiveStorage::Service for the generic API
@@ -38,7 +38,7 @@ module ActiveStorage
 
     def download_chunk(key, range)
       instrument :download_chunk, key: key, range: range do
-        File.open(path_for(key), "rb") do |file|
+        File.open(path_for(key), 'rb') do |file|
           file.seek range.begin
           file.read range.size
         end
@@ -80,20 +80,19 @@ module ActiveStorage
             disposition: content_disposition,
             content_type: content_type
           },
-          { expires_in: expires_in,
-          purpose: :blob_key }
+          expires_in: expires_in,
+          purpose: :blob_key
         )
 
         current_uri = URI.parse(current_host)
 
         generated_url = url_helpers.rails_disk_service_url(verified_key_with_expiration,
-          protocol: current_uri.scheme,
-          host: current_uri.host,
-          port: current_uri.port,
-          disposition: content_disposition,
-          content_type: content_type,
-          filename: filename
-        )
+                                                           protocol: current_uri.scheme,
+                                                           host: current_uri.host,
+                                                           port: current_uri.port,
+                                                           disposition: content_disposition,
+                                                           content_type: content_type,
+                                                           filename: filename)
         payload[:url] = generated_url
 
         generated_url
@@ -109,8 +108,8 @@ module ActiveStorage
             content_length: content_length,
             checksum: checksum
           },
-          { expires_in: expires_in,
-          purpose: :blob_token }
+          expires_in: expires_in,
+          purpose: :blob_token
         )
 
         generated_url = url_helpers.update_rails_disk_service_url(verified_token_with_expiration, host: current_host)
@@ -121,8 +120,8 @@ module ActiveStorage
       end
     end
 
-    def headers_for_direct_upload(key, content_type:, **)
-      { "Content-Type" => content_type }
+    def headers_for_direct_upload(_key, content_type:, **)
+      { 'Content-Type' => content_type }
     end
 
     def path_for(key) #:nodoc:
@@ -130,37 +129,38 @@ module ActiveStorage
     end
 
     private
-      def stream(key)
-        File.open(path_for(key), "rb") do |file|
-          while data = file.read(5.megabytes)
-            yield data
-          end
-        end
-      rescue Errno::ENOENT
-        raise ActiveStorage::FileNotFoundError
-      end
 
-      def folder_for(key)
-        [ key[0..1], key[2..3] ].join("/")
-      end
-
-      def make_path_for(key)
-        path_for(key).tap { |path| FileUtils.mkdir_p File.dirname(path) }
-      end
-
-      def ensure_integrity_of(key, checksum)
-        unless Digest::MD5.file(path_for(key)).base64digest == checksum
-          delete key
-          raise ActiveStorage::IntegrityError
+    def stream(key)
+      File.open(path_for(key), 'rb') do |file|
+        while data = file.read(5.megabytes)
+          yield data
         end
       end
+    rescue Errno::ENOENT
+      raise ActiveStorage::FileNotFoundError
+    end
 
-      def url_helpers
-        @url_helpers ||= Rails.application.routes.url_helpers
-      end
+    def folder_for(key)
+      [key[0..1], key[2..3]].join('/')
+    end
 
-      def current_host
-        ActiveStorage::Current.host
+    def make_path_for(key)
+      path_for(key).tap { |path| FileUtils.mkdir_p File.dirname(path) }
+    end
+
+    def ensure_integrity_of(key, checksum)
+      unless Digest::MD5.file(path_for(key)).base64digest == checksum
+        delete key
+        raise ActiveStorage::IntegrityError
       end
+    end
+
+    def url_helpers
+      @url_helpers ||= Rails.application.routes.url_helpers
+    end
+
+    def current_host
+      ActiveStorage::Current.host
+    end
   end
 end

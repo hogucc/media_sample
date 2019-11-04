@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require "mutex_m"
-require "concurrent/map"
-require "set"
+require 'mutex_m'
+require 'concurrent/map'
+require 'set'
 
 module ActiveSupport
   module Notifications
@@ -80,8 +80,7 @@ module ActiveSupport
       end
 
       # This is a sync queue, so there is no waiting.
-      def wait
-      end
+      def wait; end
 
       module Subscribers # :nodoc:
         def self.new(pattern, listener)
@@ -94,9 +93,7 @@ module ActiveSupport
             # `proc { |*x| }` or `proc { |**x| }`
             if listener.respond_to?(:parameters)
               params = listener.parameters
-              if params.length == 1 && params.first.first == :opt
-                subscriber_class = EventObject
-              end
+              subscriber_class = EventObject if params.length == 1 && params.first.first == :opt
             end
           end
 
@@ -108,10 +105,10 @@ module ActiveSupport
         end
 
         def self.wrap_all(pattern, subscriber)
-          unless pattern
-            AllMessages.new(subscriber)
-          else
+          if pattern
             subscriber
+          else
+            AllMessages.new(subscriber)
           end
         end
 
@@ -120,6 +117,7 @@ module ActiveSupport
 
           def self.wrap(pattern)
             return pattern if String === pattern
+
             new(pattern)
           end
 
@@ -147,9 +145,7 @@ module ActiveSupport
           end
 
           def publish(name, *args)
-            if @can_publish
-              @delegate.publish name, *args
-            end
+            @delegate.publish name, *args if @can_publish
           end
 
           def start(name, id, payload)
@@ -178,7 +174,7 @@ module ActiveSupport
             @delegate.call name, *args
           end
 
-          def start(name, id, payload)
+          def start(_name, _id, _payload)
             timestack = Thread.current[:_timestack] ||= []
             timestack.push Time.now
           end
@@ -198,7 +194,7 @@ module ActiveSupport
             stack.push event
           end
 
-          def finish(name, id, payload)
+          def finish(_name, _id, _payload)
             stack = Thread.current[:_event_stack]
             event = stack.pop
             event.finish!
@@ -206,9 +202,10 @@ module ActiveSupport
           end
 
           private
-            def build_event(name, id, payload)
-              ActiveSupport::Notifications::Event.new name, nil, nil, id, payload
-            end
+
+          def build_event(name, id, payload)
+            ActiveSupport::Notifications::Event.new name, nil, nil, id, payload
+          end
         end
 
         class AllMessages # :nodoc:
@@ -228,7 +225,7 @@ module ActiveSupport
             @delegate.publish name, *args
           end
 
-          def subscribed_to?(name)
+          def subscribed_to?(_name)
             true
           end
 
@@ -236,7 +233,7 @@ module ActiveSupport
             false
           end
 
-          alias :matches? :===
+          alias matches? ===
         end
       end
     end

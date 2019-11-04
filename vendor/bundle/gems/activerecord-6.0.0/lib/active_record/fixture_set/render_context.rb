@@ -6,7 +6,7 @@ class ActiveRecord::FixtureSet::RenderContext # :nodoc:
   def self.create_subclass
     Class.new(ActiveRecord::FixtureSet.context_class) do
       def get_binding
-        binding()
+        binding
       end
 
       def binary(path)

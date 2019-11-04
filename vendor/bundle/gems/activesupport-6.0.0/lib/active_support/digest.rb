@@ -9,6 +9,7 @@ module ActiveSupport
 
       def hash_digest_class=(klass)
         raise ArgumentError, "#{klass} is expected to implement hexdigest class method" unless klass.respond_to?(:hexdigest)
+
         @hash_digest_class = klass
       end
 

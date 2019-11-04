@@ -57,9 +57,7 @@ end
   raise_exception = instance_method(:raise_exception)
 
   define_method(:raise_exception) do |exc|
-    if exc.bindings.empty?
-      exc.instance_variable_set(:@bindings, Skiptrace.current_bindings)
-    end
+    exc.instance_variable_set(:@bindings, Skiptrace.current_bindings) if exc.bindings.empty?
 
     raise_exception.bind(self).call(exc)
   end

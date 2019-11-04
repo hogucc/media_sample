@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-# coding: utf-8
 # Copyright (C) Bob Aman
 #
 #    Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,14 +14,13 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
+require 'spec_helper'
 
-require "spec_helper"
-
-require "addressable/uri"
-require "net/http"
+require 'addressable/uri'
+require 'net/http'
 
 describe Net::HTTP do
-  it "should be compatible with Addressable" do
+  it 'should be compatible with Addressable' do
     response_body =
       Net::HTTP.get(Addressable::URI.parse('http://www.google.com/'))
     expect(response_body).not_to be_nil

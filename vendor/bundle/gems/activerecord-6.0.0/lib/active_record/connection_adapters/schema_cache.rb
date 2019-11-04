@@ -26,23 +26,23 @@ module ActiveRecord
       end
 
       def encode_with(coder)
-        coder["columns"]          = @columns
-        coder["columns_hash"]     = @columns_hash
-        coder["primary_keys"]     = @primary_keys
-        coder["data_sources"]     = @data_sources
-        coder["indexes"]          = @indexes
-        coder["version"]          = connection.migration_context.current_version
-        coder["database_version"] = database_version
+        coder['columns']          = @columns
+        coder['columns_hash']     = @columns_hash
+        coder['primary_keys']     = @primary_keys
+        coder['data_sources']     = @data_sources
+        coder['indexes']          = @indexes
+        coder['version']          = connection.migration_context.current_version
+        coder['database_version'] = database_version
       end
 
       def init_with(coder)
-        @columns          = coder["columns"]
-        @columns_hash     = coder["columns_hash"]
-        @primary_keys     = coder["primary_keys"]
-        @data_sources     = coder["data_sources"]
-        @indexes          = coder["indexes"] || {}
-        @version          = coder["version"]
-        @database_version = coder["database_version"]
+        @columns          = coder['columns']
+        @columns_hash     = coder['columns_hash']
+        @primary_keys     = coder['primary_keys']
+        @data_sources     = coder['data_sources']
+        @indexes          = coder['indexes'] || {}
+        @version          = coder['version']
+        @database_version = coder['database_version']
       end
 
       def primary_keys(table_name)
@@ -79,9 +79,9 @@ module ActiveRecord
       # Get the columns for a table as a hash, key is the column name
       # value is the column object.
       def columns_hash(table_name)
-        @columns_hash[table_name] ||= Hash[columns(table_name).map { |col|
+        @columns_hash[table_name] ||= Hash[columns(table_name).map do |col|
           [col.name, col]
-        }]
+        end]
       end
 
       # Checks whether the columns hash is already cached for a table.
@@ -129,13 +129,14 @@ module ActiveRecord
 
       def marshal_load(array)
         @version, @columns, @columns_hash, @primary_keys, @data_sources, @indexes, @database_version = array
-        @indexes = @indexes || {}
+        @indexes ||= {}
       end
 
       private
-        def prepare_data_sources
-          connection.data_sources.each { |source| @data_sources[source] = true }
-        end
+
+      def prepare_data_sources
+        connection.data_sources.each { |source| @data_sources[source] = true }
+      end
     end
   end
 end

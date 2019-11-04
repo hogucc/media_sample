@@ -8,7 +8,7 @@ Capybara.add_selector(:datalist_input, locator_type: [String, Symbol]) do
     locate_field(xpath, locator, options)
   end
 
-  filter_set(:_field, %i[disabled name placeholder])
+  filter_set(:_field, [:disabled, :name, :placeholder])
 
   node_filter(:options) do |node, options|
     actual = node.find("//datalist[@id=#{node[:list]}]", visible: :all).all(:datalist_option, wait: false).map(&:value)

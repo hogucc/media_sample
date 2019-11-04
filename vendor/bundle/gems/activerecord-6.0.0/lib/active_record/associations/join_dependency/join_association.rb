@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "active_record/associations/join_dependency/join_part"
-require "active_support/core_ext/array/extract"
+require 'active_record/associations/join_dependency/join_part'
+require 'active_support/core_ext/array/extract'
 
 module ActiveRecord
   module Associations
@@ -19,6 +19,7 @@ module ActiveRecord
 
         def match?(other)
           return true if self == other
+
           super && reflection == other.reflection
         end
 
@@ -48,7 +49,8 @@ module ActiveRecord
             end
 
             # The current table in this iteration becomes the foreign table in the next
-            foreign_table, foreign_klass = table, klass
+            foreign_table = table
+            foreign_klass = klass
           end
 
           joins
@@ -66,14 +68,15 @@ module ActiveRecord
         end
 
         private
-          def append_constraints(join, constraints)
-            if join.is_a?(Arel::Nodes::StringJoin)
-              join_string = table.create_and(constraints.unshift(join.left))
-              join.left = Arel.sql(base_klass.connection.visitor.compile(join_string))
-            else
-              join.right.expr.children.concat(constraints)
-            end
+
+        def append_constraints(join, constraints)
+          if join.is_a?(Arel::Nodes::StringJoin)
+            join_string = table.create_and(constraints.unshift(join.left))
+            join.left = Arel.sql(base_klass.connection.visitor.compile(join_string))
+          else
+            join.right.expr.children.concat(constraints)
           end
+        end
       end
     end
   end

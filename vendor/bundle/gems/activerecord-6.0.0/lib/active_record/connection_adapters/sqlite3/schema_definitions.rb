@@ -7,12 +7,13 @@ module ActiveRecord
         def references(*args, **options)
           super(*args, type: :integer, **options)
         end
-        alias :belongs_to :references
+        alias belongs_to references
 
         private
-          def integer_like_primary_key_type(type, options)
-            :primary_key
-          end
+
+        def integer_like_primary_key_type(_type, _options)
+          :primary_key
+        end
       end
     end
   end

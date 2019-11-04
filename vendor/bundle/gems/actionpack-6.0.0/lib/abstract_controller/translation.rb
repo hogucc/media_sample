@@ -12,8 +12,8 @@ module AbstractController
     # simple framework for scoping them consistently.
     def translate(key, options = {})
       options = options.dup
-      if key.to_s.first == "."
-        path = controller_path.tr("/", ".")
+      if key.to_s.first == '.'
+        path = controller_path.tr('/', '.')
         defaults = [:"#{path}#{key}"]
         defaults << options[:default] if options[:default]
         options[:default] = defaults.flatten
@@ -21,12 +21,12 @@ module AbstractController
       end
       I18n.translate(key, options)
     end
-    alias :t :translate
+    alias t translate
 
     # Delegates to <tt>I18n.localize</tt>. Also aliased as <tt>l</tt>.
     def localize(*args)
       I18n.localize(*args)
     end
-    alias :l :localize
+    alias l localize
   end
 end

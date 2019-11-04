@@ -1,5 +1,5 @@
-# encoding: utf-8
 # frozen_string_literal: true
+
 #
 # = Date Field
 #
@@ -26,11 +26,10 @@ require 'mail/fields/common/common_date'
 
 module Mail
   class DateField < StructuredField
-
     include Mail::CommonDate
 
     FIELD_NAME = 'date'
-    CAPITALIZED_FIELD = "Date"
+    CAPITALIZED_FIELD = 'Date'
 
     def initialize(value = nil, charset = 'utf-8')
       self.charset = charset
@@ -42,7 +41,7 @@ module Mail
       end
       super(CAPITALIZED_FIELD, value, charset)
     rescue ArgumentError => e
-      raise e unless "invalid date"==e.message
+      raise e unless e.message == 'invalid date'
     end
 
     def encoded
@@ -52,6 +51,5 @@ module Mail
     def decoded
       do_decode
     end
-
   end
 end

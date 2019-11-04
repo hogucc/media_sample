@@ -2,7 +2,7 @@ class Foreman::Thor
   class Option < Argument #:nodoc:
     attr_reader :aliases, :group, :lazy_default, :hide
 
-    VALID_TYPES = [:boolean, :numeric, :hash, :array, :string]
+    VALID_TYPES = [:boolean, :numeric, :hash, :array, :string].freeze
 
     def initialize(name, options = {})
       options[:required] = false unless options.key?(:required)
@@ -52,22 +52,22 @@ class Foreman::Thor
       default = value
 
       type = case value
-      when Symbol
-        default = nil
-        if VALID_TYPES.include?(value)
-          value
-        elsif required = (value == :required) # rubocop:disable AssignmentInCondition
-          :string
-        end
-      when TrueClass, FalseClass
-        :boolean
-      when Numeric
-        :numeric
-      when Hash, Array, String
-        value.class.name.downcase.to_sym
+             when Symbol
+               default = nil
+               if VALID_TYPES.include?(value)
+                 value
+               elsif required = (value == :required) # rubocop:disable AssignmentInCondition
+                 :string
+               end
+             when TrueClass, FalseClass
+               :boolean
+             when Numeric
+               :numeric
+             when Hash, Array, String
+               value.class.name.downcase.to_sym
       end
 
-      new(name.to_s, :required => required, :type => type, :default => default, :aliases => aliases)
+      new(name.to_s, required: required, type: type, default: default, aliases: aliases)
     end
 
     def switch_name
@@ -80,19 +80,19 @@ class Foreman::Thor
 
     def usage(padding = 0)
       sample = if banner && !banner.to_s.empty?
-        "#{switch_name}=#{banner}"
-      else
-        switch_name
+                 "#{switch_name}=#{banner}"
+               else
+                 switch_name
       end
 
       sample = "[#{sample}]" unless required?
 
       if boolean?
-        sample << ", [#{dasherize('no-' + human_name)}]" unless (name == "force") || name.start_with?("no-")
+        sample << ", [#{dasherize('no-' + human_name)}]" unless (name == 'force') || name.start_with?('no-')
       end
 
       if aliases.empty?
-        (" " * padding) << sample
+        (' ' * padding) << sample
       else
         "#{aliases.join(', ')}, #{sample}"
       end
@@ -106,25 +106,26 @@ class Foreman::Thor
       RUBY
     end
 
-  protected
+    protected
 
     def validate!
-      raise ArgumentError, "An option cannot be boolean and required." if boolean? && required?
+      raise ArgumentError, 'An option cannot be boolean and required.' if boolean? && required?
+
       validate_default_type!
     end
 
     def validate_default_type!
       default_type = case @default
-      when nil
-        return
-      when TrueClass, FalseClass
-        required? ? :string : :boolean
-      when Numeric
-        :numeric
-      when Symbol
-        :string
-      when Hash, Array, String
-        @default.class.name.downcase.to_sym
+                     when nil
+                       return
+                     when TrueClass, FalseClass
+                       required? ? :string : :boolean
+                     when Numeric
+                       :numeric
+                     when Symbol
+                       :string
+                     when Hash, Array, String
+                       @default.class.name.downcase.to_sym
       end
 
       # TODO: This should raise an ArgumentError in a future version of Foreman::Thor
@@ -132,15 +133,15 @@ class Foreman::Thor
     end
 
     def dasherized?
-      name.index("-") == 0
+      name.index('-') == 0
     end
 
     def undasherize(str)
-      str.sub(/^-{1,2}/, "")
+      str.sub(/^-{1,2}/, '')
     end
 
     def dasherize(str)
-      (str.length > 1 ? "--" : "-") + str.tr("_", "-")
+      (str.length > 1 ? '--' : '-') + str.tr('_', '-')
     end
   end
 end

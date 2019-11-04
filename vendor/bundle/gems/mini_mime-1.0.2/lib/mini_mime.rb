@@ -1,6 +1,4 @@
-require "mini_mime/version"
-require "thread"
-
+require 'mini_mime/version'
 module MiniMime
   def self.lookup_by_filename(filename)
     Db.lookup_by_filename(filename)
@@ -20,12 +18,12 @@ module MiniMime
       attr_accessor :content_type_db_path
     end
 
-    self.ext_db_path = File.expand_path("../db/ext_mime.db", __FILE__)
-    self.content_type_db_path = File.expand_path("../db/content_type_mime.db", __FILE__)
+    self.ext_db_path = File.expand_path('db/ext_mime.db', __dir__)
+    self.content_type_db_path = File.expand_path('db/content_type_mime.db', __dir__)
   end
 
   class Info
-    BINARY_ENCODINGS = %w(base64 8bit)
+    BINARY_ENCODINGS = %w[base64 8bit].freeze
 
     attr_accessor :extension, :content_type, :encoding
 
@@ -54,6 +52,7 @@ module MiniMime
     def self.lookup_by_filename(filename)
       extension = File.extname(filename)
       return if extension.empty?
+
       extension = extension[1..-1]
       extension.downcase!
       lookup_by_extension(extension)
@@ -128,8 +127,8 @@ module MiniMime
         to = @rows - 1
         result = nil
 
-        while from <= to do
-          midpoint = from + (to-from).div(2)
+        while from <= to
+          midpoint = from + (to - from).div(2)
           current = resolve(midpoint)
           data = current[@sort_order]
           if data > val
@@ -145,7 +144,7 @@ module MiniMime
       end
 
       def resolve(row)
-        @file.seek(row*@row_length)
+        @file.seek(row * @row_length)
         Info.new(@file.readline)
       end
     end

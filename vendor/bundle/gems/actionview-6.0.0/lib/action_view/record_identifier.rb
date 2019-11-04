@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "active_support/core_ext/module"
-require "action_view/model_naming"
+require 'active_support/core_ext/module'
+require 'action_view/model_naming'
 
 module ActionView
   # RecordIdentifier encapsulates methods used by various ActionView helpers
@@ -59,8 +59,8 @@ module ActionView
 
     include ModelNaming
 
-    JOIN = "_"
-    NEW = "new"
+    JOIN = '_'
+    NEW = 'new'
 
     # The DOM class convention is to use the singular form of an object or class.
     #
@@ -94,7 +94,7 @@ module ActionView
       end
     end
 
-  private
+    private
 
     # Returns a string representation of the key attribute(s) that is suitable for use in an HTML DOM id.
     # This can be overwritten to customize the default generated string representation if desired.

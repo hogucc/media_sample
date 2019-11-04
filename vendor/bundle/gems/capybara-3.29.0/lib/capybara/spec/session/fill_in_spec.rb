@@ -168,7 +168,7 @@ Capybara::SpecHelper.spec '#fill_in' do
   end
 
   it 'casts to string if field has maxlength' do
-    @session.fill_in(:form_zipcode, with: 1234567)
+    @session.fill_in(:form_zipcode, with: 1_234_567)
     @session.click_button('awesome')
     expect(extract_results(@session)['zipcode']).to eq('12345')
   end

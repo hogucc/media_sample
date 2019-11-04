@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require "active_support/core_ext/hash/except"
-require "active_support/core_ext/hash/slice"
-require "active_record/relation/merger"
+require 'active_support/core_ext/hash/except'
+require 'active_support/core_ext/hash/slice'
+require 'active_record/relation/merger'
 
 module ActiveRecord
   module SpawnMethods
@@ -68,10 +68,10 @@ module ActiveRecord
 
     private
 
-      def relation_with(values)
-        result = Relation.create(klass, values: values)
-        result.extend(*extending_values) if extending_values.any?
-        result
-      end
+    def relation_with(values)
+      result = Relation.create(klass, values: values)
+      result.extend(*extending_values) if extending_values.any?
+      result
+    end
   end
 end

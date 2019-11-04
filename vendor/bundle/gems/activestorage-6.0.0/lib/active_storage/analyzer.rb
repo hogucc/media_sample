@@ -8,7 +8,7 @@ module ActiveStorage
 
     # Implement this method in a concrete subclass. Have it return true when given a blob from which
     # the analyzer can extract metadata.
-    def self.accept?(blob)
+    def self.accept?(_blob)
       false
     end
 
@@ -22,17 +22,18 @@ module ActiveStorage
     end
 
     private
-      # Downloads the blob to a tempfile on disk. Yields the tempfile.
-      def download_blob_to_tempfile(&block) #:doc:
-        blob.open tmpdir: tmpdir, &block
-      end
 
-      def logger #:doc:
-        ActiveStorage.logger
-      end
+    # Downloads the blob to a tempfile on disk. Yields the tempfile.
+    def download_blob_to_tempfile(&block) #:doc:
+      blob.open tmpdir: tmpdir, &block
+    end
 
-      def tmpdir #:doc:
-        Dir.tmpdir
-      end
+    def logger #:doc:
+      ActiveStorage.logger
+    end
+
+    def tmpdir #:doc:
+      Dir.tmpdir
+    end
   end
 end

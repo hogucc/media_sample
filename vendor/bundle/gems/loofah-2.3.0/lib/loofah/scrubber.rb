@@ -2,7 +2,7 @@ module Loofah
   #
   #  A RuntimeError raised when Loofah could not find an appropriate scrubber.
   #
-  class ScrubberNotFound < RuntimeError ; end
+  class ScrubberNotFound < RuntimeError; end
 
   #
   #  A Scrubber wraps up a block (or method) that is run on an HTML node (element):
@@ -31,7 +31,6 @@ module Loofah
   #  Scrubber::STOP to terminate the traversal of a subtree.
   #
   class Scrubber
-
     # Top-down Scrubbers may return CONTINUE to indicate that the subtree should be traversed.
     CONTINUE = Object.new.freeze
 
@@ -63,10 +62,10 @@ module Loofah
     #
     def initialize(options = {}, &block)
       direction = options[:direction] || :top_down
-      unless [:top_down, :bottom_up].include?(direction)
-        raise ArgumentError, "direction #{direction} must be one of :top_down or :bottom_up" 
-      end
-      @direction, @block = direction, block
+      raise ArgumentError, "direction #{direction} must be one of :top_down or :bottom_up" unless [:top_down, :bottom_up].include?(direction)
+
+      @direction = direction
+      @block = block
     end
 
     #
@@ -82,8 +81,8 @@ module Loofah
     #  When +new+ is not passed a block, the class may implement
     #  +scrub+, which will be called for each document node.
     #
-    def scrub(node)
-      raise ScrubberNotFound, "No scrub method has been defined on #{self.class.to_s}"
+    def scrub(_node)
+      raise ScrubberNotFound, "No scrub method has been defined on #{self.class}"
     end
 
     #
@@ -118,11 +117,11 @@ module Loofah
       else
         return if scrub(node) == STOP
       end
-      node.children.each {|j| traverse_conditionally_top_down(j)}
+      node.children.each { |j| traverse_conditionally_top_down(j) }
     end
 
     def traverse_conditionally_bottom_up(node)
-      node.children.each {|j| traverse_conditionally_bottom_up(j)}
+      node.children.each { |j| traverse_conditionally_bottom_up(j) }
       if block
         block.call(node)
       else

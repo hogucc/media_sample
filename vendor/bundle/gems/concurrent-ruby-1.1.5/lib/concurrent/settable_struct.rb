@@ -3,7 +3,6 @@ require 'concurrent/errors'
 require 'concurrent/synchronization'
 
 module Concurrent
-
   # An thread-safe, write-once variation of Ruby's standard `Struct`.
   # Each member can have its value set at most once, either at construction
   # or any time thereafter. Attempting to assign a value to a member
@@ -18,7 +17,7 @@ module Concurrent
     def values
       synchronize { ns_values }
     end
-    alias_method :to_a, :values
+    alias to_a values
 
     # @!macro struct_values_at
     def values_at(*indexes)
@@ -29,7 +28,7 @@ module Concurrent
     def inspect
       synchronize { ns_inspect }
     end
-    alias_method :to_s, :inspect
+    alias to_s inspect
 
     # @!macro struct_merge
     def merge(other, &block)
@@ -54,18 +53,21 @@ module Concurrent
     # @!macro struct_each
     def each(&block)
       return enum_for(:each) unless block_given?
+
       synchronize { ns_each(&block) }
     end
 
     # @!macro struct_each_pair
     def each_pair(&block)
       return enum_for(:each_pair) unless block_given?
+
       synchronize { ns_each_pair(&block) }
     end
 
     # @!macro struct_select
     def select(&block)
       return enum_for(:select) unless block_given?
+
       synchronize { ns_select(&block) }
     end
 
@@ -75,30 +77,29 @@ module Concurrent
     def []=(member, value)
       if member.is_a? Integer
         length = synchronize { @values.length }
-        if member >= length
-          raise IndexError.new("offset #{member} too large for struct(size:#{length})")
-        end
+        raise IndexError, "offset #{member} too large for struct(size:#{length})" if member >= length
+
         synchronize do
-          unless @values[member].nil?
-            raise Concurrent::ImmutabilityError.new('struct member has already been set')
-          end
+          raise Concurrent::ImmutabilityError, 'struct member has already been set' unless @values[member].nil?
+
           @values[member] = value
         end
       else
         send("#{member}=", value)
       end
     rescue NoMethodError
-      raise NameError.new("no member '#{member}' in struct")
+      raise NameError, "no member '#{member}' in struct"
     end
 
     # @!macro struct_new
     def self.new(*args, &block)
       clazz_name = nil
-      if args.length == 0
-        raise ArgumentError.new('wrong number of arguments (0 for 1+)')
-      elsif args.length > 0 && args.first.is_a?(String)
+      if args.empty?
+        raise ArgumentError, 'wrong number of arguments (0 for 1+)'
+      elsif !args.empty? && args.first.is_a?(String)
         clazz_name = args.shift
       end
+
       FACTORY.define_struct(clazz_name, args, &block)
     end
 
@@ -113,9 +114,8 @@ module Concurrent
             end
             clazz.send(:define_method, "#{member}=") do |value|
               synchronize do
-                unless @values[index].nil?
-                  raise Concurrent::ImmutabilityError.new('struct member has already been set')
-                end
+                raise Concurrent::ImmutabilityError, 'struct member has already been set' unless @values[index].nil?
+
                 @values[index] = value
               end
             end

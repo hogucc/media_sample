@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "active_support/core_ext/object/duplicable"
-require "active_support/core_ext/array/extract"
+require 'active_support/core_ext/object/duplicable'
+require 'active_support/core_ext/array/extract'
 
 module ActiveSupport
   # +ParameterFilter+ allows you to specify keys for sensitive data from
@@ -26,7 +26,7 @@ module ActiveSupport
   #   end])
   #   => reverses the value to all keys matching /secret/i
   class ParameterFilter
-    FILTERED = "[FILTERED]" # :nodoc:
+    FILTERED = '[FILTERED]' # :nodoc:
 
     # Create instance with given filters. Supported type of filters are +String+, +Regexp+, and +Proc+.
     # Other types of filters are treated as +String+ using +to_s+.
@@ -50,7 +50,7 @@ module ActiveSupport
       @filters.empty? ? value : compiled_filter.value_for_key(key, value)
     end
 
-  private
+    private
 
     def compiled_filter
       @compiled_filter ||= CompiledFilter.compile(@filters, mask: @mask)
@@ -58,9 +58,11 @@ module ActiveSupport
 
     class CompiledFilter # :nodoc:
       def self.compile(filters, mask:)
-        return lambda { |params| params.dup } if filters.empty?
+        return ->(params) { params.dup } if filters.empty?
 
-        strings, regexps, blocks = [], [], []
+        strings = []
+        regexps = []
+        blocks = []
 
         filters.each do |item|
           case item
@@ -73,11 +75,11 @@ module ActiveSupport
           end
         end
 
-        deep_regexps = regexps.extract! { |r| r.to_s.include?("\\.") }
-        deep_strings = strings.extract! { |s| s.include?("\\.") }
+        deep_regexps = regexps.extract! { |r| r.to_s.include?('\\.') }
+        deep_strings = strings.extract! { |s| s.include?('\\.') }
 
-        regexps << Regexp.new(strings.join("|"), true) unless strings.empty?
-        deep_regexps << Regexp.new(deep_strings.join("|"), true) unless deep_strings.empty?
+        regexps << Regexp.new(strings.join('|'), true) unless strings.empty?
+        deep_regexps << Regexp.new(deep_strings.join('|'), true) unless deep_strings.empty?
 
         new regexps, deep_regexps, blocks, mask: mask
       end
@@ -105,7 +107,7 @@ module ActiveSupport
         parents.push(key) if deep_regexps
         if regexps.any? { |r| r.match?(key) }
           value = @mask
-        elsif deep_regexps && (joined = parents.join(".")) && deep_regexps.any? { |r| r.match?(joined) }
+        elsif deep_regexps && (joined = parents.join('.')) && deep_regexps.any? { |r| r.match?(joined) }
           value = @mask
         elsif value.is_a?(Hash)
           value = call(value, parents, original_params)

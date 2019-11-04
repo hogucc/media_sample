@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "byebug/helpers/eval"
+require 'byebug/helpers/eval'
 
 module Byebug
   module Helpers
@@ -15,19 +15,19 @@ module Byebug
           [name, safe_inspect(silent_eval(name.to_s, binding))]
         end
 
-        puts prv(vars, "instance")
+        puts prv(vars, 'instance')
       end
 
       def var_global
         globals = global_variables.reject do |v|
-          %i[$IGNORECASE $= $KCODE $-K $binding].include?(v)
+          [:$IGNORECASE, :$=, :$KCODE, :$-K, :$binding].include?(v)
         end
 
         var_list(globals)
       end
 
       def var_instance(str)
-        obj = warning_eval(str || "self")
+        obj = warning_eval(str || 'self')
 
         var_list(obj.instance_variables, obj.instance_eval { binding })
       end
@@ -35,8 +35,8 @@ module Byebug
       def var_local
         locals = context.frame.locals
         cur_self = context.frame._self
-        locals[:self] = cur_self unless cur_self.to_s == "main"
-        puts prv(locals.keys.sort.map { |k| [k, locals[k]] }, "instance")
+        locals[:self] = cur_self unless cur_self.to_s == 'main'
+        puts prv(locals.keys.sort.map { |k| [k, locals[k]] }, 'instance')
       end
 
       def var_args
@@ -47,7 +47,7 @@ module Byebug
         arg_values = args.map { |arg| arg[1] }
 
         locals = all_locals.select { |k, _| arg_values.include?(k) }
-        puts prv(locals.keys.sort.map { |k| [k, locals[k]] }, "instance")
+        puts prv(locals.keys.sort.map { |k| [k, locals[k]] }, 'instance')
       end
     end
   end

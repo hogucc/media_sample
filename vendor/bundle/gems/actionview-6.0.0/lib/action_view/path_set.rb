@@ -36,7 +36,7 @@ module ActionView #:nodoc:
       PathSet.new(paths + array)
     end
 
-    %w(<< concat push insert unshift).each do |method|
+    %w[<< concat push insert unshift].each do |method|
       class_eval <<-METHOD, __FILE__, __LINE__ + 1
         def #{method}(*args)
           paths.#{method}(*typecast(args))
@@ -48,7 +48,7 @@ module ActionView #:nodoc:
       find_all(*args).first || raise(MissingTemplate.new(self, *args))
     end
 
-    alias :find_file :find
+    alias find_file find
     deprecate :find_file
 
     def find_all(path, prefixes = [], *args)
@@ -70,26 +70,26 @@ module ActionView #:nodoc:
 
     private
 
-      def _find_all(path, prefixes, args)
-        prefixes = [prefixes] if String === prefixes
-        prefixes.each do |prefix|
-          paths.each do |resolver|
-            templates = resolver.find_all(path, prefix, *args)
-            return templates unless templates.empty?
-          end
+    def _find_all(path, prefixes, args)
+      prefixes = [prefixes] if String === prefixes
+      prefixes.each do |prefix|
+        paths.each do |resolver|
+          templates = resolver.find_all(path, prefix, *args)
+          return templates unless templates.empty?
         end
-        []
       end
+      []
+    end
 
-      def typecast(paths)
-        paths.map do |path|
-          case path
-          when Pathname, String
-            OptimizedFileSystemResolver.new path.to_s
-          else
-            path
-          end
+    def typecast(paths)
+      paths.map do |path|
+        case path
+        when Pathname, String
+          OptimizedFileSystemResolver.new path.to_s
+        else
+          path
         end
       end
+    end
   end
 end

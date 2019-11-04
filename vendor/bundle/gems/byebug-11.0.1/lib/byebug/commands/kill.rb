@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "byebug/command"
+require 'byebug/command'
 
 module Byebug
   #
@@ -24,7 +24,7 @@ module Byebug
     end
 
     def self.short_description
-      "Sends a signal to the current process"
+      'Sends a signal to the current process'
     end
 
     def execute
@@ -33,12 +33,12 @@ module Byebug
 
         return errmsg("signal name #{signame} is not a signal I know about\n") unless Signal.list.member?(signame)
       else
-        return unless confirm("Really kill? (y/n) ")
+        return unless confirm('Really kill? (y/n) ')
 
-        signame = "KILL"
+        signame = 'KILL'
       end
 
-      processor.interface.close if signame == "KILL"
+      processor.interface.close if signame == 'KILL'
       Process.kill(signame, Process.pid)
     end
   end

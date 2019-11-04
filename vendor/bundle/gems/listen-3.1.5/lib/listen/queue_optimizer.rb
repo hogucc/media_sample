@@ -126,6 +126,7 @@ module Listen
       # Expect an ignored moved_from and non-ignored moved_to
       # to qualify as an "editor modify"
       return unless config.silenced?(Pathname(from), from_type)
+
       config.silenced?(Pathname(to), to_type) ? nil : [to_dir, to]
     end
   end

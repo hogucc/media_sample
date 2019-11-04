@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 module Mail
   module Matchers
     def any_attachment

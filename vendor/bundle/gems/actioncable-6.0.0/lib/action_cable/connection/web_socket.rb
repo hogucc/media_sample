@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "websocket/driver"
+require 'websocket/driver'
 
 module ActionCable
   module Connection
@@ -15,7 +15,7 @@ module ActionCable
       end
 
       def alive?
-        websocket && websocket.alive?
+        websocket&.alive?
       end
 
       def transmit(data)
@@ -35,7 +35,8 @@ module ActionCable
       end
 
       private
-        attr_reader :websocket
+
+      attr_reader :websocket
     end
   end
 end

@@ -1,4 +1,4 @@
-require "foreman/vendor/thor/lib/thor/actions/empty_directory"
+require 'foreman/vendor/thor/lib/thor/actions/empty_directory'
 
 class Foreman::Thor
   module Actions
@@ -26,18 +26,18 @@ class Foreman::Thor
       config = args.shift
       action InjectIntoFile.new(self, destination, data, config)
     end
-    alias_method :inject_into_file, :insert_into_file
+    alias inject_into_file insert_into_file
 
     class InjectIntoFile < EmptyDirectory #:nodoc:
       attr_reader :replacement, :flag, :behavior
 
       def initialize(base, destination, data, config)
-        super(base, destination, {:verbose => true}.merge(config))
+        super(base, destination, { verbose: true }.merge(config))
 
         @behavior, @flag = if @config.key?(:after)
-          [:after, @config.delete(:after)]
-        else
-          [:before, @config.delete(:before)]
+                             [:after, @config.delete(:after)]
+                           else
+                             [:before, @config.delete(:before)]
         end
 
         @replacement = data.is_a?(Proc) ? data.call : data
@@ -48,9 +48,9 @@ class Foreman::Thor
         say_status :invoke
 
         content = if @behavior == :after
-          '\0' + replacement
-        else
-          replacement + '\0'
+                    '\0' + replacement
+                  else
+                    replacement + '\0'
         end
 
         replace!(/#{flag}/, content, config[:force])
@@ -60,29 +60,29 @@ class Foreman::Thor
         say_status :revoke
 
         regexp = if @behavior == :after
-          content = '\1\2'
-          /(#{flag})(.*)(#{Regexp.escape(replacement)})/m
-        else
-          content = '\2\3'
-          /(#{Regexp.escape(replacement)})(.*)(#{flag})/m
+                   content = '\1\2'
+                   /(#{flag})(.*)(#{Regexp.escape(replacement)})/m
+                 else
+                   content = '\2\3'
+                   /(#{Regexp.escape(replacement)})(.*)(#{flag})/m
         end
 
         replace!(regexp, content, true)
       end
 
-    protected
+      protected
 
       def say_status(behavior)
         status = if behavior == :invoke
-          if flag == /\A/
-            :prepend
-          elsif flag == /\z/
-            :append
-          else
-            :insert
-          end
-        else
-          :subtract
+                   if flag == /\A/
+                     :prepend
+                   elsif flag == /\z/
+                     :append
+                   else
+                     :insert
+                   end
+                 else
+                   :subtract
         end
 
         super(status, config[:verbose])
@@ -92,10 +92,11 @@ class Foreman::Thor
       #
       def replace!(regexp, string, force)
         return if base.options[:pretend]
+
         content = File.binread(destination)
         if force || !content.include?(replacement)
           content.gsub!(regexp, string)
-          File.open(destination, "wb") { |file| file.write(content) }
+          File.open(destination, 'wb') { |file| file.write(content) }
         end
       end
     end

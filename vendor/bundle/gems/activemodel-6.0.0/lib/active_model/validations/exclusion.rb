@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "active_model/validations/clusivity"
+require 'active_model/validations/clusivity'
 
 module ActiveModel
   module Validations
@@ -8,9 +8,7 @@ module ActiveModel
       include Clusivity
 
       def validate_each(record, attribute, value)
-        if include?(record, value)
-          record.errors.add(attribute, :exclusion, options.except(:in, :within).merge!(value: value))
-        end
+        record.errors.add(attribute, :exclusion, options.except(:in, :within).merge!(value: value)) if include?(record, value)
       end
     end
 

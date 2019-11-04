@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "active_support/core_ext/module/anonymous"
+require 'active_support/core_ext/module/anonymous'
 
 module ActiveModel
   # == Active \Model \Validator
@@ -101,7 +101,7 @@ module ActiveModel
     #   PresenceValidator.kind   # => :presence
     #   AcceptanceValidator.kind # => :acceptance
     def self.kind
-      @kind ||= name.split("::").last.underscore.chomp("_validator").to_sym unless anonymous?
+      @kind ||= name.split('::').last.underscore.chomp('_validator').to_sym unless anonymous?
     end
 
     # Accepts options that will be made available through the +options+ reader.
@@ -119,8 +119,8 @@ module ActiveModel
 
     # Override this method in subclasses with validation logic, adding errors
     # to the records +errors+ array where necessary.
-    def validate(record)
-      raise NotImplementedError, "Subclasses must implement a validate(record) method."
+    def validate(_record)
+      raise NotImplementedError, 'Subclasses must implement a validate(record) method.'
     end
   end
 
@@ -137,7 +137,8 @@ module ActiveModel
     # and instead be made available through the +attributes+ reader.
     def initialize(options)
       @attributes = Array(options.delete(:attributes))
-      raise ArgumentError, ":attributes cannot be blank" if @attributes.empty?
+      raise ArgumentError, ':attributes cannot be blank' if @attributes.empty?
+
       super
       check_validity!
     end
@@ -149,21 +150,21 @@ module ActiveModel
       attributes.each do |attribute|
         value = record.read_attribute_for_validation(attribute)
         next if (value.nil? && options[:allow_nil]) || (value.blank? && options[:allow_blank])
+
         validate_each(record, attribute, value)
       end
     end
 
     # Override this method in subclasses with the validation logic, adding
     # errors to the records +errors+ array where necessary.
-    def validate_each(record, attribute, value)
-      raise NotImplementedError, "Subclasses must implement a validate_each(record, attribute, value) method"
+    def validate_each(_record, _attribute, _value)
+      raise NotImplementedError, 'Subclasses must implement a validate_each(record, attribute, value) method'
     end
 
     # Hook method that gets called by the initializer allowing verification
     # that the arguments supplied are valid. You could for example raise an
     # +ArgumentError+ when invalid options are supplied.
-    def check_validity!
-    end
+    def check_validity!; end
   end
 
   # +BlockValidator+ is a special +EachValidator+ which receives a block on initialization
@@ -176,8 +177,8 @@ module ActiveModel
 
     private
 
-      def validate_each(record, attribute, value)
-        @block.call(record, attribute, value)
-      end
+    def validate_each(record, attribute, value)
+      @block.call(record, attribute, value)
+    end
   end
 end

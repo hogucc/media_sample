@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "monitor"
+require 'monitor'
 
 module ActionCable
   module Server
@@ -16,7 +16,9 @@ module ActionCable
 
       attr_reader :config
 
-      def self.logger; config.logger; end
+      def self.logger
+        config.logger
+      end
       delegate :logger, to: :config
 
       attr_reader :mutex
@@ -45,11 +47,11 @@ module ActionCable
 
         @mutex.synchronize do
           # Shutdown the worker pool
-          @worker_pool.halt if @worker_pool
+          @worker_pool&.halt
           @worker_pool = nil
 
           # Shutdown the pub/sub adapter
-          @pubsub.shutdown if @pubsub
+          @pubsub&.shutdown
           @pubsub = nil
         end
       end

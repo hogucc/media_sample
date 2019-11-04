@@ -40,14 +40,13 @@ end
 #
 class BlankSlate
   class << self
-
     # Hide the method named +name+ in the BlankSlate class.  Don't
     # hide +instance_eval+ or any method beginning with "__".
     def hide(name)
       warn_level = $VERBOSE
       $VERBOSE = nil
       if instance_methods.include?(name._blankslate_as_name) &&
-          name !~ /^(__|instance_eval$)/
+         name !~ /^(__|instance_eval$)/
         @hidden_methods ||= {}
         @hidden_methods[name.to_sym] = instance_method(name)
         undef_method name
@@ -65,7 +64,8 @@ class BlankSlate
     # slate object.
     def reveal(name)
       hidden_method = find_hidden_method(name)
-      fail "Don't know how to reveal method '#{name}'" unless hidden_method
+      raise "Don't know how to reveal method '#{name}'" unless hidden_method
+
       define_method(name, hidden_method)
     end
   end
@@ -82,13 +82,14 @@ end
 #
 module Kernel
   class << self
-    alias_method :blank_slate_method_added, :method_added
+    alias blank_slate_method_added method_added
 
     # Detect method additions to Kernel and remove them in the
     # BlankSlate class.
     def method_added(name)
       result = blank_slate_method_added(name)
       return result if self != Kernel
+
       BlankSlate.hide(name)
       result
     end
@@ -100,18 +101,19 @@ end
 #
 class Object
   class << self
-    alias_method :blank_slate_method_added, :method_added
+    alias blank_slate_method_added method_added
 
     # Detect method additions to Object and remove them in the
     # BlankSlate class.
     def method_added(name)
       result = blank_slate_method_added(name)
       return result if self != Object
+
       BlankSlate.hide(name)
       result
     end
 
-    def find_hidden_method(name)
+    def find_hidden_method(_name)
       nil
     end
   end
@@ -129,6 +131,7 @@ class Module
   def append_features(mod)
     result = blankslate_original_append_features(mod)
     return result if mod != Object
+
     instance_methods.each do |name|
       BlankSlate.hide(name)
     end

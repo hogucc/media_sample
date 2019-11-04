@@ -90,9 +90,9 @@ module ActiveSupport
             Hash[Array(expression).map { |e| [e, difference] }]
           end
 
-        exps = expressions.keys.map { |e|
-          e.respond_to?(:call) ? e : lambda { eval(e, block.binding) }
-        }
+        exps = expressions.keys.map do |e|
+          e.respond_to?(:call) ? e : -> { eval(e, block.binding) }
+        end
         before = exps.map(&:call)
 
         retval = yield

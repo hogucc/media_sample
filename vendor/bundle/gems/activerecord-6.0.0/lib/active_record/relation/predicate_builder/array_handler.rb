@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "active_support/core_ext/array/extract"
+require 'active_support/core_ext/array/extract'
 
 module ActiveRecord
   class PredicateBuilder
@@ -27,9 +27,7 @@ module ActiveRecord
             values.empty? ? NullPredicate : attribute.in(values)
           end
 
-        unless nils.empty?
-          values_predicate = values_predicate.or(predicate_builder.build(attribute, nil))
-        end
+        values_predicate = values_predicate.or(predicate_builder.build(attribute, nil)) unless nils.empty?
 
         array_predicates = ranges.map { |range| predicate_builder.build(attribute, range) }
         array_predicates.unshift(values_predicate)
@@ -37,13 +35,14 @@ module ActiveRecord
       end
 
       private
-        attr_reader :predicate_builder
 
-        module NullPredicate # :nodoc:
-          def self.or(other)
-            other
-          end
+      attr_reader :predicate_builder
+
+      module NullPredicate # :nodoc:
+        def self.or(other)
+          other
         end
+      end
     end
   end
 end
