@@ -1,10 +1,9 @@
 Rails.application.routes.draw do
-  #root to: 'home#index'
-  root to: 'posts#index'
-  resources :posts, only: [:index]
+  root to: 'home#index'
+
   namespace :api do
     namespace :v1 do
-      resources :posts, only: [:show]
+      resources :posts, only: [:index, :show]
     end
   end
 end
