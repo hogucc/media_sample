@@ -4,7 +4,7 @@
       <div class="nav-wrapper">
         <router-link to="/" class="brand-logo">ぺっとろぐ</router-link>
         <ul id="nav-mobile" class="right">
-          <li><router-link to="">投稿</router-link></li>
+          <li><router-link to="/create">投稿する</router-link></li>
         </ul>
       </div>
     </nav>
