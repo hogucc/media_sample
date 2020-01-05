@@ -1,3 +1,78 @@
-#card-title-link:hover {
-  text-decoration: underline;
+.container {
+  margin: 30px;
+}
+
+label > input {
+  display: none;
+}
+
+.input {
+  display: none;
+}
+
+.input-file, .preview-item-btn {
+  padding: 0 1rem;
+  border: solid 1px #888;
+  border-radius: 3px;
+  cursor: pointer;
+} 
+
+.preview-item-btn {
+  width: 50%;
+  height: 30px;
+}
+
+.input-file::after {
+  content: '+';
+  font-size: 1rem;
+  color: #888;
+  padding-left: 1rem;
+}
+
+.input-file {
+  font-size: 1rem;
+}
+
+.preview-item-name {
+  margin: 1px;
+  padding: 1px;
+  font-size: 1rem;
+  color: #888;
+}
+
+.preview-item-name::after{
+  content: '×';
+  font-size: 1rem;
+  color: #888;
+  padding-left: 1rem;
+}
+
+.form-label {
+  color: #212529;
+  font-size: 16px;
+  font-weight: bold;
+  padding-left: 8px;
+  border-left: 3px solid #e75926;
+}
+
+.validate {
+  display: block;
+  width: 100%;
+  padding: 6px 12px;
+  font-size: 14px;
+  color: #555;
+  background-color: #fff;
+  background-image: none;
+  border: 1px solid #ccc;
+  border-radius: 2px;
+  box-shadow: none;
+  transition: none;
+}
+
+.badge-required {
+  color: #fff;
+}
+
+.btn-post-create {
+  float: right;
 }
