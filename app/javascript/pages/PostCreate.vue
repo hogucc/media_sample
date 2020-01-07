@@ -20,6 +20,7 @@
             画像を選択
             <input ref="imageUploader" type="file" accept="image/*,.png,.jpg,.jpeg" v-on:change="onFileChange($event)" />
           </label>
+
           <div class="preview-item">
             <img
               v-show="uploadedImage"
@@ -55,6 +56,7 @@
           content: '',
           image: ''
         },
+        isDrag: null,
       }
     },
     methods: {
@@ -71,10 +73,19 @@
           this.uploadedImage = e.target.result;
         };
         reader.readAsDataURL(file);
-      },remove(){
+      },
+      remove(){
         this.$refs.imageUploader.value = ''
         this.uploadedImage = '';
-      },createPost: function(){
+      },
+      checkDrag(event, key, status){ 
+        if (status && event.dataTransfer.types == "text/plain") {
+            //ファイルではなく、html要素をドラッグしてきた時は処理を中止
+            return false
+        }
+        this.isDrag = status ? key : null
+      },
+      createPost: function(){
         if(!this.post.title) return;
         axios.post('/api/posts', {post: this.post}).then((res) => {
           this.$router.push({path: '/'});
