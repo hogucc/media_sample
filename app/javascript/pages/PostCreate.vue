@@ -16,11 +16,20 @@
         </div>
         <div class="row">
           <label class="form-label" for="photo">写真を追加する</label>
+          <div class = "file-field input-field">
+            <div class = "btn">
+              <span>画像を選択</span>
+              <input ref="imageUploader" type="file" accept="image/*,.png,.jpg,.jpeg" v-on:change="onFileChange($event)" />
+            </div>
+
+            <div class = "file-path-wrapper">
+              <input class = "file-path validate" type = "text" placeholder = "Upload file" />
+            </div>
+          </div>
           <label class="input-file" v-show="!uploadedImage">
             画像を選択
             <input ref="imageUploader" type="file" accept="image/*,.png,.jpg,.jpeg" v-on:change="onFileChange($event)" />
           </label>
-
           <div class="preview-item">
             <img
               v-show="uploadedImage"
@@ -28,9 +37,6 @@
               :src="uploadedImage"
               alt=""
             />
-            <div v-show="uploadedImage" class="preview-item-btn" v-on:click="remove">
-              <p class="preview-item-name">{{ img_name }}</p>
-            </div>
           </div>
         </div>
         <div class="btn btn-post-create" v-on:click="createPost">投稿する</div>
