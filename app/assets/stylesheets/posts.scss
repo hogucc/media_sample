@@ -10,43 +10,6 @@ label > input {
   display: none;
 }
 
-.input-file, .preview-item-btn {
-  padding: 0 1rem;
-  border: solid 1px #888;
-  border-radius: 3px;
-  cursor: pointer;
-} 
-
-.preview-item-btn {
-  width: 50%;
-  height: 30px;
-}
-
-.input-file::after {
-  content: '+';
-  font-size: 1rem;
-  color: #888;
-  padding-left: 1rem;
-}
-
-.input-file {
-  font-size: 1rem;
-}
-
-.preview-item-name {
-  margin: 1px;
-  padding: 1px;
-  font-size: 1rem;
-  color: #888;
-}
-
-.preview-item-name::after{
-  content: '×';
-  font-size: 1rem;
-  color: #888;
-  padding-left: 1rem;
-}
-
 .form-label {
   color: #212529;
   font-size: 16px;
@@ -69,6 +32,11 @@ label > input {
   transition: none;
 }
 
+.preview-item-file {
+  width: 100px;
+  height: 100px;
+}
+
 .badge-required {
   color: #fff;
 }
@@ -76,3 +44,36 @@ label > input {
 .btn-post-create {
   float: right;
 }
+
+.preview-item {
+  width: 100px;
+  height: 100px;
+  position: relative;
+}
+
+.delete-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background-color: #fff;
+  text-align: center;
+  color: #aab7b8;
+  position: absolute;
+  top: 5px;
+  left: 75px;
+  box-shadow: 0 1px 2px 0 rgba(88,88,88,0.75)
+}
+
+.post-form-content {
+  width: 860px;
+}
+
+.post-form-title {
+  width: 860px;
+}
+
+.post-form-photo {
+  width: 860px;
+  height: 230px;
+}
+
