@@ -1,4 +1,5 @@
 <template>
+
   <div class="section">
     <div class="container">
       <form class="col s12">
@@ -21,13 +22,13 @@
         <div class="post-form-photo">
           <div class="row">
             <label class="form-label" for="photo">写真を追加する</label>
-            <div class = "file-field input-field">
-              <div class = "btn">
+            <div class="file-field input-field">
+              <div class="btn">
                 <span>画像を選択</span>
                 <input ref="imageUploader" type="file" accept="image/*,.png,.jpg,.jpeg" v-on:change="onFileChange($event)" />
               </div>
-              <div class = "file-path-wrapper">
-                <input class = "file-path validate valid" type = "text" placeholder = "画像を選択してください" />
+              <div class="file-path-wrapper">
+                <input class="file-path validate valid" type="text" placeholder="画像を選択してください" />
               </div>
             </div>
             <div class="preview-item">
