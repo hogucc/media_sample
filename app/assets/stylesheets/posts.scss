@@ -1,12 +1,12 @@
-.container {
-  margin: 30px;
+.post-form {
+  background-color: #f8faf7;
+}
+
+.post-area {
+  background-color: #fff;
 }
 
 label > input {
-  display: none;
-}
-
-.input {
   display: none;
 }
 
@@ -16,6 +16,24 @@ label > input {
   font-weight: bold;
   padding-left: 8px;
   border-left: 3px solid #e75926;
+}
+
+.post-form-title {
+  padding: 20px;
+}
+
+.post-form-content {
+  padding: 20px;
+}
+
+.post-form-photo {
+  padding: 20px;
+}
+
+.post-form-submit {
+  margin: 20px;
+  height: 70px;
+  border-top: 0.5px solid #e0e0e0;
 }
 
 .validate {
@@ -32,23 +50,42 @@ label > input {
   transition: none;
 }
 
-.preview-item-file {
-  width: 100px;
-  height: 100px;
-}
-
 .badge-required {
   color: #fff;
 }
 
 .btn-post-create {
+  margin-top: 20px;
   float: right;
 }
 
-.preview-item {
-  width: 100px;
-  height: 100px;
+label[for="file-upload"] {
+  display:inline-block;
+  width: 200px;
+  height: 200px;
+  font-size: 30px;
+  color: #aab7b8;
+  background-color: #fafafa;
+  border: 2px solid #aab7b8;
+  border-style: dashed;
+  text-align: center;
+  cursor: pointer;
+  line-height: 200px;
+}
+
+#preview-thumbnails {
+  margin: 10px 0;
+}
+
+.preview-container {
+  width: 200px;
+  height: 200px;
   position: relative;
+}
+
+.preview-item-file {
+  width: 200px;
+  height: 200px;
 }
 
 .delete-btn {
@@ -60,20 +97,6 @@ label > input {
   color: #aab7b8;
   position: absolute;
   top: 5px;
-  left: 75px;
+  left: 170px;
   box-shadow: 0 1px 2px 0 rgba(88,88,88,0.75)
 }
-
-.post-form-content {
-  width: 860px;
-}
-
-.post-form-title {
-  width: 860px;
-}
-
-.post-form-photo {
-  width: 860px;
-  height: 230px;
-}
-
