@@ -67,6 +67,10 @@
       onFileChange(e){
         const files = e.target.files || e.dataTransfer.files;
         if(files.length > 0) {
+          if(files[0].size > 5) {
+            alert('アップロードできるファイルの最大サイズは5MBです。5MB以下のファイルを選んでください。');
+            return;
+          }
           this.createImage(files[0]);
           this.post.image = files[0];
           this.canDisplayRemoveIcon = true;
@@ -85,7 +89,13 @@
         this.canDisplayRemoveIcon = false;
       },
       createPost: function(){
+        console.log("createPost");
         if(!this.post.title || !this.post.content) return;
+        console.log(this.post.title);
+        console.log(this.post.content);
+        console.log(this.post.image);
+        let formData = new FormData();
+        formData.append('fileKey', this.post.image);
         axios.post('/api/posts', {post: this.post}).then((res) => {
           this.$router.push({path: '/'});
         }, (error) => {
