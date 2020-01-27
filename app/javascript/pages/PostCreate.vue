@@ -89,13 +89,7 @@
         this.canDisplayRemoveIcon = false;
       },
       createPost: function(){
-        console.log("createPost");
         if(!this.post.title || !this.post.content) return;
-        console.log(this.post.title);
-        console.log(this.post.content);
-        console.log(this.post.image);
-        let formData = new FormData();
-        formData.append('fileKey', this.post.image);
         axios.post('/api/posts', {post: this.post}).then((res) => {
           this.$router.push({path: '/'});
         }, (error) => {
