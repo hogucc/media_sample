@@ -31,7 +31,7 @@
               </div>
               <label for="file-upload" v-show="!uploadedImage">
                 <font-awesome-icon icon="plus" />
-                <input id="file-upload" ref="imageUploader" type="file" accept="image/*,.png,.jpg,.jpeg" v-on:change="onFileChange($event)" />
+                <input id="file-upload" ref="imageUploader" type="file" accept="image/jpeg,image/jpg,image/png" v-on:change="onFileChange($event)" />
               </label>
             </div>
           </div>
