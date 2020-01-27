@@ -1,5 +1,5 @@
 class Api::V1::PostsController < ApplicationController
-  # protect_from_forgery :except => [:create]
+  protect_from_forgery :except => [:create]
 
   def index
     @posts = Post.all
@@ -14,7 +14,7 @@ class Api::V1::PostsController < ApplicationController
   def create
     @post = Post.new(post_params)
     if @post.save
-      head :no_content
+      head :create
     else
       render json: @post.errors, status: :unprocessable_entity
     end

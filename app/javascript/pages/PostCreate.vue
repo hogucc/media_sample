@@ -31,7 +31,7 @@
               </div>
               <label for="file-upload" v-show="!uploadedImage">
                 <font-awesome-icon icon="plus" />
-                <input id="file-upload" ref="imageUploader" type="file" accept="image/*,.png,.jpg,.jpeg" v-on:change="onFileChange($event)" />
+                <input id="file-upload" ref="imageUploader" type="file" accept="image/jpeg,image/jpg,image/png" v-on:change="onFileChange($event)" />
               </label>
             </div>
           </div>
@@ -65,9 +65,10 @@
     },
     methods: {
       onFileChange(e){
-        const files = e.target.files || e.dataTransfer.files;
+        const files = e.target.files;
         if(files.length > 0) {
-          if(files[0].size > 5) {
+          var size_in_megabytes = files[0].size/1024/1024;
+          if(size_in_megabytes > 5) {
             alert('アップロードできるファイルの最大サイズは5MBです。5MB以下のファイルを選んでください。');
             return;
           }
@@ -89,13 +90,7 @@
         this.canDisplayRemoveIcon = false;
       },
       createPost: function(){
-        console.log("createPost");
         if(!this.post.title || !this.post.content) return;
-        console.log(this.post.title);
-        console.log(this.post.content);
-        console.log(this.post.image);
-        let formData = new FormData();
-        formData.append('fileKey', this.post.image);
         axios.post('/api/posts', {post: this.post}).then((res) => {
           this.$router.push({path: '/'});
         }, (error) => {
