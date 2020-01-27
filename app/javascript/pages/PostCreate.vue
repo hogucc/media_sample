@@ -65,9 +65,10 @@
     },
     methods: {
       onFileChange(e){
-        const files = e.target.files || e.dataTransfer.files;
+        const files = e.target.files;
         if(files.length > 0) {
-          if(files[0].size > 5) {
+          var size_in_megabytes = files[0].size/1024/1024;
+          if(size_in_megabytes > 5) {
             alert('アップロードできるファイルの最大サイズは5MBです。5MB以下のファイルを選んでください。');
             return;
           }
