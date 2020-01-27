@@ -14,7 +14,7 @@ class Api::V1::PostsController < ApplicationController
   def create
     @post = Post.new(post_params)
     if @post.save
-      head :no_content
+      head :create
     else
       render json: @post.errors, status: :unprocessable_entity
     end
