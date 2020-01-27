@@ -1,5 +1,5 @@
 class Api::V1::PostsController < ApplicationController
-  # protect_from_forgery :except => [:create]
+  protect_from_forgery :except => [:create]
 
   def index
     @posts = Post.all
