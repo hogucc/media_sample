@@ -4,15 +4,15 @@
       <div class="container">
         <form class="col s12 post-area">
           <div class="post-form-title">
-            <label class="form-label" for="article_title"><span class="new badge red badge-required" data-badge-caption="">必須</span>タイトル</label>
+            <label class="form-label" for="article_title">タイトル</label>
             <div class="input-field">
-              <input placeholder="タイトルを15文字以内で入力してください" type="text" maxlength="15" class="validate" v-model="post.title" required="required">
+              <input placeholder="タイトルを15文字以内で入力してください" type="text" maxlength="15" class="validate" v-model="post.title">
             </div>
           </div>
           <div class="post-form-content">
-            <label class="form-label" for="post_detail"><span class="new badge red badge-required" data-badge-caption="">必須</span>内容</label>
+            <label class="form-label" for="post_detail">内容</label>
             <div class="input-field">
-              <textarea　placeholder="内容を400文字以内で入力してください" maxlength="400" class="materialize-textarea" v-model="post.content" required="required" />
+              <textarea　placeholder="内容を400文字以内で入力してください" maxlength="400" class="materialize-textarea" v-model="post.content" />
             </div>
           </div>
           <div class="post-form-photo">
@@ -29,9 +29,9 @@
                   <font-awesome-icon icon="times" />
                 </div>
               </div>
-              <label for="file-upload" v-show="!uploadedImage">
+              <label for="image" v-show="!uploadedImage">
                 <font-awesome-icon icon="plus" />
-                <input id="file-upload" ref="imageUploader" type="file" accept="image/jpeg,image/jpg,image/png" v-on:change="onFileChange($event)" />
+                <input id="image" ref="imageUploader" type="file" accept="image/jpeg,image/jpg,image/png" v-on:change="onFileChange($event)" />
               </label>
             </div>
           </div>
@@ -87,11 +87,27 @@
       remove(){
         this.$refs.imageUploader.value = '';
         this.uploadedImage = '';
+        this.post.image = '';
         this.canDisplayRemoveIcon = false;
       },
       createPost: function(){
         if(!this.post.title || !this.post.content) return;
-        axios.post('/api/posts', {post: this.post}).then((res) => {
+
+        const params = {
+          'title': this.post.title,
+          'content': this.post.content,
+          'image': this.post.image
+        }
+
+        let formData = new FormData()
+
+        Object.entries(params).forEach(
+          ([key, value]) => formData.append(key, value)
+        )
+
+        console.log(this.post.image);
+
+        axios.post('/api/v1/posts', formData).then((res) => {
           this.$router.push({path: '/'});
         }, (error) => {
           console.log(error);
