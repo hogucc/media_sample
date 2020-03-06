@@ -105,8 +105,6 @@
           ([key, value]) => formData.append(key, value)
         )
 
-        console.log(this.post.image);
-
         axios.post('/api/v1/posts', formData).then((res) => {
           this.$router.push({path: '/'});
         }, (error) => {

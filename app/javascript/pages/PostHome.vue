@@ -11,6 +11,7 @@
               {{post.title}}
             </div>
             <div class="card-more">
+              <button class="btn" v-on:click="deletePost(post.id)">削除</button>
               <div v-if="show[index]">
                 <font-awesome-icon icon="angle-up" size="lg"/>
               </div>
@@ -54,6 +55,12 @@
       },
       toggleShowPost(key){
         this.$set(this.show , key, !this.show[key])
+      },
+      deletePost(id) {
+        axios.delete(`/api/v1/posts/${id}`).then(res => {
+          this.posts = [];
+          this.fetchPosts();
+        })
       }
     }
   }

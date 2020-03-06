@@ -25,6 +25,15 @@ class Api::V1::PostsController < ApplicationController
     end
   end
 
+  def destroy
+    @post = Post.find(params[:id])
+    if @post.destroy
+      head :no_content
+    else
+      render json: @post.errors, status: :unprocessable_entity
+    end
+  end
+
   private
 
   def post_params
