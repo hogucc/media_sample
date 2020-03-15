@@ -7,7 +7,7 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
 library.add(fas)
 Vue.component('font-awesome-icon', FontAwesomeIcon)
-
+//= require materialize
 const app = new Vue({
   el: '#app',
   router: Router,
