@@ -46,7 +46,6 @@ group :development do
   gem 'spring-watcher-listen', '~> 2.0.0'
   gem 'foreman'
   gem 'materialize-sass'
-  gem 'material_icons'
   gem 'rubocop', require: false
   gem 'rubocop-rails'
 end
