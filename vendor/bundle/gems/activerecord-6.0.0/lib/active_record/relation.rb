@@ -5,24 +5,30 @@ module ActiveRecord
   class Relation
     MULTI_VALUE_METHODS  = [:includes, :eager_load, :preload, :select, :group,
                             :order, :joins, :left_outer_joins, :references,
-                            :extending, :unscope, :optimizer_hints, :annotate]
+                            :extending, :unscope, :optimizer_hints, :annotate].freeze
 
     SINGLE_VALUE_METHODS = [:limit, :offset, :lock, :readonly, :reordering,
-                            :reverse_order, :distinct, :create_with, :skip_query_cache]
+                            :reverse_order, :distinct, :create_with, :skip_query_cache].freeze
 
-    CLAUSE_METHODS = [:where, :having, :from]
-    INVALID_METHODS_FOR_DELETE_ALL = [:distinct, :group, :having]
+    CLAUSE_METHODS = [:where, :having, :from].freeze
+    INVALID_METHODS_FOR_DELETE_ALL = [:distinct, :group, :having].freeze
 
     VALUE_METHODS = MULTI_VALUE_METHODS + SINGLE_VALUE_METHODS + CLAUSE_METHODS
 
     include Enumerable
-    include FinderMethods, Calculations, SpawnMethods, QueryMethods, Batches, Explain, Delegation
+    include Delegation
+    include Explain
+    include Batches
+    include QueryMethods
+    include SpawnMethods
+    include Calculations
+    include FinderMethods
 
     attr_reader :table, :klass, :loaded, :predicate_builder
     attr_accessor :skip_preloading_value
-    alias :model :klass
-    alias :loaded? :loaded
-    alias :locked? :lock_value
+    alias model klass
+    alias loaded? loaded
+    alias locked? lock_value
 
     def initialize(klass, table: klass.arel_table, predicate_builder: klass.predicate_builder, values: {})
       @klass  = klass
@@ -34,7 +40,7 @@ module ActiveRecord
       @delegate_to_klass = false
     end
 
-    def initialize_copy(other)
+    def initialize_copy(_other)
       @values = @values.dup
       reset
     end
@@ -67,7 +73,7 @@ module ActiveRecord
     #   user = users.new { |user| user.name = 'Oscar' }
     #   user.name # => Oscar
     def new(attributes = nil, &block)
-      block = _deprecated_scope_block("new", &block)
+      block = _deprecated_scope_block('new', &block)
       scoping { klass.new(attributes, &block) }
     end
 
@@ -96,7 +102,7 @@ module ActiveRecord
       if attributes.is_a?(Array)
         attributes.collect { |attr| create(attr, &block) }
       else
-        block = _deprecated_scope_block("create", &block)
+        block = _deprecated_scope_block('create', &block)
         scoping { klass.create(attributes, &block) }
       end
     end
@@ -111,7 +117,7 @@ module ActiveRecord
       if attributes.is_a?(Array)
         attributes.collect { |attr| create!(attr, &block) }
       else
-        block = _deprecated_scope_block("create!", &block)
+        block = _deprecated_scope_block('create!', &block)
         scoping { klass.create!(attributes, &block) }
       end
     end
@@ -264,30 +270,35 @@ module ActiveRecord
     # Returns true if there are no records.
     def empty?
       return @records.empty? if loaded?
+
       !exists?
     end
 
     # Returns true if there are no records.
     def none?
       return super if block_given?
+
       empty?
     end
 
     # Returns true if there are any records.
     def any?
       return super if block_given?
+
       !empty?
     end
 
     # Returns true if there is exactly one record.
     def one?
       return super if block_given?
+
       limit_value ? records.one? : size == 1
     end
 
     # Returns true if there is more than one record.
     def many?
       return super if block_given?
+
       limit_value ? records.many? : size > 1
     end
 
@@ -345,18 +356,16 @@ module ActiveRecord
     def compute_cache_version(timestamp_column) # :nodoc:
       if loaded? || distinct_value
         size = records.size
-        if size > 0
-          timestamp = max_by(&timestamp_column)._read_attribute(timestamp_column)
-        end
+        timestamp = max_by(&timestamp_column)._read_attribute(timestamp_column) if size > 0
       else
         collection = eager_loading? ? apply_join_dependency : self
 
         column = connection.visitor.compile(arel_attribute(timestamp_column))
-        select_values = "COUNT(*) AS #{connection.quote_column_name("size")}, MAX(%s) AS timestamp"
+        select_values = "COUNT(*) AS #{connection.quote_column_name('size')}, MAX(%s) AS timestamp"
 
         if collection.has_limit_or_offset?
           query = collection.select("#{column} AS collection_cache_key_timestamp")
-          subquery_alias = "subquery_for_cache_key"
+          subquery_alias = 'subquery_for_cache_key'
           subquery_column = "#{subquery_alias}.collection_cache_key_timestamp"
           arel = query.build_subquery(subquery_alias, select_values % subquery_column)
         else
@@ -369,8 +378,8 @@ module ActiveRecord
 
         if result
           column_type = klass.type_for_attribute(timestamp_column)
-          timestamp = column_type.deserialize(result["timestamp"])
-          size = result["size"]
+          timestamp = column_type.deserialize(result['timestamp'])
+          size = result['size']
         else
           timestamp = nil
           size = 0
@@ -380,7 +389,7 @@ module ActiveRecord
       if timestamp
         "#{size}-#{timestamp.utc.to_s(cache_timestamp_format)}"
       else
-        "#{size}"
+        size.to_s
       end
     end
     private :compute_cache_version
@@ -430,7 +439,7 @@ module ActiveRecord
     #   # Update all invoices and set the number column to its id value.
     #   Invoice.update_all('number = id')
     def update_all(updates)
-      raise ArgumentError, "Empty list of attributes to change" if updates.blank?
+      raise ArgumentError, 'Empty list of attributes to change' if updates.blank?
 
       if eager_loading?
         relation = apply_join_dependency
@@ -447,8 +456,8 @@ module ActiveRecord
 
       if updates.is_a?(Hash)
         if klass.locking_enabled? &&
-            !updates.key?(klass.locking_column) &&
-            !updates.key?(klass.locking_column.to_sym)
+           !updates.key?(klass.locking_column) &&
+           !updates.key?(klass.locking_column.to_sym)
           attr = arel_attribute(klass.locking_column)
           updates[attr.name] = _increment_attribute(attr)
         end
@@ -556,9 +565,7 @@ module ActiveRecord
         value = @values[method]
         method == :distinct ? value : value&.any?
       end
-      if invalid_methods.any?
-        raise ActiveRecordError.new("delete_all doesn't support #{invalid_methods.join(', ')}")
-      end
+      raise ActiveRecordError, "delete_all doesn't support #{invalid_methods.join(', ')}" if invalid_methods.any?
 
       if eager_loading?
         relation = apply_join_dependency
@@ -706,7 +713,7 @@ module ActiveRecord
       subject = loaded? ? records : self
       entries = subject.take([limit_value, 11].compact.min).map!(&:inspect)
 
-      entries[10] = "..." if entries.size == 11
+      entries[10] = '...' if entries.size == 11
 
       "#<#{self.class.name} [#{entries.join(', ')}]>"
     end
@@ -737,123 +744,127 @@ module ActiveRecord
     attr_reader :_deprecated_scope_source # :nodoc:
 
     protected
-      attr_writer :_deprecated_scope_source # :nodoc:
 
-      def load_records(records)
-        @records = records.freeze
-        @loaded = true
-      end
+    attr_writer :_deprecated_scope_source # :nodoc:
 
-      def null_relation? # :nodoc:
-        is_a?(NullRelation)
-      end
+    def load_records(records)
+      @records = records.freeze
+      @loaded = true
+    end
+
+    def null_relation? # :nodoc:
+      is_a?(NullRelation)
+    end
 
     private
-      def already_in_scope?
-        @delegate_to_klass && begin
-          scope = klass.current_scope(true)
-          scope && !scope._deprecated_scope_source
+
+    def already_in_scope?
+      @delegate_to_klass && begin
+        scope = klass.current_scope(true)
+        scope && !scope._deprecated_scope_source
+      end
+    end
+
+    def _deprecated_spawn(name)
+      spawn.tap { |scope| scope._deprecated_scope_source = name }
+    end
+
+    def _deprecated_scope_block(name)
+      lambda do |record|
+        klass.current_scope = _deprecated_spawn(name)
+        yield record if block_given?
+      end
+    end
+
+    def _scoping(scope)
+      previous = klass.current_scope(true)
+      klass.current_scope = scope
+      yield
+    ensure
+      klass.current_scope = previous
+    end
+
+    def _substitute_values(values)
+      values.map do |name, value|
+        attr = arel_attribute(name)
+        unless Arel.arel_node?(value)
+          type = klass.type_for_attribute(attr.name)
+          value = predicate_builder.build_bind_attribute(attr.name, type.cast(value))
         end
+        [attr, value]
       end
+    end
 
-      def _deprecated_spawn(name)
-        spawn.tap { |scope| scope._deprecated_scope_source = name }
-      end
+    def _increment_attribute(attribute, value = 1)
+      bind = predicate_builder.build_bind_attribute(attribute.name, value.abs)
+      expr = table.coalesce(Arel::Nodes::UnqualifiedColumn.new(attribute), 0)
+      expr = value < 0 ? expr - bind : expr + bind
+      expr.expr
+    end
 
-      def _deprecated_scope_block(name, &block)
-        -> record do
-          klass.current_scope = _deprecated_spawn(name)
-          yield record if block_given?
-        end
-      end
-
-      def _scoping(scope)
-        previous, klass.current_scope = klass.current_scope(true), scope
-        yield
-      ensure
-        klass.current_scope = previous
-      end
-
-      def _substitute_values(values)
-        values.map do |name, value|
-          attr = arel_attribute(name)
-          unless Arel.arel_node?(value)
-            type = klass.type_for_attribute(attr.name)
-            value = predicate_builder.build_bind_attribute(attr.name, type.cast(value))
-          end
-          [attr, value]
-        end
-      end
-
-      def _increment_attribute(attribute, value = 1)
-        bind = predicate_builder.build_bind_attribute(attribute.name, value.abs)
-        expr = table.coalesce(Arel::Nodes::UnqualifiedColumn.new(attribute), 0)
-        expr = value < 0 ? expr - bind : expr + bind
-        expr.expr
-      end
-
-      def exec_queries(&block)
-        skip_query_cache_if_necessary do
-          @records =
-            if eager_loading?
-              apply_join_dependency do |relation, join_dependency|
-                if relation.null_relation?
-                  []
-                else
-                  relation = join_dependency.apply_column_aliases(relation)
-                  rows = connection.select_all(relation.arel, "SQL")
-                  join_dependency.instantiate(rows, &block)
-                end.freeze
-              end
-            else
-              klass.find_by_sql(arel, &block).freeze
+    def exec_queries(&block)
+      skip_query_cache_if_necessary do
+        @records =
+          if eager_loading?
+            apply_join_dependency do |relation, join_dependency|
+              if relation.null_relation?
+                []
+              else
+                relation = join_dependency.apply_column_aliases(relation)
+                rows = connection.select_all(relation.arel, 'SQL')
+                join_dependency.instantiate(rows, &block)
+              end.freeze
             end
-
-          preload_associations(@records) unless skip_preloading_value
-
-          @records.each(&:readonly!) if readonly_value
-
-          @loaded = true
-          @records
-        end
-      end
-
-      def skip_query_cache_if_necessary
-        if skip_query_cache_value
-          uncached do
-            yield
+          else
+            klass.find_by_sql(arel, &block).freeze
           end
-        else
+
+        preload_associations(@records) unless skip_preloading_value
+
+        @records.each(&:readonly!) if readonly_value
+
+        @loaded = true
+        @records
+      end
+    end
+
+    def skip_query_cache_if_necessary
+      if skip_query_cache_value
+        uncached do
           yield
         end
+      else
+        yield
       end
+    end
 
-      def build_preloader
-        ActiveRecord::Associations::Preloader.new
-      end
+    def build_preloader
+      ActiveRecord::Associations::Preloader.new
+    end
 
-      def references_eager_loaded_tables?
-        joined_tables = arel.join_sources.map do |join|
-          if join.is_a?(Arel::Nodes::StringJoin)
-            tables_in_string(join.left)
-          else
-            [join.left.table_name, join.left.table_alias]
-          end
+    def references_eager_loaded_tables?
+      joined_tables = arel.join_sources.map do |join|
+        if join.is_a?(Arel::Nodes::StringJoin)
+          tables_in_string(join.left)
+        else
+          [join.left.table_name, join.left.table_alias]
         end
-
-        joined_tables += [table.name, table.table_alias]
-
-        # always convert table names to downcase as in Oracle quoted table names are in uppercase
-        joined_tables = joined_tables.flatten.compact.map(&:downcase).uniq
-
-        (references_values - joined_tables).any?
       end
 
-      def tables_in_string(string)
-        return [] if string.blank?
-        # always convert table names to downcase as in Oracle quoted table names are in uppercase
-        # ignore raw_sql_ that is used by Oracle adapter as alias for limit/offset subqueries
-        string.scan(/([a-zA-Z_][.\w]+).?\./).flatten.map(&:downcase).uniq - ["raw_sql_"]
-      end
+      joined_tables += [table.name, table.table_alias]
+
+      # always convert table names to downcase as in Oracle quoted table names are in uppercase
+      joined_tables = joined_tables.flatten.compact.map(&:downcase).uniq
+
+      (references_values - joined_tables).any?
+    end
+
+    def tables_in_string(string)
+      return [] if string.blank?
+
+      # always convert table names to downcase as in Oracle quoted table names are in uppercase
+      # ignore raw_sql_ that is used by Oracle adapter as alias for limit/offset subqueries
+      string.scan(/([a-zA-Z_][.\w]+).?\./).flatten.map(&:downcase).uniq - ['raw_sql_']
+    end
   end
 end

@@ -1,5 +1,5 @@
-# encoding: utf-8
 # frozen_string_literal: true
+
 module Mail
   module Encodings
     class TransferEncoding
@@ -20,11 +20,11 @@ module Mail
         can_transport? enc
       end
 
-      def self.cost(str)
-        raise "Unimplemented"
+      def self.cost(_str)
+        raise 'Unimplemented'
       end
 
-      def self.compatible_input?(str)
+      def self.compatible_input?(_str)
         true
       end
 

@@ -9,7 +9,7 @@ module Arel # :nodoc: all
       include Arel::OrderPredications
 
       def encode_with(coder)
-        coder.scalar = self.to_s
+        coder.scalar = to_s
       end
     end
   end

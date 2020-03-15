@@ -2,7 +2,6 @@ require 'ffi/tools/struct_generator'
 require 'ffi/tools/const_generator'
 
 module FFI
-
   ##
   # Generate files with C structs for FFI::Struct and C constants.
   #
@@ -47,7 +46,6 @@ module FFI
   #
   # @see FFI::Generator::Task for easy integration in a Rakefile
   class Generator
-
     def initialize(ffi_name, rb_name, options = {})
       @ffi_name = ffi_name
       @rb_name = rb_name
@@ -60,10 +58,10 @@ module FFI
         @constants = []
         @structs = []
 
-        indent = $1
-        original_lines = $2.count "\n"
+        indent = Regexp.last_match(1)
+        original_lines = Regexp.last_match(2).count "\n"
 
-        instance_eval $2, @ffi_name, $`.count("\n")
+        instance_eval Regexp.last_match(2), @ffi_name, $`.count("\n")
 
         new_lines = []
         @constants.each { |c| new_lines << c.to_ruby }
@@ -99,7 +97,5 @@ module FFI
     def to_s
       proc { |obj| obj.to_s.inspect }
     end
-
   end
 end
-

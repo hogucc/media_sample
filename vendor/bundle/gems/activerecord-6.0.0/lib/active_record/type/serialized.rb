@@ -25,9 +25,8 @@ module ActiveRecord
 
       def serialize(value)
         return if value.nil?
-        unless default_value?(value)
-          super coder.dump(value)
-        end
+
+        super coder.dump(value) unless default_value?(value)
       end
 
       def inspect
@@ -36,6 +35,7 @@ module ActiveRecord
 
       def changed_in_place?(raw_old_value, value)
         return false if value.nil?
+
         raw_new_value = encoded(value)
         raw_old_value.nil? != raw_new_value.nil? ||
           subtype.changed_in_place?(raw_old_value, raw_new_value)
@@ -46,9 +46,7 @@ module ActiveRecord
       end
 
       def assert_valid_value(value)
-        if coder.respond_to?(:assert_valid_value)
-          coder.assert_valid_value(value, action: "serialize")
-        end
+        coder.assert_valid_value(value, action: 'serialize') if coder.respond_to?(:assert_valid_value)
       end
 
       def force_equality?(value)
@@ -57,15 +55,13 @@ module ActiveRecord
 
       private
 
-        def default_value?(value)
-          value == coder.load(nil)
-        end
+      def default_value?(value)
+        value == coder.load(nil)
+      end
 
-        def encoded(value)
-          unless default_value?(value)
-            coder.dump(value)
-          end
-        end
+      def encoded(value)
+        coder.dump(value) unless default_value?(value)
+      end
     end
   end
 end

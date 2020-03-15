@@ -63,8 +63,8 @@ module Listen
     rescue SystemCallError
       record.unset_path(rel_path)
       :removed
-    rescue
-      Listen::Logger.debug "lstat failed for: #{rel_path} (#{$ERROR_INFO})"
+    rescue StandardError
+      Listen::Logger.debug "lstat failed for: #{rel_path} (#{$!})"
       raise
     end
 

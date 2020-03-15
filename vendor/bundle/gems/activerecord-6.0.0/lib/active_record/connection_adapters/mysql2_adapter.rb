@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require "active_record/connection_adapters/abstract_mysql_adapter"
-require "active_record/connection_adapters/mysql/database_statements"
+require 'active_record/connection_adapters/abstract_mysql_adapter'
+require 'active_record/connection_adapters/mysql/database_statements'
 
-gem "mysql2", ">= 0.4.4"
-require "mysql2"
+gem 'mysql2', '>= 0.4.4'
+require 'mysql2'
 
 module ActiveRecord
   module ConnectionHandling # :nodoc:
@@ -15,16 +15,16 @@ module ActiveRecord
       config = config.symbolize_keys
       config[:flags] ||= 0
 
-      if config[:flags].kind_of? Array
-        config[:flags].push "FOUND_ROWS"
+      if config[:flags].is_a? Array
+        config[:flags].push 'FOUND_ROWS'
       else
         config[:flags] |= Mysql2::Client::FOUND_ROWS
       end
 
       client = Mysql2::Client.new(config)
       ConnectionAdapters::Mysql2Adapter.new(client, logger, nil, config)
-    rescue Mysql2::Error => error
-      if error.error_number == ER_BAD_DB_ERROR
+    rescue Mysql2::Error => e
+      if e.error_number == ER_BAD_DB_ERROR
         raise ActiveRecord::NoDatabaseError
       else
         raise
@@ -34,7 +34,7 @@ module ActiveRecord
 
   module ConnectionAdapters
     class Mysql2Adapter < AbstractMysqlAdapter
-      ADAPTER_NAME = "Mysql2"
+      ADAPTER_NAME = 'Mysql2'
 
       include MySQL::DatabaseStatements
 
@@ -51,7 +51,7 @@ module ActiveRecord
       end
 
       def supports_json?
-        !mariadb? && database_version >= "5.7.8"
+        !mariadb? && database_version >= '5.7.8'
       end
 
       def supports_comments?
@@ -107,7 +107,7 @@ module ActiveRecord
         disconnect!
         connect
       end
-      alias :reset! :reconnect!
+      alias reset! reconnect!
 
       # Disconnects from the database if already connected.
       # Otherwise, this method does nothing.
@@ -124,23 +124,23 @@ module ActiveRecord
 
       private
 
-        def connect
-          @connection = Mysql2::Client.new(@config)
-          configure_connection
-        end
+      def connect
+        @connection = Mysql2::Client.new(@config)
+        configure_connection
+      end
 
-        def configure_connection
-          @connection.query_options[:as] = :array
-          super
-        end
+      def configure_connection
+        @connection.query_options[:as] = :array
+        super
+      end
 
-        def full_version
-          schema_cache.database_version.full_version_string
-        end
+      def full_version
+        schema_cache.database_version.full_version_string
+      end
 
-        def get_full_version
-          @connection.server_info[:version]
-        end
+      def get_full_version
+        @connection.server_info[:version]
+      end
     end
   end
 end

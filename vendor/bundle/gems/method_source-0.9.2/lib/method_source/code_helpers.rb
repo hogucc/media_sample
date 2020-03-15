@@ -1,5 +1,4 @@
 module MethodSource
-
   module CodeHelpers
     # Retrieve the first expression starting on the given line of the given file.
     #
@@ -17,10 +16,10 @@ module MethodSource
     #   consume (add to the expression buffer) without checking for validity.
     # @return [String]  The first complete expression
     # @raise [SyntaxError]  If the first complete expression can't be identified
-    def expression_at(file, line_number, options={})
+    def expression_at(file, line_number, options = {})
       options = {
-        :strict  => false,
-        :consume => 0
+        strict: false,
+        consume: 0
       }.merge!(options)
 
       lines = file.is_a?(Array) ? file : file.each_line.to_a
@@ -33,7 +32,7 @@ module MethodSource
 
       begin
         extract_first_expression(relevant_lines) do |code|
-          code.gsub(/\#\{.*?\}/, "temp")
+          code.gsub(/\#\{.*?\}/, 'temp')
         end
       rescue SyntaxError
         raise e
@@ -89,14 +88,14 @@ module MethodSource
     # @yield a clean-up function to run before checking for complete_expression
     # @return [String]  a valid ruby expression
     # @raise [SyntaxError]
-    def extract_first_expression(lines, consume=0, &block)
-      code = consume.zero? ? "" : lines.slice!(0..(consume - 1)).join
+    def extract_first_expression(lines, consume = 0, &block)
+      code = consume.zero? ? '' : lines.slice!(0..(consume - 1)).join
 
       lines.each do |v|
         code << v
         return code if complete_expression?(block ? block.call(code) : code)
       end
-      raise SyntaxError, "unexpected $end"
+      raise SyntaxError, 'unexpected $end'
     end
 
     # Get the last comment from the input.
@@ -104,7 +103,7 @@ module MethodSource
     # @param [Array<String>]  lines
     # @return [String]
     def extract_last_comment(lines)
-      buffer = ""
+      buffer = ''
 
       lines.each do |line|
         # Add any line that is a valid ruby comment,
@@ -112,7 +111,7 @@ module MethodSource
         if (line =~ /^\s*#/) || (line =~ /^\s*$/)
           buffer << line.lstrip
         else
-          buffer.replace("")
+          buffer.replace('')
         end
       end
 
@@ -128,14 +127,15 @@ module MethodSource
         /unterminated (quoted string|string|regexp) meets end of file/, # "quoted string" is ironruby
         /can't find string ".*" anywhere before EOF/, # rbx and jruby
         /missing 'end' for/, /expecting kWHEN/ # rbx
-      ]
+      ].freeze
 
       RBX_ONLY_REGEXPS = [
         /expecting '[})\]]'(?:$|:)/, /expecting keyword_end/
-      ]
+      ].freeze
 
       def self.===(ex)
         return false unless SyntaxError === ex
+
         case ex.message
         when *GENERIC_REGEXPS
           true

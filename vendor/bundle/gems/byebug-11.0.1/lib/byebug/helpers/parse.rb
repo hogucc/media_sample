@@ -15,14 +15,14 @@ module Byebug
       # purpose.
       #
       def get_int(str, cmd, min = nil, max = nil)
-        return nil, pr("parse.errors.int.not_number", cmd: cmd, str: str) if str !~ /\A-?[0-9]+\z/
+        return nil, pr('parse.errors.int.not_number', cmd: cmd, str: str) if str !~ /\A-?[0-9]+\z/
 
         int = str.to_i
         if min && int < min
-          err = pr("parse.errors.int.too_low", cmd: cmd, str: str, min: min)
+          err = pr('parse.errors.int.too_low', cmd: cmd, str: str, min: min)
           return nil, err
         elsif max && int > max
-          err = pr("parse.errors.int.too_high", cmd: cmd, str: str, max: max)
+          err = pr('parse.errors.int.too_high', cmd: cmd, str: str, max: max)
           return nil, err
         end
 
@@ -36,12 +36,10 @@ module Byebug
         return true unless code
 
         without_stderr do
-          begin
-            RubyVM::InstructionSequence.compile(code)
-            true
-          rescue SyntaxError
-            false
-          end
+          RubyVM::InstructionSequence.compile(code)
+          true
+        rescue SyntaxError
+          false
         end
       end
 

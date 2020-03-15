@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "byebug/setting"
+require 'byebug/setting'
 
 module Byebug
   #
@@ -13,7 +13,7 @@ module Byebug
     end
 
     def banner
-      "Enable/disable post-mortem mode"
+      'Enable/disable post-mortem mode'
     end
 
     def value=(val)

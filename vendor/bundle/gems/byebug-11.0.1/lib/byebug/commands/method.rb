@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "byebug/command"
-require "byebug/helpers/eval"
+require 'byebug/command'
+require 'byebug/helpers/eval'
 
 module Byebug
   #
@@ -31,7 +31,7 @@ module Byebug
     end
 
     def self.short_description
-      "Shows methods of an object, class or module"
+      'Shows methods of an object, class or module'
     end
 
     def execute
@@ -39,11 +39,11 @@ module Byebug
 
       result =
         if @match[1]
-          prc("method.methods", obj.methods.sort) { |item, _| { name: item } }
+          prc('method.methods', obj.methods.sort) { |item, _| { name: item } }
         elsif !obj.is_a?(Module)
-          pr("variable.errors.not_module", object: @match.post_match)
+          pr('variable.errors.not_module', object: @match.post_match)
         else
-          prc("method.methods", obj.instance_methods(false).sort) do |item, _|
+          prc('method.methods', obj.instance_methods(false).sort) do |item, _|
             { name: item }
           end
         end

@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require "active_support/core_ext/module/redefine_method"
-require "active_support/core_ext/time/calculations"
-require "concurrent/map"
+require 'active_support/core_ext/module/redefine_method'
+require 'active_support/core_ext/time/calculations'
+require 'concurrent/map'
 
 module ActiveSupport
   module Testing
@@ -41,12 +41,12 @@ module ActiveSupport
 
       private
 
-        def unstub_object(stub)
-          singleton_class = stub.object.singleton_class
-          singleton_class.silence_redefinition_of_method stub.method_name
-          singleton_class.alias_method stub.method_name, stub.original_method
-          singleton_class.undef_method stub.original_method
-        end
+      def unstub_object(stub)
+        singleton_class = stub.object.singleton_class
+        singleton_class.silence_redefinition_of_method stub.method_name
+        singleton_class.alias_method stub.method_name, stub.original_method
+        singleton_class.undef_method stub.original_method
+      end
     end
 
     # Contains helpers that help you test passage of time.
@@ -113,40 +113,40 @@ module ActiveSupport
         if block_given? && simple_stubs.stubbing(Time, :now)
           travel_to_nested_block_call = <<~MSG
 
-      Calling `travel_to` with a block, when we have previously already made a call to `travel_to`, can lead to confusing time stubbing.
+            Calling `travel_to` with a block, when we have previously already made a call to `travel_to`, can lead to confusing time stubbing.
 
-      Instead of:
+            Instead of:
 
-         travel_to 2.days.from_now do
-           # 2 days from today
-           travel_to 3.days.from_now do
-             # 5 days from today
-           end
-         end
+               travel_to 2.days.from_now do
+                 # 2 days from today
+                 travel_to 3.days.from_now do
+                   # 5 days from today
+                 end
+               end
 
-      preferred way to achieve above is:
+            preferred way to achieve above is:
 
-         travel 2.days do
-           # 2 days from today
-         end
+               travel 2.days do
+                 # 2 days from today
+               end
 
-         travel 5.days do
-           # 5 days from today
-         end
+               travel 5.days do
+                 # 5 days from today
+               end
 
           MSG
           raise travel_to_nested_block_call
         end
 
-        if date_or_time.is_a?(Date) && !date_or_time.is_a?(DateTime)
-          now = date_or_time.midnight.to_time
-        else
-          now = date_or_time.to_time.change(usec: 0)
-        end
+        now = if date_or_time.is_a?(Date) && !date_or_time.is_a?(DateTime)
+                date_or_time.midnight.to_time
+              else
+                date_or_time.to_time.change(usec: 0)
+              end
 
         simple_stubs.stub_object(Time, :now) { at(now.to_i) }
         simple_stubs.stub_object(Date, :today) { jd(now.to_date.jd) }
-        simple_stubs.stub_object(DateTime, :now) { jd(now.to_date.jd, now.hour, now.min, now.sec, Rational(now.utc_offset, 86400)) }
+        simple_stubs.stub_object(DateTime, :now) { jd(now.to_date.jd, now.hour, now.min, now.sec, Rational(now.utc_offset, 86_400)) }
 
         if block_given?
           begin
@@ -168,7 +168,7 @@ module ActiveSupport
       def travel_back
         simple_stubs.unstub_all!
       end
-      alias_method :unfreeze_time, :travel_back
+      alias unfreeze_time travel_back
 
       # Calls +travel_to+ with +Time.now+.
       #
@@ -192,9 +192,9 @@ module ActiveSupport
 
       private
 
-        def simple_stubs
-          @simple_stubs ||= SimpleStubs.new
-        end
+      def simple_stubs
+        @simple_stubs ||= SimpleStubs.new
+      end
     end
   end
 end

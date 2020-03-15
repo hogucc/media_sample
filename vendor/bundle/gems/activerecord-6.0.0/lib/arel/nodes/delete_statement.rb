@@ -5,10 +5,10 @@ module Arel # :nodoc: all
     class DeleteStatement < Arel::Nodes::Node
       attr_accessor :left, :right, :orders, :limit, :offset, :key
 
-      alias :relation :left
-      alias :relation= :left=
-      alias :wheres :right
-      alias :wheres= :right=
+      alias relation left
+      alias relation= left=
+      alias wheres right
+      alias wheres= right=
 
       def initialize(relation = nil, wheres = [])
         super()
@@ -32,14 +32,14 @@ module Arel # :nodoc: all
 
       def eql?(other)
         self.class == other.class &&
-          self.left == other.left &&
-          self.right == other.right &&
-          self.orders == other.orders &&
-          self.limit == other.limit &&
-          self.offset == other.offset &&
-          self.key == other.key
+          left == other.left &&
+          right == other.right &&
+          orders == other.orders &&
+          limit == other.limit &&
+          offset == other.offset &&
+          key == other.key
       end
-      alias :== :eql?
+      alias == eql?
     end
   end
 end

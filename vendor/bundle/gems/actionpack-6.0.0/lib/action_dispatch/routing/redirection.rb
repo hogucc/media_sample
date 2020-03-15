@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-require "action_dispatch/http/request"
-require "active_support/core_ext/uri"
-require "active_support/core_ext/array/extract_options"
-require "rack/utils"
-require "action_controller/metal/exceptions"
-require "action_dispatch/routing/endpoint"
+require 'action_dispatch/http/request'
+require 'active_support/core_ext/uri'
+require 'active_support/core_ext/array/extract_options'
+require 'rack/utils'
+require 'action_controller/metal/exceptions'
+require 'action_dispatch/routing/endpoint'
 
 module ActionDispatch
   module Routing
@@ -17,7 +17,9 @@ module ActionDispatch
         @block  = block
       end
 
-      def redirect?; true; end
+      def redirect?
+        true
+      end
 
       def call(env)
         serve Request.new env
@@ -30,7 +32,7 @@ module ActionDispatch
           if relative_path?(uri.path)
             uri.path = "#{req.script_name}/#{uri.path}"
           elsif uri.path.empty?
-            uri.path = req.script_name.empty? ? "/" : req.script_name
+            uri.path = req.script_name.empty? ? '/' : req.script_name
           end
         end
 
@@ -43,12 +45,12 @@ module ActionDispatch
         body = %(<html><body>You are being <a href="#{ERB::Util.unwrapped_html_escape(uri.to_s)}">redirected</a>.</body></html>)
 
         headers = {
-          "Location" => uri.to_s,
-          "Content-Type" => "text/html",
-          "Content-Length" => body.length.to_s
+          'Location' => uri.to_s,
+          'Content-Type' => 'text/html',
+          'Content-Length' => body.length.to_s
         }
 
-        [ status, headers, [body] ]
+        [status, headers, [body]]
       end
 
       def path(params, request)
@@ -60,31 +62,32 @@ module ActionDispatch
       end
 
       private
-        def relative_path?(path)
-          path && !path.empty? && path[0] != "/"
-        end
 
-        def escape(params)
-          Hash[params.map { |k, v| [k, Rack::Utils.escape(v)] }]
-        end
+      def relative_path?(path)
+        path && !path.empty? && path[0] != '/'
+      end
 
-        def escape_fragment(params)
-          Hash[params.map { |k, v| [k, Journey::Router::Utils.escape_fragment(v)] }]
-        end
+      def escape(params)
+        Hash[params.map { |k, v| [k, Rack::Utils.escape(v)] }]
+      end
 
-        def escape_path(params)
-          Hash[params.map { |k, v| [k, Journey::Router::Utils.escape_path(v)] }]
-        end
+      def escape_fragment(params)
+        Hash[params.map { |k, v| [k, Journey::Router::Utils.escape_fragment(v)] }]
+      end
+
+      def escape_path(params)
+        Hash[params.map { |k, v| [k, Journey::Router::Utils.escape_path(v)] }]
+      end
     end
 
     class PathRedirect < Redirect
-      URL_PARTS = /\A([^?]+)?(\?[^#]+)?(#.+)?\z/
+      URL_PARTS = /\A([^?]+)?(\?[^#]+)?(#.+)?\z/.freeze
 
-      def path(params, request)
+      def path(params, _request)
         if block.match(URL_PARTS)
-          path     = interpolation_required?($1, params) ? $1 % escape_path(params)     : $1
-          query    = interpolation_required?($2, params) ? $2 % escape(params)          : $2
-          fragment = interpolation_required?($3, params) ? $3 % escape_fragment(params) : $3
+          path     = interpolation_required?(Regexp.last_match(1), params) ? Regexp.last_match(1) % escape_path(params)     : Regexp.last_match(1)
+          query    = interpolation_required?(Regexp.last_match(2), params) ? Regexp.last_match(2) % escape(params)          : Regexp.last_match(2)
+          fragment = interpolation_required?(Regexp.last_match(3), params) ? Regexp.last_match(3) % escape_fragment(params) : Regexp.last_match(3)
 
           "#{path}#{query}#{fragment}"
         else
@@ -97,13 +100,14 @@ module ActionDispatch
       end
 
       private
-        def interpolation_required?(string, params)
-          !params.empty? && string && string.match(/%\{\w*\}/)
-        end
+
+      def interpolation_required?(string, params)
+        !params.empty? && string && string.match(/%\{\w*\}/)
+      end
     end
 
     class OptionRedirect < Redirect # :nodoc:
-      alias :options :block
+      alias options block
 
       def path(params, request)
         url_options = {
@@ -114,16 +118,14 @@ module ActionDispatch
           params: request.query_parameters
         }.merge! options
 
-        if !params.empty? && url_options[:path].match(/%\{\w*\}/)
-          url_options[:path] = (url_options[:path] % escape_path(params))
-        end
+        url_options[:path] = (url_options[:path] % escape_path(params)) if !params.empty? && url_options[:path].match(/%\{\w*\}/)
 
         unless options[:host] || options[:domain]
           if relative_path?(url_options[:path])
             url_options[:path] = "/#{url_options[:path]}"
             url_options[:script_name] = request.script_name
           elsif url_options[:path].empty?
-            url_options[:path] = request.script_name.empty? ? "/" : ""
+            url_options[:path] = request.script_name.empty? ? '/' : ''
             url_options[:script_name] = request.script_name
           end
         end
@@ -193,7 +195,8 @@ module ActionDispatch
         return PathRedirect.new(status, path) if String === path
 
         block = path if path.respond_to? :call
-        raise ArgumentError, "redirection argument not supported" unless block
+        raise ArgumentError, 'redirection argument not supported' unless block
+
         Redirect.new status, block
       end
     end

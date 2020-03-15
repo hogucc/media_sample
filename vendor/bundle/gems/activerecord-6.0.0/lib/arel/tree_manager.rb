@@ -62,9 +62,7 @@ module Arel # :nodoc: all
     end
 
     def where(expr)
-      if Arel::TreeManager === expr
-        expr = expr.ast
-      end
+      expr = expr.ast if Arel::TreeManager === expr
       @ctx.wheres << expr
       self
     end

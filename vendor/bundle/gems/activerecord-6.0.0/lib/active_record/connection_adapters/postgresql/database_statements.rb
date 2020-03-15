@@ -6,7 +6,7 @@ module ActiveRecord
       module DatabaseStatements
         def explain(arel, binds = [])
           sql = "EXPLAIN #{to_sql(arel, binds)}"
-          PostgreSQL::ExplainPrettyPrinter.new.pp(exec_query(sql, "EXPLAIN", binds))
+          PostgreSQL::ExplainPrettyPrinter.new.pp(exec_query(sql, 'EXPLAIN', binds))
         end
 
         # The internal PostgreSQL identifier of the money data type.
@@ -22,9 +22,9 @@ module ActiveRecord
           end
 
           rows = res.values
-          return rows unless ftypes.any? { |_, x|
+          return rows unless ftypes.any? do |_, x|
             x == BYTEA_COLUMN_TYPE_OID || x == MONEY_COLUMN_TYPE_OID
-          }
+          end
 
           typehash = ftypes.group_by { |_, type| type }
           binaries = typehash[BYTEA_COLUMN_TYPE_OID] || []
@@ -47,10 +47,10 @@ module ActiveRecord
               #  (1) $12,345,678.12
               #  (2) $12.345.678,12
               case data
-              when /^-?\D+[\d,]+\.\d{2}$/  # (1)
-                data.gsub!(/[^-\d.]/, "")
-              when /^-?\D+[\d.]+,\d{2}$/  # (2)
-                data.gsub!(/[^-\d,]/, "").sub!(/,/, ".")
+              when /^-?\D+[\d,]+\.\d{2}$/ # (1)
+                data.gsub!(/[^-\d.]/, '')
+              when /^-?\D+[\d.]+,\d{2}$/ # (2)
+                data.gsub!(/[^-\d,]/, '').sub!(/,/, '.')
               end
             end
           end
@@ -79,9 +79,7 @@ module ActiveRecord
         # Note: the PG::Result object is manually memory managed; if you don't
         # need it specifically, you may want consider the <tt>exec_query</tt> wrapper.
         def execute(sql, name = nil)
-          if preventing_writes? && write_query?(sql)
-            raise ActiveRecord::ReadOnlyError, "Write query attempted while in readonly mode: #{sql}"
-          end
+          raise ActiveRecord::ReadOnlyError, "Write query attempted while in readonly mode: #{sql}" if preventing_writes? && write_query?(sql)
 
           materialize_transactions
 
@@ -92,7 +90,7 @@ module ActiveRecord
           end
         end
 
-        def exec_query(sql, name = "SQL", binds = [], prepare: false)
+        def exec_query(sql, name = 'SQL', binds = [], prepare: false)
           execute_and_clear(sql, name, binds, prepare: prepare) do |result|
             types = {}
             fields = result.fields
@@ -106,9 +104,9 @@ module ActiveRecord
         end
 
         def exec_delete(sql, name = nil, binds = [])
-          execute_and_clear(sql, name, binds) { |result| result.cmd_tuples }
+          execute_and_clear(sql, name, binds, &:cmd_tuples)
         end
-        alias :exec_update :exec_delete
+        alias exec_update exec_delete
 
         def sql_for_insert(sql, pk, binds) # :nodoc:
           if pk.nil?
@@ -145,7 +143,7 @@ module ActiveRecord
 
         # Begins a transaction.
         def begin_db_transaction
-          execute "BEGIN"
+          execute 'BEGIN'
         end
 
         def begin_isolated_db_transaction(isolation)
@@ -155,27 +153,28 @@ module ActiveRecord
 
         # Commits a transaction.
         def commit_db_transaction
-          execute "COMMIT"
+          execute 'COMMIT'
         end
 
         # Aborts a transaction.
         def exec_rollback_db_transaction
-          execute "ROLLBACK"
+          execute 'ROLLBACK'
         end
 
         private
-          def build_truncate_statements(*table_names)
-            "TRUNCATE TABLE #{table_names.map(&method(:quote_table_name)).join(", ")}"
-          end
 
-          # Returns the current ID of a table's sequence.
-          def last_insert_id_result(sequence_name)
-            exec_query("SELECT currval(#{quote(sequence_name)})", "SQL")
-          end
+        def build_truncate_statements(*table_names)
+          "TRUNCATE TABLE #{table_names.map(&method(:quote_table_name)).join(', ')}"
+        end
 
-          def suppress_composite_primary_key(pk)
-            pk unless pk.is_a?(Array)
-          end
+        # Returns the current ID of a table's sequence.
+        def last_insert_id_result(sequence_name)
+          exec_query("SELECT currval(#{quote(sequence_name)})", 'SQL')
+        end
+
+        def suppress_composite_primary_key(pk)
+          pk unless pk.is_a?(Array)
+        end
       end
     end
   end

@@ -19,8 +19,8 @@ module ActionView
             method_and_value = @tag_value.present? ? "#{@method_name}.#{@tag_value}" : @method_name
 
             content ||= Translator
-              .new(object, @object_name, method_and_value, scope: "helpers.label")
-              .translate
+                        .new(object, @object_name, method_and_value, scope: 'helpers.label')
+                        .translate
             content ||= @method_name.humanize
 
             content
@@ -43,38 +43,38 @@ module ActionView
 
         def render(&block)
           options = @options.stringify_keys
-          tag_value = options.delete("value")
+          tag_value = options.delete('value')
           name_and_id = options.dup
 
-          if name_and_id["for"]
-            name_and_id["id"] = name_and_id["for"]
+          if name_and_id['for']
+            name_and_id['id'] = name_and_id['for']
           else
-            name_and_id.delete("id")
+            name_and_id.delete('id')
           end
 
           add_default_name_and_id_for_value(tag_value, name_and_id)
-          options.delete("index")
-          options.delete("namespace")
-          options["for"] = name_and_id["id"] unless options.key?("for")
+          options.delete('index')
+          options.delete('namespace')
+          options['for'] = name_and_id['id'] unless options.key?('for')
 
           builder = LabelBuilder.new(@template_object, @object_name, @method_name, @object, tag_value)
 
           content = if block_given?
-            @template_object.capture(builder, &block)
-          elsif @content.present?
-            @content.to_s
-          else
-            render_component(builder)
+                      @template_object.capture(builder, &block)
+                    elsif @content.present?
+                      @content.to_s
+                    else
+                      render_component(builder)
           end
 
-          label_tag(name_and_id["id"], content, options)
+          label_tag(name_and_id['id'], content, options)
         end
 
         private
 
-          def render_component(builder)
-            builder.translation
-          end
+        def render_component(builder)
+          builder.translation
+        end
       end
     end
   end

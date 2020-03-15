@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "set"
+require 'set'
 
 module ActionView
   # = Action View Atom Feed Helpers
@@ -97,72 +97,73 @@ module ActionView
       # an +AtomBuilder+ instance.
       def atom_feed(options = {}, &block)
         if options[:schema_date]
-          options[:schema_date] = options[:schema_date].strftime("%Y-%m-%d") if options[:schema_date].respond_to?(:strftime)
+          options[:schema_date] = options[:schema_date].strftime('%Y-%m-%d') if options[:schema_date].respond_to?(:strftime)
         else
-          options[:schema_date] = "2005" # The Atom spec copyright date
+          options[:schema_date] = '2005' # The Atom spec copyright date
         end
 
-        xml = options.delete(:xml) || eval("xml", block.binding)
+        xml = options.delete(:xml) || eval('xml', block.binding)
         xml.instruct!
-        if options[:instruct]
-          options[:instruct].each do |target, attrs|
-            if attrs.respond_to?(:keys)
-              xml.instruct!(target, attrs)
-            elsif attrs.respond_to?(:each)
-              attrs.each { |attr_group| xml.instruct!(target, attr_group) }
-            end
+        options[:instruct]&.each do |target, attrs|
+          if attrs.respond_to?(:keys)
+            xml.instruct!(target, attrs)
+          elsif attrs.respond_to?(:each)
+            attrs.each { |attr_group| xml.instruct!(target, attr_group) }
           end
         end
 
-        feed_opts = { "xml:lang" => options[:language] || "en-US", "xmlns" => "http://www.w3.org/2005/Atom" }
-        feed_opts.merge!(options).reject! { |k, v| !k.to_s.match(/^xml/) }
+        feed_opts = { 'xml:lang' => options[:language] || 'en-US', 'xmlns' => 'http://www.w3.org/2005/Atom' }
+        feed_opts.merge!(options).select! { |k, _v| k.to_s.match(/^xml/) }
 
         xml.feed(feed_opts) do
-          xml.id(options[:id] || "tag:#{request.host},#{options[:schema_date]}:#{request.fullpath.split(".")[0]}")
-          xml.link(rel: "alternate", type: "text/html", href: options[:root_url] || (request.protocol + request.host_with_port))
-          xml.link(rel: "self", type: "application/atom+xml", href: options[:url] || request.url)
+          xml.id(options[:id] || "tag:#{request.host},#{options[:schema_date]}:#{request.fullpath.split('.')[0]}")
+          xml.link(rel: 'alternate', type: 'text/html', href: options[:root_url] || (request.protocol + request.host_with_port))
+          xml.link(rel: 'self', type: 'application/atom+xml', href: options[:url] || request.url)
 
           yield AtomFeedBuilder.new(xml, self, options)
         end
       end
 
       class AtomBuilder #:nodoc:
-        XHTML_TAG_NAMES = %w(content rights title subtitle summary).to_set
+        XHTML_TAG_NAMES = %w[content rights title subtitle summary].to_set
 
         def initialize(xml)
           @xml = xml
         end
 
         private
-          # Delegate to xml builder, first wrapping the element in an xhtml
-          # namespaced div element if the method and arguments indicate
-          # that an xhtml_block? is desired.
-          def method_missing(method, *arguments, &block)
-            if xhtml_block?(method, arguments)
-              @xml.__send__(method, *arguments) do
-                @xml.div(xmlns: "http://www.w3.org/1999/xhtml") do |xhtml|
-                  block.call(xhtml)
-                end
-              end
-            else
-              @xml.__send__(method, *arguments, &block)
-            end
-          end
 
-          # True if the method name matches one of the five elements defined
-          # in the Atom spec as potentially containing XHTML content and
-          # if type: 'xhtml' is, in fact, specified.
-          def xhtml_block?(method, arguments)
-            if XHTML_TAG_NAMES.include?(method.to_s)
-              last = arguments.last
-              last.is_a?(Hash) && last[:type].to_s == "xhtml"
+        # Delegate to xml builder, first wrapping the element in an xhtml
+        # namespaced div element if the method and arguments indicate
+        # that an xhtml_block? is desired.
+        def method_missing(method, *arguments, &block)
+          if xhtml_block?(method, arguments)
+            @xml.__send__(method, *arguments) do
+              @xml.div(xmlns: 'http://www.w3.org/1999/xhtml') do |xhtml|
+                block.call(xhtml)
+              end
             end
+          else
+            @xml.__send__(method, *arguments, &block)
           end
+        end
+
+        # True if the method name matches one of the five elements defined
+        # in the Atom spec as potentially containing XHTML content and
+        # if type: 'xhtml' is, in fact, specified.
+        def xhtml_block?(method, arguments)
+          if XHTML_TAG_NAMES.include?(method.to_s)
+            last = arguments.last
+            last.is_a?(Hash) && last[:type].to_s == 'xhtml'
+          end
+        end
       end
 
       class AtomFeedBuilder < AtomBuilder #:nodoc:
         def initialize(xml, view, feed_options = {})
-          @xml, @view, @feed_options = xml, view, feed_options
+          @xml = xml
+          @view = view
+          @feed_options = feed_options
         end
 
         # Accepts a Date or Time object and inserts it in the proper format. If +nil+ is passed, current time in UTC is used.
@@ -183,18 +184,14 @@ module ActionView
           @xml.entry do
             @xml.id(options[:id] || "tag:#{@view.request.host},#{@feed_options[:schema_date]}:#{record.class}/#{record.id}")
 
-            if options[:published] || (record.respond_to?(:created_at) && record.created_at)
-              @xml.published((options[:published] || record.created_at).xmlschema)
-            end
+            @xml.published((options[:published] || record.created_at).xmlschema) if options[:published] || (record.respond_to?(:created_at) && record.created_at)
 
-            if options[:updated] || (record.respond_to?(:updated_at) && record.updated_at)
-              @xml.updated((options[:updated] || record.updated_at).xmlschema)
-            end
+            @xml.updated((options[:updated] || record.updated_at).xmlschema) if options[:updated] || (record.respond_to?(:updated_at) && record.updated_at)
 
-            type = options.fetch(:type, "text/html")
+            type = options.fetch(:type, 'text/html')
 
             url = options.fetch(:url) { @view.polymorphic_url(record) }
-            @xml.link(rel: "alternate", type: type, href: url) if url
+            @xml.link(rel: 'alternate', type: type, href: url) if url
 
             yield AtomBuilder.new(@xml)
           end

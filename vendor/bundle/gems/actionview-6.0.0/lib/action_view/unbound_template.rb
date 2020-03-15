@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "concurrent/map"
+require 'concurrent/map'
 
 module ActionView
   class UnboundTemplate
@@ -19,14 +19,14 @@ module ActionView
 
     private
 
-      def build_template(locals)
-        options = @options.merge(locals: locals)
-        Template.new(
-          @source,
-          @identifer,
-          @handler,
-          options
-        )
-      end
+    def build_template(locals)
+      options = @options.merge(locals: locals)
+      Template.new(
+        @source,
+        @identifer,
+        @handler,
+        options
+      )
+    end
   end
 end

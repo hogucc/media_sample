@@ -39,9 +39,9 @@ Capybara::SpecHelper.spec '#within_window', requires: [:windows] do
     it 'returns value from the block' do
       window = (@session.windows - [@window]).first
       value = @session.within_window window do
-        43252003274489856000
+        43_252_003_274_489_856_000
       end
-      expect(value).to eq(43252003274489856000)
+      expect(value).to eq(43_252_003_274_489_856_000)
     end
 
     it 'should switch back if exception was raised inside block' do
@@ -58,7 +58,7 @@ Capybara::SpecHelper.spec '#within_window', requires: [:windows] do
       expect(@session.send(:scopes)).to eq([nil])
     end
 
-    it 'should leave correct scopes after execution in case of error', requires: %i[windows frames] do
+    it 'should leave correct scopes after execution in case of error', requires: [:windows, :frames] do
       window = (@session.windows - [@window]).first
       expect do
         @session.within_frame 'frameOne' do

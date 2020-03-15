@@ -37,11 +37,11 @@ module ActionController
     attr_reader :defaults, :controller
 
     DEFAULTS = {
-      http_host: "example.org",
+      http_host: 'example.org',
       https: false,
-      method: "get",
-      script_name: "",
-      input: ""
+      method: 'get',
+      script_name: '',
+      input: ''
     }.freeze
 
     # Create a new renderer instance for a specific controller class.
@@ -85,7 +85,7 @@ module ActionController
     # If no <tt>options</tt> hash is passed or if <tt>:update</tt> is specified, the default is
     # to render a partial and use the second parameter as the locals hash.
     def render(*args)
-      raise "missing controller" unless controller
+      raise 'missing controller' unless controller
 
       request = ActionDispatch::Request.new @env
       request.routes = controller._routes
@@ -97,34 +97,35 @@ module ActionController
     end
 
     private
-      def normalize_keys(env)
-        new_env = {}
-        env.each_pair { |k, v| new_env[rack_key_for(k)] = rack_value_for(k, v) }
-        new_env["rack.url_scheme"] = new_env["HTTPS"] == "on" ? "https" : "http"
-        new_env
-      end
 
-      RACK_KEY_TRANSLATION = {
-        http_host:   "HTTP_HOST",
-        https:       "HTTPS",
-        method:      "REQUEST_METHOD",
-        script_name: "SCRIPT_NAME",
-        input:       "rack.input"
-      }
+    def normalize_keys(env)
+      new_env = {}
+      env.each_pair { |k, v| new_env[rack_key_for(k)] = rack_value_for(k, v) }
+      new_env['rack.url_scheme'] = new_env['HTTPS'] == 'on' ? 'https' : 'http'
+      new_env
+    end
 
-      IDENTITY = ->(_) { _ }
+    RACK_KEY_TRANSLATION = {
+      http_host: 'HTTP_HOST',
+      https: 'HTTPS',
+      method: 'REQUEST_METHOD',
+      script_name: 'SCRIPT_NAME',
+      input: 'rack.input'
+    }.freeze
 
-      RACK_VALUE_TRANSLATION = {
-        https: ->(v) { v ? "on" : "off" },
-        method: ->(v) { -v.upcase },
-      }
+    IDENTITY = ->(_) { _ }
 
-      def rack_key_for(key)
-        RACK_KEY_TRANSLATION.fetch(key, key.to_s)
-      end
+    RACK_VALUE_TRANSLATION = {
+      https: ->(v) { v ? 'on' : 'off' },
+      method: ->(v) { -v.upcase }
+    }.freeze
 
-      def rack_value_for(key, value)
-        RACK_VALUE_TRANSLATION.fetch(key, IDENTITY).call value
-      end
+    def rack_key_for(key)
+      RACK_KEY_TRANSLATION.fetch(key, key.to_s)
+    end
+
+    def rack_value_for(key, value)
+      RACK_VALUE_TRANSLATION.fetch(key, IDENTITY).call value
+    end
   end
 end

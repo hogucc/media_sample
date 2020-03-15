@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "erb"
-require "yaml"
+require 'erb'
+require 'yaml'
 
 module ActiveRecord
   class FixtureSet
@@ -26,57 +26,55 @@ module ActiveRecord
       end
 
       def model_class
-        config_row["model_class"]
+        config_row['model_class']
       end
 
       private
-        def rows
-          @rows ||= raw_rows.reject { |fixture_name, _| fixture_name == "_fixture" }
-        end
 
-        def config_row
-          @config_row ||= begin
-            row = raw_rows.find { |fixture_name, _| fixture_name == "_fixture" }
-            if row
-              row.last
-            else
-              { 'model_class': nil }
-            end
+      def rows
+        @rows ||= raw_rows.reject { |fixture_name, _| fixture_name == '_fixture' }
+      end
+
+      def config_row
+        @config_row ||= begin
+          row = raw_rows.find { |fixture_name, _| fixture_name == '_fixture' }
+          if row
+            row.last
+          else
+            { 'model_class': nil }
           end
         end
+      end
 
-        def raw_rows
-          @raw_rows ||= begin
-            data = YAML.load(render(IO.read(@file)))
-            data ? validate(data).to_a : []
-          rescue ArgumentError, Psych::SyntaxError => error
-            raise Fixture::FormatError, "a YAML error occurred parsing #{@file}. Please note that YAML must be consistently indented using spaces. Tabs are not allowed. Please have a look at http://www.yaml.org/faq.html\nThe exact error was:\n  #{error.class}: #{error}", error.backtrace
-          end
+      def raw_rows
+        @raw_rows ||= begin
+          data = YAML.safe_load(render(IO.read(@file)))
+          data ? validate(data).to_a : []
+                      rescue ArgumentError, Psych::SyntaxError => e
+                        raise Fixture::FormatError, "a YAML error occurred parsing #{@file}. Please note that YAML must be consistently indented using spaces. Tabs are not allowed. Please have a look at http://www.yaml.org/faq.html\nThe exact error was:\n  #{e.class}: #{e}", e.backtrace
         end
+      end
 
-        def prepare_erb(content)
-          erb = ERB.new(content)
-          erb.filename = @file
-          erb
-        end
+      def prepare_erb(content)
+        erb = ERB.new(content)
+        erb.filename = @file
+        erb
+      end
 
-        def render(content)
-          context = ActiveRecord::FixtureSet::RenderContext.create_subclass.new
-          prepare_erb(content).result(context.get_binding)
-        end
+      def render(content)
+        context = ActiveRecord::FixtureSet::RenderContext.create_subclass.new
+        prepare_erb(content).result(context.get_binding)
+      end
 
-        # Validate our unmarshalled data.
-        def validate(data)
-          unless Hash === data || YAML::Omap === data
-            raise Fixture::FormatError, "fixture is not a hash: #{@file}"
-          end
+      # Validate our unmarshalled data.
+      def validate(data)
+        raise Fixture::FormatError, "fixture is not a hash: #{@file}" unless Hash === data || YAML::Omap === data
 
-          invalid = data.reject { |_, row| Hash === row }
-          if invalid.any?
-            raise Fixture::FormatError, "fixture key is not a hash: #{@file}, keys: #{invalid.keys.inspect}"
-          end
-          data
-        end
+        invalid = data.reject { |_, row| Hash === row }
+        raise Fixture::FormatError, "fixture key is not a hash: #{@file}, keys: #{invalid.keys.inspect}" if invalid.any?
+
+        data
+      end
     end
   end
 end

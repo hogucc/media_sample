@@ -1,6 +1,4 @@
 require 'ffi'
-require 'thread'
-
 module ChildProcess
   module Unix
     class PosixSpawnProcess < Process
@@ -16,13 +14,13 @@ module ChildProcess
         if io.stdout
           actions.add_dup fileno_for(io.stdout), fileno_for(STDOUT)
         else
-          actions.add_open fileno_for(STDOUT), "/dev/null", File::WRONLY, 0644
+          actions.add_open fileno_for(STDOUT), '/dev/null', File::WRONLY, 0o644
         end
 
         if io.stderr
           actions.add_dup fileno_for(io.stderr), fileno_for(STDERR)
         else
-          actions.add_open fileno_for(STDERR), "/dev/null", File::WRONLY, 0644
+          actions.add_open fileno_for(STDERR), '/dev/null', File::WRONLY, 0o644
         end
 
         if duplex?
@@ -67,9 +65,7 @@ module ChildProcess
         actions.free
         attrs.free
 
-        if ret != 0
-          raise LaunchError, "#{Lib.strerror(ret)} (#{ret})"
-        end
+        raise LaunchError, "#{Lib.strerror(ret)} (#{ret})" if ret != 0
 
         @pid = pid_ptr.read_int
         ::Process.detach(@pid) if detach?
@@ -88,9 +84,7 @@ module ChildProcess
       class Argv
         def initialize(args)
           @ptrs = args.map do |e|
-            if e.include?("\0")
-              raise ArgumentError, "argument cannot contain null bytes: #{e.inspect}"
-            end
+            raise ArgumentError, "argument cannot contain null bytes: #{e.inspect}" if e.include?("\0")
 
             FFI::MemoryPointer.from_string(e.to_s)
           end
@@ -111,11 +105,9 @@ module ChildProcess
           @ptrs = env.map do |key, val|
             next if val.nil?
 
-            if key =~ /=|\0/ || val.to_s.include?("\0")
-              raise InvalidEnvironmentVariable, "#{key.inspect} => #{val.to_s.inspect}"
-            end
+            raise InvalidEnvironmentVariable, "#{key.inspect} => #{val.to_s.inspect}" if key =~ /=|\0/ || val.to_s.include?("\0")
 
-            FFI::MemoryPointer.from_string("#{key}=#{val.to_s}")
+            FFI::MemoryPointer.from_string("#{key}=#{val}")
           end.compact
 
           @ptrs << FFI::Pointer.new(0)
@@ -128,7 +120,6 @@ module ChildProcess
           env
         end
       end # Envp
-
     end
   end
 end

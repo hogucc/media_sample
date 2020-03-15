@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "byebug/processors/command_processor"
+require 'byebug/processors/command_processor'
 
 module Byebug
   #
@@ -12,7 +12,7 @@ module Byebug
     end
 
     def prompt
-      "(byebug:post_mortem) "
+      '(byebug:post_mortem) '
     end
   end
 end

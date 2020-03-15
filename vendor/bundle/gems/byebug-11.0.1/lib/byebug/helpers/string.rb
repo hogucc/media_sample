@@ -11,7 +11,7 @@ module Byebug
       # ACamelizedString.
       #
       def camelize(str)
-        str.dup.split(/[_-]/).map(&:capitalize).join("")
+        str.dup.split(/[_-]/).map(&:capitalize).join('')
       end
 
       #
@@ -26,7 +26,7 @@ module Byebug
       # Removes a number of leading whitespace for each input line.
       #
       def deindent(str, leading_spaces: 6)
-        str.gsub(/^ {#{leading_spaces}}/, "")
+        str.gsub(/^ {#{leading_spaces}}/, '')
       end
     end
   end

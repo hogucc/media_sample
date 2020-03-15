@@ -1,4 +1,3 @@
-require 'thread'
 require 'listen/record/entry'
 require 'listen/record/symlink_detector'
 
@@ -15,6 +14,7 @@ module Listen
 
     def add_dir(rel_path)
       return if [nil, '', '.'].include? rel_path
+
       @tree[rel_path] ||= {}
     end
 
@@ -71,7 +71,7 @@ module Listen
     private
 
     def _auto_hash
-      Hash.new { |h, k| h[k] = Hash.new }
+      Hash.new { |h, k| h[k] = {} }
     end
 
     attr_reader :tree
@@ -90,9 +90,11 @@ module Listen
       # entries from a tree, without adding non-existing dirs to the record
       if [nil, '', '.'].include? dirname
         return unless tree.key?(basename)
+
         tree.delete(basename)
       else
         return unless tree.key?(dirname)
+
         tree[dirname].delete(basename)
       end
     end

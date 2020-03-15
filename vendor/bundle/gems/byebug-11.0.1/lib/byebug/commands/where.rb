@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require "pathname"
-require "byebug/command"
-require "byebug/helpers/frame"
+require 'pathname'
+require 'byebug/command'
+require 'byebug/helpers/frame'
 
 module Byebug
   #
@@ -33,7 +33,7 @@ module Byebug
     end
 
     def self.short_description
-      "Displays the backtrace"
+      'Displays the backtrace'
     end
 
     def execute
@@ -43,7 +43,7 @@ module Byebug
     private
 
     def print_backtrace
-      bt = prc("frame.line", (0...context.stack_size)) do |_, index|
+      bt = prc('frame.line', (0...context.stack_size)) do |_, index|
         Frame.new(context, index).to_hash
       end
 

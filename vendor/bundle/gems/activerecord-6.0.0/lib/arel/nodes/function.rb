@@ -24,20 +24,20 @@ module Arel # :nodoc: all
 
       def eql?(other)
         self.class == other.class &&
-          self.expressions == other.expressions &&
+          expressions == other.expressions &&
           self.alias == other.alias &&
-          self.distinct == other.distinct
+          distinct == other.distinct
       end
-      alias :== :eql?
+      alias == eql?
     end
 
-    %w{
+    %w[
       Sum
       Exists
       Max
       Min
       Avg
-    }.each do |name|
+    ].each do |name|
       const_set(name, Class.new(Function))
     end
   end

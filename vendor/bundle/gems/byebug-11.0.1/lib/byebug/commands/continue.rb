@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "byebug/command"
-require "byebug/helpers/parse"
+require 'byebug/command'
+require 'byebug/helpers/parse'
 
 module Byebug
   #
@@ -31,16 +31,16 @@ module Byebug
     end
 
     def self.short_description
-      "Runs until program ends, hits a breakpoint or reaches a line"
+      'Runs until program ends, hits a breakpoint or reaches a line'
     end
 
     def execute
       if until_line?
-        num, err = get_int(modifier, "Continue", 0, nil)
+        num, err = get_int(modifier, 'Continue', 0, nil)
         return errmsg(err) unless num
 
         filename = File.expand_path(frame.file)
-        return errmsg(pr("continue.errors.unstopped_line", line: num)) unless Breakpoint.potential_line?(filename, num)
+        return errmsg(pr('continue.errors.unstopped_line', line: num)) unless Breakpoint.potential_line?(filename, num)
 
         Breakpoint.add(filename, num)
       end
@@ -54,11 +54,11 @@ module Byebug
     private
 
     def until_line?
-      @match[1] && !["!", "unconditionally"].include?(modifier)
+      @match[1] && !['!', 'unconditionally'].include?(modifier)
     end
 
     def unconditionally?
-      @match[1] && ["!", "unconditionally"].include?(modifier)
+      @match[1] && ['!', 'unconditionally'].include?(modifier)
     end
 
     def modifier

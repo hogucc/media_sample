@@ -9,5 +9,5 @@ Capybara.add_selector(:file_field, locator_type: [String, Symbol]) do
     locate_field(xpath, locator, options)
   end
 
-  filter_set(:_field, %i[disabled multiple name])
+  filter_set(:_field, [:disabled, :multiple, :name])
 end

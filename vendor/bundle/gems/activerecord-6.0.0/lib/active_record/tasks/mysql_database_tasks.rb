@@ -13,10 +13,10 @@ module ActiveRecord
 
       def create
         establish_connection configuration_without_database
-        connection.create_database configuration["database"], creation_options
+        connection.create_database configuration['database'], creation_options
         establish_connection configuration
-      rescue ActiveRecord::StatementInvalid => error
-        if connection.error_number(error.cause) == ER_DB_CREATE_EXISTS
+      rescue ActiveRecord::StatementInvalid => e
+        if connection.error_number(e.cause) == ER_DB_CREATE_EXISTS
           raise DatabaseAlreadyExists
         else
           raise
@@ -25,12 +25,12 @@ module ActiveRecord
 
       def drop
         establish_connection configuration
-        connection.drop_database configuration["database"]
+        connection.drop_database configuration['database']
       end
 
       def purge
         establish_connection configuration
-        connection.recreate_database configuration["database"], creation_options
+        connection.recreate_database configuration['database'], creation_options
       end
 
       def charset
@@ -43,73 +43,71 @@ module ActiveRecord
 
       def structure_dump(filename, extra_flags)
         args = prepare_command_options
-        args.concat(["--result-file", "#{filename}"])
-        args.concat(["--no-data"])
-        args.concat(["--routines"])
-        args.concat(["--skip-comments"])
+        args.concat(['--result-file', filename.to_s])
+        args.concat(['--no-data'])
+        args.concat(['--routines'])
+        args.concat(['--skip-comments'])
 
         ignore_tables = ActiveRecord::SchemaDumper.ignore_tables
-        if ignore_tables.any?
-          args += ignore_tables.map { |table| "--ignore-table=#{configuration['database']}.#{table}" }
-        end
+        args += ignore_tables.map { |table| "--ignore-table=#{configuration['database']}.#{table}" } if ignore_tables.any?
 
-        args.concat(["#{configuration['database']}"])
+        args.concat([configuration['database'].to_s])
         args.unshift(*extra_flags) if extra_flags
 
-        run_cmd("mysqldump", args, "dumping")
+        run_cmd('mysqldump', args, 'dumping')
       end
 
       def structure_load(filename, extra_flags)
         args = prepare_command_options
-        args.concat(["--execute", %{SET FOREIGN_KEY_CHECKS = 0; SOURCE #{filename}; SET FOREIGN_KEY_CHECKS = 1}])
-        args.concat(["--database", "#{configuration['database']}"])
+        args.concat(['--execute', %(SET FOREIGN_KEY_CHECKS = 0; SOURCE #{filename}; SET FOREIGN_KEY_CHECKS = 1)])
+        args.concat(['--database', configuration['database'].to_s])
         args.unshift(*extra_flags) if extra_flags
 
-        run_cmd("mysql", args, "loading")
+        run_cmd('mysql', args, 'loading')
       end
 
       private
 
-        attr_reader :configuration
+      attr_reader :configuration
 
-        def configuration_without_database
-          configuration.merge("database" => nil)
+      def configuration_without_database
+        configuration.merge('database' => nil)
+      end
+
+      def creation_options
+        {}.tap do |options|
+          options[:charset]     = configuration['encoding']   if configuration.include? 'encoding'
+          options[:collation]   = configuration['collation']  if configuration.include? 'collation'
         end
+      end
 
-        def creation_options
-          Hash.new.tap do |options|
-            options[:charset]     = configuration["encoding"]   if configuration.include? "encoding"
-            options[:collation]   = configuration["collation"]  if configuration.include? "collation"
-          end
-        end
+      def prepare_command_options
+        args = {
+          'host' => '--host',
+          'port' => '--port',
+          'socket' => '--socket',
+          'username' => '--user',
+          'password' => '--password',
+          'encoding' => '--default-character-set',
+          'sslca' => '--ssl-ca',
+          'sslcert' => '--ssl-cert',
+          'sslcapath' => '--ssl-capath',
+          'sslcipher' => '--ssl-cipher',
+          'sslkey' => '--ssl-key'
+        }.map { |opt, arg| "#{arg}=#{configuration[opt]}" if configuration[opt] }.compact
 
-        def prepare_command_options
-          args = {
-            "host"      => "--host",
-            "port"      => "--port",
-            "socket"    => "--socket",
-            "username"  => "--user",
-            "password"  => "--password",
-            "encoding"  => "--default-character-set",
-            "sslca"     => "--ssl-ca",
-            "sslcert"   => "--ssl-cert",
-            "sslcapath" => "--ssl-capath",
-            "sslcipher" => "--ssl-cipher",
-            "sslkey"    => "--ssl-key"
-          }.map { |opt, arg| "#{arg}=#{configuration[opt]}" if configuration[opt] }.compact
+        args
+      end
 
-          args
-        end
+      def run_cmd(cmd, args, action)
+        raise run_cmd_error(cmd, args, action) unless Kernel.system(cmd, *args)
+      end
 
-        def run_cmd(cmd, args, action)
-          fail run_cmd_error(cmd, args, action) unless Kernel.system(cmd, *args)
-        end
-
-        def run_cmd_error(cmd, args, action)
-          msg = +"failed to execute: `#{cmd}`\n"
-          msg << "Please check the output above for any errors and make sure that `#{cmd}` is installed in your PATH and has proper permissions.\n\n"
-          msg
-        end
+      def run_cmd_error(cmd, _args, _action)
+        msg = +"failed to execute: `#{cmd}`\n"
+        msg << "Please check the output above for any errors and make sure that `#{cmd}` is installed in your PATH and has proper permissions.\n\n"
+        msg
+      end
     end
   end
 end

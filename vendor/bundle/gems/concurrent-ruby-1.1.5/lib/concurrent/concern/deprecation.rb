@@ -2,11 +2,10 @@ require 'concurrent/concern/logging'
 
 module Concurrent
   module Concern
-
     # @!visibility private
     # @!macro internal_implementation_note
     module Deprecation
-      # TODO require additional parameter: a version. Display when it'll be removed based on that. Error if not removed.
+      # TODO: require additional parameter: a version. Display when it'll be removed based on that. Error if not removed.
       include Concern::Logging
 
       def deprecated(message, strip = 2)
@@ -28,7 +27,7 @@ module Concurrent
         deprecated "`#{old_name}` is deprecated and it'll removed in next release, use `#{new_name}` instead", 3
       end
 
-      extend self
+      module_function
     end
   end
 end

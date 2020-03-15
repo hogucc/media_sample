@@ -18,7 +18,7 @@ module Loofah
       def sanitize(string_or_io)
         loofah_fragment = Loofah.fragment(string_or_io)
         loofah_fragment.scrub!(:strip)
-        loofah_fragment.xpath("./form").each { |form| form.remove }
+        loofah_fragment.xpath('./form').each(&:remove)
         loofah_fragment.to_s
       end
 
@@ -27,7 +27,7 @@ module Loofah
       #
       #    Loofah::Helpers.sanitize_css("display:block;background-image:url(http://www.ragingplatypus.com/i/cam-full.jpg)") # => "display: block;"
       #
-      def sanitize_css style_string
+      def sanitize_css(style_string)
         ::Loofah::HTML5::Scrub.scrub_css style_string
       end
 
@@ -51,7 +51,7 @@ module Loofah
         end
 
         def white_list_sanitizer
-          warn "warning: white_list_sanitizer is deprecated, please use safe_list_sanitizer instead."
+          warn 'warning: white_list_sanitizer is deprecated, please use safe_list_sanitizer instead.'
           safe_list_sanitizer
         end
       end
@@ -68,7 +68,7 @@ module Loofah
       #    Loofah::Helpers::ActionView.set_as_default_sanitizer
       #
       class FullSanitizer
-        def sanitize html, *args
+        def sanitize(html, *_args)
           Loofah::Helpers.strip_tags html
         end
       end
@@ -85,19 +85,17 @@ module Loofah
       #    Loofah::Helpers::ActionView.set_as_default_sanitizer
       #
       class SafeListSanitizer
-        def sanitize html, *args
+        def sanitize(html, *_args)
           Loofah::Helpers.sanitize html
         end
 
-        def sanitize_css style_string, *args
+        def sanitize_css(style_string, *_args)
           Loofah::Helpers.sanitize_css style_string
         end
       end
 
       WhiteListSanitizer = SafeListSanitizer
-      if Object.respond_to?(:deprecate_constant)
-        deprecate_constant :WhiteListSanitizer
-      end
+      deprecate_constant :WhiteListSanitizer if Object.respond_to?(:deprecate_constant)
     end
   end
 end

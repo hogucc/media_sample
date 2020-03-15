@@ -13,18 +13,14 @@ module ChildProcess
         exec_r, exec_w = ::IO.pipe
         ChildProcess.close_on_exec exec_w
 
-        if duplex?
-          reader, writer = ::IO.pipe
-        end
+        reader, writer = ::IO.pipe if duplex?
 
-        @pid = Kernel.fork {
+        @pid = Kernel.fork do
           # Children of the forked process will inherit its process group
           # This is to make sure that all grandchildren dies when this Process instance is killed
           ::Process.setpgid 0, 0 if leader?
 
-          if @cwd
-            Dir.chdir(@cwd)
-          end
+          Dir.chdir(@cwd) if @cwd
 
           exec_r.close
           set_env
@@ -32,12 +28,12 @@ module ChildProcess
           if stdout
             STDOUT.reopen(stdout)
           else
-            STDOUT.reopen("/dev/null", "a+")
+            STDOUT.reopen('/dev/null', 'a+')
           end
           if stderr
             STDERR.reopen(stderr)
           else
-            STDERR.reopen("/dev/null", "a+")
+            STDERR.reopen('/dev/null', 'a+')
           end
 
           if duplex?
@@ -49,10 +45,10 @@ module ChildProcess
 
           begin
             Kernel.exec([executable, executable], *args)
-          rescue SystemCallError => ex
-            exec_w << ex.message
+          rescue SystemCallError => e
+            exec_w << e.message
           end
-        }
+        end
 
         exec_w.close
 
@@ -62,9 +58,7 @@ module ChildProcess
         end
 
         # if we don't eventually get EOF, exec() failed
-        unless exec_r.eof?
-          raise LaunchError, exec_r.read || "executing command with #{@args.inspect} failed"
-        end
+        raise LaunchError, exec_r.read || "executing command with #{@args.inspect} failed" unless exec_r.eof?
 
         ::Process.detach(@pid) if detach?
       end
@@ -72,7 +66,6 @@ module ChildProcess
       def set_env
         @environment.each { |k, v| ENV[k.to_s] = v.nil? ? nil : v.to_s }
       end
-
     end # Process
   end # Unix
 end # ChildProcess

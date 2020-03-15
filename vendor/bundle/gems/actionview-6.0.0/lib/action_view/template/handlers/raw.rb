@@ -3,7 +3,7 @@
 module ActionView
   module Template::Handlers
     class Raw
-      def call(template, source)
+      def call(_template, source)
         "#{source.inspect}.html_safe;"
       end
     end

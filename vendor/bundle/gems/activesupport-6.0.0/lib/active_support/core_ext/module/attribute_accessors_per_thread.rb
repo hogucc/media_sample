@@ -35,7 +35,7 @@ class Module
   #   Current.new.user # => NoMethodError
   def thread_mattr_reader(*syms, instance_reader: true, instance_accessor: true) # :nodoc:
     syms.each do |sym|
-      raise NameError.new("invalid attribute name: #{sym}") unless /^[_A-Za-z]\w*$/.match?(sym)
+      raise NameError, "invalid attribute name: #{sym}" unless /^[_A-Za-z]\w*$/.match?(sym)
 
       # The following generated method concatenates `name` because we want it
       # to work with inheritance via polymorphism.
@@ -45,16 +45,16 @@ class Module
         end
       EOS
 
-      if instance_reader && instance_accessor
-        class_eval(<<-EOS, __FILE__, __LINE__ + 1)
+      next unless instance_reader && instance_accessor
+
+      class_eval(<<-EOS, __FILE__, __LINE__ + 1)
           def #{sym}
             self.class.#{sym}
           end
-        EOS
-      end
+      EOS
     end
   end
-  alias :thread_cattr_reader :thread_mattr_reader
+  alias thread_cattr_reader thread_mattr_reader
 
   # Defines a per-thread class attribute and creates a class and instance writer methods to
   # allow assignment to the attribute.
@@ -76,7 +76,7 @@ class Module
   #   Current.new.user = "DHH" # => NoMethodError
   def thread_mattr_writer(*syms, instance_writer: true, instance_accessor: true) # :nodoc:
     syms.each do |sym|
-      raise NameError.new("invalid attribute name: #{sym}") unless /^[_A-Za-z]\w*$/.match?(sym)
+      raise NameError, "invalid attribute name: #{sym}" unless /^[_A-Za-z]\w*$/.match?(sym)
 
       # The following generated method concatenates `name` because we want it
       # to work with inheritance via polymorphism.
@@ -86,16 +86,16 @@ class Module
         end
       EOS
 
-      if instance_writer && instance_accessor
-        class_eval(<<-EOS, __FILE__, __LINE__ + 1)
+      next unless instance_writer && instance_accessor
+
+      class_eval(<<-EOS, __FILE__, __LINE__ + 1)
           def #{sym}=(obj)
             self.class.#{sym} = obj
           end
-        EOS
-      end
+      EOS
     end
   end
-  alias :thread_cattr_writer :thread_mattr_writer
+  alias thread_cattr_writer thread_mattr_writer
 
   # Defines both class and instance accessors for class attributes.
   #
@@ -140,5 +140,5 @@ class Module
     thread_mattr_reader(*syms, instance_reader: instance_reader, instance_accessor: instance_accessor)
     thread_mattr_writer(*syms, instance_writer: instance_writer, instance_accessor: instance_accessor)
   end
-  alias :thread_cattr_accessor :thread_mattr_accessor
+  alias thread_cattr_accessor thread_mattr_accessor
 end

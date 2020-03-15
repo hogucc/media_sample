@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-require "active_support/core_ext/module/redefine_method"
-require "action_controller"
-require "action_controller/test_case"
-require "action_view"
+require 'active_support/core_ext/module/redefine_method'
+require 'action_controller'
+require 'action_controller/test_case'
+require 'action_view'
 
-require "rails-dom-testing"
+require 'rails-dom-testing'
 
 module ActionView
   # = Action View Test Case
@@ -20,16 +20,16 @@ module ActionView
       end
 
       def controller_path=(path)
-        self.class.controller_path = (path)
+        self.class.controller_path = path
       end
 
       def initialize
         super
-        self.class.controller_path = ""
+        self.class.controller_path = ''
         @request = ActionController::TestRequest.create(self.class)
         @response = ActionDispatch::TestResponse.new
 
-        @request.env.delete("PATH_INFO")
+        @request.env.delete('PATH_INFO')
         @params = ActionController::Parameters.new
       end
     end
@@ -37,7 +37,8 @@ module ActionView
     module Behavior
       extend ActiveSupport::Concern
 
-      include ActionDispatch::Assertions, ActionDispatch::TestProcess
+      include ActionDispatch::TestProcess
+      include ActionDispatch::Assertions
       include Rails::Dom::Testing::Assertions
       include ActionController::TemplateAssertions
       include ActionView::Context
@@ -92,7 +93,7 @@ module ActionView
           super
         end
 
-      private
+        private
 
         def include_helper_modules!
           helper(helper_class) if helper_class
@@ -106,8 +107,8 @@ module ActionView
         @view_flow = ActionView::OutputFlow.new
         # empty string ensures buffer has UTF-8 encoding as
         # new without arguments returns ASCII-8BIT encoded buffer like String#new
-        @output_buffer = ActiveSupport::SafeBuffer.new ""
-        @rendered = +""
+        @output_buffer = ActiveSupport::SafeBuffer.new ''
+        @rendered = +''
 
         make_test_case_available_to_view!
         say_no_to_protect_against_forgery!
@@ -162,7 +163,7 @@ module ActionView
         ActiveSupport.run_load_hooks(:action_view_test_case, self)
       end
 
-    private
+      private
 
       # Need to experiment if this priority is the best one: rendered => output_buffer
       def document_root_element
@@ -219,7 +220,7 @@ module ActionView
         end
       end
 
-      alias_method :_view, :view
+      alias _view view
 
       INTERNAL_IVARS = [
         :@NAME,
@@ -250,7 +251,7 @@ module ActionView
         :@view_flow,
         :@_subscribers,
         :@html_document
-      ]
+      ].freeze
 
       def _user_defined_ivars
         instance_variables - INTERNAL_IVARS
@@ -269,7 +270,7 @@ module ActionView
       def method_missing(selector, *args)
         begin
           routes = @controller.respond_to?(:_routes) && @controller._routes
-        rescue
+        rescue StandardError
           # Don't call routes, if there is an error on _routes call
         end
 
@@ -282,10 +283,10 @@ module ActionView
         end
       end
 
-      def respond_to_missing?(name, include_private = false)
+      def respond_to_missing?(name, _include_private = false)
         begin
           routes = @controller.respond_to?(:_routes) && @controller._routes
-        rescue
+        rescue StandardError
           # Don't call routes, if there is an error on _routes call
         end
 

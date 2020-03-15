@@ -29,7 +29,7 @@ module Arel # :nodoc: all
       def initialize_copy(other)
         super
         @case = @case.clone if @case
-        @conditions = @conditions.map { |x| x.clone }
+        @conditions = @conditions.map(&:clone)
         @default = @default.clone if @default
       end
 
@@ -40,10 +40,10 @@ module Arel # :nodoc: all
       def eql?(other)
         self.class == other.class &&
           self.case == other.case &&
-          self.conditions == other.conditions &&
-          self.default == other.default
+          conditions == other.conditions &&
+          default == other.default
       end
-      alias :== :eql?
+      alias == eql?
     end
 
     class When < Binary # :nodoc:

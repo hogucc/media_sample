@@ -27,18 +27,18 @@ module Capybara
         self
       end
 
-    private
+      private
 
       def scroll_element_to_location(element, location)
         scroll_opts = case location
-        when :top
-          'true'
-        when :bottom
-          'false'
-        when :center
-          "{behavior: 'instant', block: 'center'}"
-        else
-          raise ArgumentError, "Invalid scroll_to location: #{location}"
+                      when :top
+                        'true'
+                      when :bottom
+                        'false'
+                      when :center
+                        "{behavior: 'instant', block: 'center'}"
+                      else
+                        raise ArgumentError, "Invalid scroll_to location: #{location}"
         end
         driver.execute_script <<~JS, element
           arguments[0].scrollIntoView(#{scroll_opts})
@@ -47,12 +47,12 @@ module Capybara
 
       def scroll_to_location(location)
         scroll_y = case location
-        when :top
-          '0'
-        when :bottom
-          'arguments[0].scrollHeight'
-        when :center
-          '(arguments[0].scrollHeight - arguments[0].clientHeight)/2'
+                   when :top
+                     '0'
+                   when :bottom
+                     'arguments[0].scrollHeight'
+                   when :center
+                     '(arguments[0].scrollHeight - arguments[0].clientHeight)/2'
         end
         driver.execute_script <<~JS, self
           if (arguments[0].scrollTo){

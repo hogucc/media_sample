@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "action_view/helpers/tags/placeholderable"
+require 'action_view/helpers/tags/placeholderable'
 
 module ActionText
   module TagHelper
@@ -21,13 +21,13 @@ module ActionText
       options = options.symbolize_keys
 
       options[:input] ||= "trix_input_#{ActionText::TagHelper.id += 1}"
-      options[:class] ||= "trix-content"
+      options[:class] ||= 'trix-content'
 
       options[:data] ||= {}
       options[:data][:direct_upload_url] = main_app.rails_direct_uploads_url
-      options[:data][:blob_url_template] = main_app.rails_service_blob_url(":signed_id", ":filename")
+      options[:data][:blob_url_template] = main_app.rails_service_blob_url(':signed_id', ':filename')
 
-      editor_tag = content_tag("trix-editor", "", options)
+      editor_tag = content_tag('trix-editor', '', options)
       input_tag = hidden_field_tag(name, value, id: options[:input])
 
       input_tag + editor_tag
@@ -44,8 +44,8 @@ module ActionView::Helpers
     def render
       options = @options.stringify_keys
       add_default_name_and_id(options)
-      options["input"] ||= dom_id(object, [options["id"], :trix_input].compact.join("_")) if object
-      @template_object.rich_text_area_tag(options.delete("name"), editable_value, options)
+      options['input'] ||= dom_id(object, [options['id'], :trix_input].compact.join('_')) if object
+      @template_object.rich_text_area_tag(options.delete('name'), editable_value, options)
     end
 
     def editable_value

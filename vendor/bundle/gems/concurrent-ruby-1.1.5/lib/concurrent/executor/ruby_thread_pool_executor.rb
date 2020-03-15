@@ -1,16 +1,13 @@
-require 'thread'
 require 'concurrent/atomic/event'
 require 'concurrent/concern/logging'
 require 'concurrent/executor/ruby_executor_service'
 require 'concurrent/utility/monotonic_time'
 
 module Concurrent
-
   # @!macro thread_pool_executor
   # @!macro thread_pool_options
   # @!visibility private
   class RubyThreadPoolExecutor < RubyExecutorService
-
     # @!macro thread_pool_executor_constant_default_max_pool_size
     DEFAULT_MAX_POOL_SIZE      = 2_147_483_647 # java.lang.Integer::MAX_VALUE
 
@@ -115,12 +112,12 @@ module Concurrent
       @idletime        = opts.fetch(:idletime, DEFAULT_THREAD_IDLETIMEOUT).to_i
       @max_queue       = opts.fetch(:max_queue, DEFAULT_MAX_QUEUE_SIZE).to_i
       @fallback_policy = opts.fetch(:fallback_policy, :abort)
-      raise ArgumentError.new("#{@fallback_policy} is not a valid fallback policy") unless FALLBACK_POLICIES.include?(@fallback_policy)
+      raise ArgumentError, "#{@fallback_policy} is not a valid fallback policy" unless FALLBACK_POLICIES.include?(@fallback_policy)
 
-      raise ArgumentError.new("`max_threads` cannot be less than #{DEFAULT_MIN_POOL_SIZE}") if @max_length < DEFAULT_MIN_POOL_SIZE
-      raise ArgumentError.new("`max_threads` cannot be greater than #{DEFAULT_MAX_POOL_SIZE}") if @max_length > DEFAULT_MAX_POOL_SIZE
-      raise ArgumentError.new("`min_threads` cannot be less than #{DEFAULT_MIN_POOL_SIZE}") if @min_length < DEFAULT_MIN_POOL_SIZE
-      raise ArgumentError.new("`min_threads` cannot be more than `max_threads`") if min_length > max_length
+      raise ArgumentError, "`max_threads` cannot be less than #{DEFAULT_MIN_POOL_SIZE}" if @max_length < DEFAULT_MIN_POOL_SIZE
+      raise ArgumentError, "`max_threads` cannot be greater than #{DEFAULT_MAX_POOL_SIZE}" if @max_length > DEFAULT_MAX_POOL_SIZE
+      raise ArgumentError, "`min_threads` cannot be less than #{DEFAULT_MIN_POOL_SIZE}" if @min_length < DEFAULT_MIN_POOL_SIZE
+      raise ArgumentError, '`min_threads` cannot be more than `max_threads`' if min_length > max_length
 
       self.auto_terminate = opts.fetch(:auto_terminate, true)
 
@@ -172,7 +169,7 @@ module Concurrent
 
     # @!visibility private
     def ns_kill_execution
-      # TODO log out unprocessed tasks in queue
+      # TODO: log out unprocessed tasks in queue
       # TODO try to shutdown first?
       @pool.each(&:kill)
       @pool.clear
@@ -194,7 +191,7 @@ module Concurrent
       end
     rescue ThreadError
       # Raised when the operating system refuses to create the new thread
-      return false
+      false
     end
 
     # tries to enqueue task
@@ -232,7 +229,7 @@ module Concurrent
     # handle ready worker, giving it new job or assigning back to @ready
     #
     # @!visibility private
-    def ns_ready_worker(worker, success = true)
+    def ns_ready_worker(worker, _success = true)
       task_and_args = @queue.shift
       if task_and_args
         worker << task_and_args
@@ -318,7 +315,6 @@ module Concurrent
           last_message = Concurrent.monotonic_time
           catch(:stop) do
             loop do
-
               case message = my_queue.pop
               when :idle_test
                 if (Concurrent.monotonic_time - last_message) > my_idletime
@@ -347,11 +343,11 @@ module Concurrent
       def run_task(pool, task, args)
         task.call(*args)
         pool.worker_task_completed
-      rescue => ex
+      rescue StandardError => e
         # let it fail
-        log DEBUG, ex
-      rescue Exception => ex
-        log ERROR, ex
+        log DEBUG, e
+      rescue Exception => e
+        log ERROR, e
         pool.worker_died(self)
         throw :stop
       end

@@ -5,7 +5,8 @@ module ActiveStorage
     attr_reader :name, :record
 
     def initialize(name, record)
-      @name, @record = name, record
+      @name = name
+      @record = record
     end
 
     def attachables

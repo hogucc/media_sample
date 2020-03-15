@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "byebug/command"
+require 'byebug/command'
 
 module Byebug
   #
@@ -25,14 +25,14 @@ module Byebug
     end
 
     def self.short_description
-      "Restores a previously saved byebug session"
+      'Restores a previously saved byebug session'
     end
 
     def execute
       return puts(help) unless @match[1]
 
       file = File.expand_path(@match[1]).strip
-      return errmsg(pr("source.errors.not_found", file: file)) unless File.exist?(file)
+      return errmsg(pr('source.errors.not_found', file: file)) unless File.exist?(file)
 
       processor.interface.read_file(file)
     end

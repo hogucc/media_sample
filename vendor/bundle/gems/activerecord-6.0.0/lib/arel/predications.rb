@@ -62,8 +62,8 @@ module Arel # :nodoc: all
         Arel::Nodes::In.new(self, other.ast)
       when Range
         if $VERBOSE
-          warn <<-eowarn
-Passing a range to `#in` is deprecated. Call `#between`, instead.
+          warn <<~eowarn
+            Passing a range to `#in` is deprecated. Call `#between`, instead.
           eowarn
         end
         between(other)
@@ -98,9 +98,9 @@ Passing a range to `#in` is deprecated. Call `#between`, instead.
       else
         left = lt(other.begin)
         right = if other.exclude_end?
-          gteq(other.end)
-        else
-          gt(other.end)
+                  gteq(other.end)
+                else
+                  gt(other.end)
         end
         left.or(right)
       end
@@ -112,8 +112,8 @@ Passing a range to `#in` is deprecated. Call `#between`, instead.
         Arel::Nodes::NotIn.new(self, other.ast)
       when Range
         if $VERBOSE
-          warn <<-eowarn
-Passing a range to `#not_in` is deprecated. Call `#not_between`, instead.
+          warn <<~eowarn
+            Passing a range to `#not_in` is deprecated. Call `#not_between`, instead.
           eowarn
         end
         not_between(other)
@@ -222,36 +222,36 @@ Passing a range to `#not_in` is deprecated. Call `#not_between`, instead.
 
     private
 
-      def grouping_any(method_id, others, *extras)
-        nodes = others.map { |expr| send(method_id, expr, *extras) }
-        Nodes::Grouping.new nodes.inject { |memo, node|
-          Nodes::Or.new(memo, node)
-        }
-      end
+    def grouping_any(method_id, others, *extras)
+      nodes = others.map { |expr| send(method_id, expr, *extras) }
+      Nodes::Grouping.new nodes.inject { |memo, node|
+        Nodes::Or.new(memo, node)
+      }
+    end
 
-      def grouping_all(method_id, others, *extras)
-        nodes = others.map { |expr| send(method_id, expr, *extras) }
-        Nodes::Grouping.new Nodes::And.new(nodes)
-      end
+    def grouping_all(method_id, others, *extras)
+      nodes = others.map { |expr| send(method_id, expr, *extras) }
+      Nodes::Grouping.new Nodes::And.new(nodes)
+    end
 
-      def quoted_node(other)
-        Nodes.build_quoted(other, self)
-      end
+    def quoted_node(other)
+      Nodes.build_quoted(other, self)
+    end
 
-      def quoted_array(others)
-        others.map { |v| quoted_node(v) }
-      end
+    def quoted_array(others)
+      others.map { |v| quoted_node(v) }
+    end
 
-      def infinity?(value)
-        value.respond_to?(:infinite?) && value.infinite?
-      end
+    def infinity?(value)
+      value.respond_to?(:infinite?) && value.infinite?
+    end
 
-      def unboundable?(value)
-        value.respond_to?(:unboundable?) && value.unboundable?
-      end
+    def unboundable?(value)
+      value.respond_to?(:unboundable?) && value.unboundable?
+    end
 
-      def open_ended?(value)
-        infinity?(value) || unboundable?(value)
-      end
+    def open_ended?(value)
+      infinity?(value) || unboundable?(value)
+    end
   end
 end

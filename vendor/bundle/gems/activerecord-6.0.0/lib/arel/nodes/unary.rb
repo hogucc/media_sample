@@ -4,7 +4,7 @@ module Arel # :nodoc: all
   module Nodes
     class Unary < Arel::Nodes::NodeExpression
       attr_accessor :expr
-      alias :value :expr
+      alias value expr
 
       def initialize(expr)
         super()
@@ -17,12 +17,12 @@ module Arel # :nodoc: all
 
       def eql?(other)
         self.class == other.class &&
-          self.expr == other.expr
+          expr == other.expr
       end
-      alias :== :eql?
+      alias == eql?
     end
 
-    %w{
+    %w[
       Bin
       Cube
       DistinctOn
@@ -38,7 +38,7 @@ module Arel # :nodoc: all
       OptimizerHints
       Ordering
       RollUp
-    }.each do |name|
+    ].each do |name|
       const_set(name, Class.new(Unary))
     end
   end

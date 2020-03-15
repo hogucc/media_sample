@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "byebug/command"
-require "byebug/helpers/eval"
+require 'byebug/command'
+require 'byebug/helpers/eval'
 
 module Byebug
   #
@@ -23,16 +23,16 @@ module Byebug
     end
 
     def self.short_description
-      "Starts a Pry session"
+      'Starts a Pry session'
     end
 
     def execute
-      return errmsg(pr("base.errors.only_local")) unless processor.interface.instance_of?(LocalInterface)
+      return errmsg(pr('base.errors.only_local')) unless processor.interface.instance_of?(LocalInterface)
 
       begin
-        require "pry"
+        require 'pry'
       rescue LoadError
-        return errmsg(pr("pry.errors.not_installed"))
+        return errmsg(pr('pry.errors.not_installed'))
       end
 
       Pry.start(context.frame._binding)

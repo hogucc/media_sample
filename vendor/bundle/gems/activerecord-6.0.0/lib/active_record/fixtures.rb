@@ -1,16 +1,16 @@
 # frozen_string_literal: true
 
-require "erb"
-require "yaml"
-require "zlib"
-require "set"
-require "active_support/dependencies"
-require "active_support/core_ext/digest/uuid"
-require "active_record/fixture_set/file"
-require "active_record/fixture_set/render_context"
-require "active_record/fixture_set/table_rows"
-require "active_record/test_fixtures"
-require "active_record/errors"
+require 'erb'
+require 'yaml'
+require 'zlib'
+require 'set'
+require 'active_support/dependencies'
+require 'active_support/core_ext/digest/uuid'
+require 'active_record/fixture_set/file'
+require 'active_record/fixture_set/render_context'
+require 'active_record/fixture_set/table_rows'
+require 'active_record/test_fixtures'
+require 'active_record/errors'
 
 module ActiveRecord
   class FixtureClassNotFound < ActiveRecord::ActiveRecordError #:nodoc:
@@ -465,18 +465,14 @@ module ActiveRecord
 
       private
 
-        def insert_class(class_names, name, klass)
-          # We only want to deal with AR objects.
-          if klass && klass < ActiveRecord::Base
-            class_names[name] = klass
-          else
-            class_names[name] = nil
-          end
-        end
+      def insert_class(class_names, name, klass)
+        # We only want to deal with AR objects.
+        class_names[name] = (klass if klass && klass < ActiveRecord::Base)
+      end
 
-        def default_fixture_model(fs_name, config)
-          ActiveRecord::FixtureSet.default_fixture_model_name(fs_name, config)
-        end
+      def default_fixture_model(fs_name, config)
+        ActiveRecord::FixtureSet.default_fixture_model_name(fs_name, config)
+      end
     end
 
     class << self
@@ -487,9 +483,9 @@ module ActiveRecord
       end
 
       def default_fixture_table_name(fixture_set_name, config = ActiveRecord::Base) # :nodoc:
-        "#{ config.table_name_prefix }"\
-        "#{ fixture_set_name.tr('/', '_') }"\
-        "#{ config.table_name_suffix }".to_sym
+        "#{config.table_name_prefix}"\
+        "#{fixture_set_name.tr('/', '_')}"\
+        "#{config.table_name_suffix}".to_sym
       end
 
       def reset_cache
@@ -518,6 +514,7 @@ module ActiveRecord
 
       def instantiate_fixtures(object, fixture_set, load_instances = true)
         return unless load_instances
+
         fixture_set.each do |fixture_name, fixture|
           object.instance_variable_set "@#{fixture_name}", fixture.find
         rescue FixtureClassNotFound
@@ -536,7 +533,7 @@ module ActiveRecord
         class_names = ClassCache.new class_names, config
 
         # FIXME: Apparently JK uses this.
-        connection = block_given? ? block : lambda { ActiveRecord::Base.connection }
+        connection = block_given? ? block : -> { ActiveRecord::Base.connection }
 
         fixture_files_to_read = fixture_set_names.reject do |fs_name|
           fixture_is_cached?(connection.call, fs_name)
@@ -547,7 +544,7 @@ module ActiveRecord
             fixtures_directory,
             fixture_files_to_read,
             class_names,
-            connection,
+            connection
           )
           cache_fixtures(connection.call, fixtures_map)
         end
@@ -571,54 +568,52 @@ module ActiveRecord
 
       private
 
-        def read_and_insert(fixtures_directory, fixture_files, class_names, connection) # :nodoc:
-          fixtures_map = {}
-          fixture_sets = fixture_files.map do |fixture_set_name|
-            klass = class_names[fixture_set_name]
-            fixtures_map[fixture_set_name] = new( # ActiveRecord::FixtureSet.new
-              nil,
-              fixture_set_name,
-              klass,
-              ::File.join(fixtures_directory, fixture_set_name)
-            )
-          end
-          update_all_loaded_fixtures(fixtures_map)
-
-          insert(fixture_sets, connection)
-
-          fixtures_map
+      def read_and_insert(fixtures_directory, fixture_files, class_names, connection) # :nodoc:
+        fixtures_map = {}
+        fixture_sets = fixture_files.map do |fixture_set_name|
+          klass = class_names[fixture_set_name]
+          fixtures_map[fixture_set_name] = new( # ActiveRecord::FixtureSet.new
+            nil,
+            fixture_set_name,
+            klass,
+            ::File.join(fixtures_directory, fixture_set_name)
+          )
         end
+        update_all_loaded_fixtures(fixtures_map)
 
-        def insert(fixture_sets, connection) # :nodoc:
-          fixture_sets_by_connection = fixture_sets.group_by do |fixture_set|
-            if fixture_set.model_class
-              fixture_set.model_class.connection
-            else
-              connection.call
-            end
-          end
+        insert(fixture_sets, connection)
 
-          fixture_sets_by_connection.each do |conn, set|
-            table_rows_for_connection = Hash.new { |h, k| h[k] = [] }
+        fixtures_map
+      end
 
-            set.each do |fixture_set|
-              fixture_set.table_rows.each do |table, rows|
-                table_rows_for_connection[table].unshift(*rows)
-              end
-            end
-
-            conn.insert_fixtures_set(table_rows_for_connection, table_rows_for_connection.keys)
-
-            # Cap primary key sequences to max(pk).
-            if conn.respond_to?(:reset_pk_sequence!)
-              set.each { |fs| conn.reset_pk_sequence!(fs.table_name) }
-            end
+      def insert(fixture_sets, connection) # :nodoc:
+        fixture_sets_by_connection = fixture_sets.group_by do |fixture_set|
+          if fixture_set.model_class
+            fixture_set.model_class.connection
+          else
+            connection.call
           end
         end
 
-        def update_all_loaded_fixtures(fixtures_map) # :nodoc:
-          all_loaded_fixtures.update(fixtures_map)
+        fixture_sets_by_connection.each do |conn, set|
+          table_rows_for_connection = Hash.new { |h, k| h[k] = [] }
+
+          set.each do |fixture_set|
+            fixture_set.table_rows.each do |table, rows|
+              table_rows_for_connection[table].unshift(*rows)
+            end
+          end
+
+          conn.insert_fixtures_set(table_rows_for_connection, table_rows_for_connection.keys)
+
+          # Cap primary key sequences to max(pk).
+          set.each { |fs| conn.reset_pk_sequence!(fs.table_name) } if conn.respond_to?(:reset_pk_sequence!)
         end
+      end
+
+      def update_all_loaded_fixtures(fixtures_map) # :nodoc:
+        all_loaded_fixtures.update(fixtures_map)
+      end
     end
 
     attr_reader :table_name, :name, :fixtures, :model_class, :config
@@ -655,47 +650,47 @@ module ActiveRecord
     # a list of rows to insert to that table.
     def table_rows
       # allow a standard key to be used for doing defaults in YAML
-      fixtures.delete("DEFAULTS")
+      fixtures.delete('DEFAULTS')
 
       TableRows.new(
         table_name,
         model_class: model_class,
         fixtures: fixtures,
-        config: config,
+        config: config
       ).to_hash
     end
 
     private
 
-      def model_class=(class_name)
-        if class_name.is_a?(Class) # TODO: Should be an AR::Base type class, or any?
-          @model_class = class_name
-        else
-          @model_class = class_name.safe_constantize if class_name
-        end
+    def model_class=(class_name)
+      if class_name.is_a?(Class) # TODO: Should be an AR::Base type class, or any?
+        @model_class = class_name
+      else
+        @model_class = class_name.safe_constantize if class_name
       end
+    end
 
-      # Loads the fixtures from the YAML file at +path+.
-      # If the file sets the +model_class+ and current instance value is not set,
-      # it uses the file value.
-      def read_fixture_files(path)
-        yaml_files = Dir["#{path}/{**,*}/*.yml"].select { |f|
-          ::File.file?(f)
-        } + [yaml_file_path(path)]
+    # Loads the fixtures from the YAML file at +path+.
+    # If the file sets the +model_class+ and current instance value is not set,
+    # it uses the file value.
+    def read_fixture_files(path)
+      yaml_files = Dir["#{path}/{**,*}/*.yml"].select do |f|
+        ::File.file?(f)
+      end + [yaml_file_path(path)]
 
-        yaml_files.each_with_object({}) do |file, fixtures|
-          FixtureSet::File.open(file) do |fh|
-            self.model_class ||= fh.model_class if fh.model_class
-            fh.each do |fixture_name, row|
-              fixtures[fixture_name] = ActiveRecord::Fixture.new(row, model_class)
-            end
+      yaml_files.each_with_object({}) do |file, fixtures|
+        FixtureSet::File.open(file) do |fh|
+          self.model_class ||= fh.model_class if fh.model_class
+          fh.each do |fixture_name, row|
+            fixtures[fixture_name] = ActiveRecord::Fixture.new(row, model_class)
           end
         end
       end
+    end
 
-      def yaml_file_path(path)
-        "#{path}.yml"
-      end
+    def yaml_file_path(path)
+      "#{path}.yml"
+    end
   end
 
   class Fixture #:nodoc:
@@ -715,7 +710,7 @@ module ActiveRecord
     end
 
     def class_name
-      model_class.name if model_class
+      model_class&.name
     end
 
     def each
@@ -726,10 +721,11 @@ module ActiveRecord
       fixture[key]
     end
 
-    alias :to_hash :fixture
+    alias to_hash fixture
 
     def find
-      raise FixtureClassNotFound, "No class attached to find." unless model_class
+      raise FixtureClassNotFound, 'No class attached to find.' unless model_class
+
       model_class.unscoped do
         model_class.find(fixture[model_class.primary_key])
       end

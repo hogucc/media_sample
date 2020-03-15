@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "byebug/command"
-require "byebug/helpers/eval"
+require 'byebug/command'
+require 'byebug/helpers/eval'
 
 module Byebug
   #
@@ -26,7 +26,7 @@ module Byebug
     end
 
     def self.short_description
-      "Spawns a subdebugger"
+      'Spawns a subdebugger'
     end
 
     def execute

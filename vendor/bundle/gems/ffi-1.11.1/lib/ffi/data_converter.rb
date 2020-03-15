@@ -47,20 +47,19 @@ module FFI
         @native_type = FFI.find_type(type)
       else
         native_type = @native_type
-        unless native_type
-          raise NotImplementedError, 'native_type method not overridden and no native_type set'
-        end
+        raise NotImplementedError, 'native_type method not overridden and no native_type set' unless native_type
+
         native_type
       end
     end
 
     # Convert to a native type.
-    def to_native(value, ctx)
+    def to_native(value, _ctx)
       value
     end
 
     # Convert from a native type.
-    def from_native(value, ctx)
+    def from_native(value, _ctx)
       value
     end
   end

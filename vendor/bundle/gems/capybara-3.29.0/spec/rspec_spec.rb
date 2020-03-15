@@ -124,7 +124,7 @@ RSpec.describe 'capybara/rspec' do
           # Reported in https://github.com/teamcapybara/capybara/issues/2115
           test_class_instance.instance_eval do
             expect do
-              expect(true).not_to only_match_matcher(false) # rubocop:disable RSpec/ExpectActual
+              expect(true).not_to only_match_matcher(false)
             end.not_to raise_error
           end
         end

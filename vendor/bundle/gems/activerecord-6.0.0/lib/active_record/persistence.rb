@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "active_record/insert_all"
+require 'active_record/insert_all'
 
 module ActiveRecord
   # = Active Record \Persistence
@@ -64,7 +64,7 @@ module ActiveRecord
       #
       # See <tt>ActiveRecord::Persistence#insert_all</tt> for documentation.
       def insert(attributes, returning: nil, unique_by: nil)
-        insert_all([ attributes ], returning: returning, unique_by: unique_by)
+        insert_all([attributes], returning: returning, unique_by: unique_by)
       end
 
       # Inserts multiple records into the database in a single SQL INSERT
@@ -131,7 +131,7 @@ module ActiveRecord
       #
       # See <tt>ActiveRecord::Persistence#insert_all!</tt> for more.
       def insert!(attributes, returning: nil)
-        insert_all!([ attributes ], returning: returning)
+        insert_all!([attributes], returning: returning)
       end
 
       # Inserts multiple records into the database in a single SQL INSERT
@@ -185,7 +185,7 @@ module ActiveRecord
       #
       # See <tt>ActiveRecord::Persistence#upsert_all</tt> for documentation.
       def upsert(attributes, returning: nil, unique_by: nil)
-        upsert_all([ attributes ], returning: returning, unique_by: unique_by)
+        upsert_all([attributes], returning: returning, unique_by: unique_by)
       end
 
       # Updates or inserts (upserts) multiple records into the database in a
@@ -286,16 +286,16 @@ module ActiveRecord
       # for updating all records in a single query.
       def update(id = :all, attributes)
         if id.is_a?(Array)
-          id.map { |one_id| find(one_id) }.each_with_index { |object, idx|
+          id.map { |one_id| find(one_id) }.each_with_index do |object, idx|
             object.update(attributes[idx])
-          }
+          end
         elsif id == :all
           all.each { |record| record.update(attributes) }
         else
           if ActiveRecord::Base === id
             raise ArgumentError,
-              "You are passing an instance of ActiveRecord::Base to `update`. " \
-              "Please pass the id of the object by calling `.id`."
+                  'You are passing an instance of ActiveRecord::Base to `update`. ' \
+                  'Please pass the id of the object by calling `.id`.'
           end
           object = find(id)
           object.update(attributes)
@@ -396,29 +396,30 @@ module ActiveRecord
       end
 
       private
-        # Given a class, an attributes hash, +instantiate_instance_of+ returns a
-        # new instance of the class. Accepts only keys as strings.
-        def instantiate_instance_of(klass, attributes, column_types = {}, &block)
-          attributes = klass.attributes_builder.build_from_database(attributes, column_types)
-          klass.allocate.init_with_attributes(attributes, &block)
-        end
 
-        # Called by +instantiate+ to decide which class to use for a new
-        # record instance.
-        #
-        # See +ActiveRecord::Inheritance#discriminate_class_for_record+ for
-        # the single-table inheritance discriminator.
-        def discriminate_class_for_record(record)
-          self
-        end
+      # Given a class, an attributes hash, +instantiate_instance_of+ returns a
+      # new instance of the class. Accepts only keys as strings.
+      def instantiate_instance_of(klass, attributes, column_types = {}, &block)
+        attributes = klass.attributes_builder.build_from_database(attributes, column_types)
+        klass.allocate.init_with_attributes(attributes, &block)
+      end
 
-        def _substitute_values(values)
-          values.map do |name, value|
-            attr = arel_attribute(name)
-            bind = predicate_builder.build_bind_attribute(name, value)
-            [attr, bind]
-          end
+      # Called by +instantiate+ to decide which class to use for a new
+      # record instance.
+      #
+      # See +ActiveRecord::Inheritance#discriminate_class_for_record+ for
+      # the single-table inheritance discriminator.
+      def discriminate_class_for_record(_record)
+        self
+      end
+
+      def _substitute_values(values)
+        values.map do |name, value|
+          attr = arel_attribute(name)
+          bind = predicate_builder.build_bind_attribute(name, value)
+          [attr, bind]
         end
+      end
     end
 
     # Returns true if this object hasn't been saved yet -- that is, a record
@@ -500,7 +501,7 @@ module ActiveRecord
     #
     # Unless an error is raised, returns true.
     def save!(*args, &block)
-      create_or_update(*args, &block) || raise(RecordNotSaved.new("Failed to save the record", self))
+      create_or_update(*args, &block) || raise(RecordNotSaved.new('Failed to save the record', self))
     end
 
     # Deletes the record in the database and freezes this instance to
@@ -532,9 +533,9 @@ module ActiveRecord
       _raise_readonly_record_error if readonly?
       destroy_associations
       @_trigger_destroy_callback = if persisted?
-        destroy_row > 0
-      else
-        true
+                                     destroy_row > 0
+                                   else
+                                     true
       end
       @destroyed = true
       freeze
@@ -566,10 +567,10 @@ module ActiveRecord
     def becomes(klass)
       became = klass.allocate
       became.send(:initialize)
-      became.instance_variable_set("@attributes", @attributes)
-      became.instance_variable_set("@mutations_from_database", @mutations_from_database ||= nil)
-      became.instance_variable_set("@new_record", new_record?)
-      became.instance_variable_set("@destroyed", destroyed?)
+      became.instance_variable_set('@attributes', @attributes)
+      became.instance_variable_set('@mutations_from_database', @mutations_from_database ||= nil)
+      became.instance_variable_set('@new_record', new_record?)
+      became.instance_variable_set('@destroyed', destroyed?)
       became.errors.copy!(errors)
       became
     end
@@ -583,9 +584,7 @@ module ActiveRecord
     def becomes!(klass)
       became = becomes(klass)
       sti_type = nil
-      if !klass.descends_from_active_record?
-        sti_type = klass.sti_name
-      end
+      sti_type = klass.sti_name unless klass.descends_from_active_record?
       became.public_send("#{klass.inheritance_column}=", sti_type)
       became
     end
@@ -623,7 +622,7 @@ module ActiveRecord
     end
 
     alias update_attributes update
-    deprecate update_attributes: "please, use update instead"
+    deprecate update_attributes: 'please, use update instead'
 
     # Updates its receiver just like #update but calls #save! instead
     # of +save+, so an exception is raised if the record is invalid and saving will fail.
@@ -637,7 +636,7 @@ module ActiveRecord
     end
 
     alias update_attributes! update!
-    deprecate update_attributes!: "please, use update! instead"
+    deprecate update_attributes!: 'please, use update! instead'
 
     # Equivalent to <code>update_columns(name => value)</code>.
     def update_column(name, value)
@@ -661,8 +660,8 @@ module ActiveRecord
     # This method raises an ActiveRecord::ActiveRecordError when called on new
     # objects, or when at least one of the attributes is marked as readonly.
     def update_columns(attributes)
-      raise ActiveRecordError, "cannot update a new record" if new_record?
-      raise ActiveRecordError, "cannot update a destroyed record" if destroyed?
+      raise ActiveRecordError, 'cannot update a new record' if new_record?
+      raise ActiveRecordError, 'cannot update a destroyed record' if destroyed?
 
       attributes = attributes.transform_keys do |key|
         name = key.to_s
@@ -809,7 +808,7 @@ module ActiveRecord
           self.class.unscoped { self.class.find(id) }
         end
 
-      @attributes = fresh_object.instance_variable_get("@attributes")
+      @attributes = fresh_object.instance_variable_get('@attributes')
       @new_record = false
       self
     end
@@ -857,23 +856,22 @@ module ActiveRecord
       end
 
       attribute_names = timestamp_attributes_for_update_in_model
-      attribute_names |= names.map!(&:to_s).map! { |name|
+      attribute_names |= names.map!(&:to_s).map! do |name|
         self.class.attribute_aliases[name] || name
-      }
+      end
 
-      unless attribute_names.empty?
+      if attribute_names.empty?
+        true
+      else
         affected_rows = _touch_row(attribute_names, time)
         @_trigger_update_callback = affected_rows == 1
-      else
-        true
       end
     end
 
-  private
+    private
 
     # A hook to be overridden by association modules.
-    def destroy_associations
-    end
+    def destroy_associations; end
 
     def destroy_row
       _delete_row
@@ -890,10 +888,10 @@ module ActiveRecord
         _write_attribute(attr_name, time)
       end
 
-      _update_row(attribute_names, "touch")
+      _update_row(attribute_names, 'touch')
     end
 
-    def _update_row(attribute_names, attempted_action = "update")
+    def _update_row(attribute_names, _attempted_action = 'update')
       self.class._update_record(
         attributes_with_values(attribute_names),
         @primary_key => id_in_database
@@ -903,6 +901,7 @@ module ActiveRecord
     def create_or_update(**, &block)
       _raise_readonly_record_error if readonly?
       return false if destroyed?
+
       result = new_record? ? _create_record(&block) : _update_record(&block)
       result != false
     end
@@ -949,7 +948,7 @@ module ActiveRecord
 
     def _raise_record_not_destroyed
       @_association_destroy_exception ||= nil
-      raise @_association_destroy_exception || RecordNotDestroyed.new("Failed to destroy the record", self)
+      raise @_association_destroy_exception || RecordNotDestroyed.new('Failed to destroy the record', self)
     ensure
       @_association_destroy_exception = nil
     end

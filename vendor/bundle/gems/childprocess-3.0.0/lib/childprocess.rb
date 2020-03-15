@@ -2,11 +2,10 @@ require 'childprocess/version'
 require 'childprocess/errors'
 require 'childprocess/abstract_process'
 require 'childprocess/abstract_io'
-require "fcntl"
+require 'fcntl'
 require 'logger'
 
 module ChildProcess
-
   @posix_spawn = false
 
   class << self
@@ -28,10 +27,10 @@ module ChildProcess
         raise Error, "unsupported platform #{platform_name.inspect}"
       end
     end
-    alias_method :build, :new
+    alias build new
 
     def logger
-      return @logger if defined?(@logger) and @logger
+      return @logger if defined?(@logger) && @logger
 
       @logger = Logger.new($stderr)
       @logger.level = $DEBUG ? Logger::DEBUG : Logger::INFO
@@ -40,9 +39,9 @@ module ChildProcess
     end
 
     def platform
-      if RUBY_PLATFORM == "java"
+      if RUBY_PLATFORM == 'java'
         :jruby
-      elsif defined?(RUBY_ENGINE) && RUBY_ENGINE == "ironruby"
+      elsif defined?(RUBY_ENGINE) && RUBY_ENGINE == 'ironruby'
         :ironruby
       else
         os
@@ -85,12 +84,12 @@ module ChildProcess
         raise ChildProcess::MissingPlatformError
       end
 
-      require "childprocess/unix/lib"
+      require 'childprocess/unix/lib'
       require 'childprocess/unix/posix_spawn_process'
 
       true
-    rescue ChildProcess::MissingPlatformError => ex
-      warn_once ex.message
+    rescue ChildProcess::MissingPlatformError => e
+      warn_once e.message
       false
     end
 
@@ -98,13 +97,11 @@ module ChildProcess
     # Set this to true to enable experimental use of posix_spawn.
     #
 
-    def posix_spawn=(bool)
-      @posix_spawn = bool
-    end
+    attr_writer :posix_spawn
 
     def os
-      @os ||= (
-        require "rbconfig"
+      @os ||= begin
+        require 'rbconfig'
         host_os = RbConfig::CONFIG['host_os'].downcase
 
         case host_os
@@ -125,28 +122,28 @@ module ChildProcess
         else
           raise Error, "unknown os: #{host_os.inspect}"
         end
-      )
+      end
     end
 
     def arch
-      @arch ||= (
+      @arch ||= begin
         host_cpu = RbConfig::CONFIG['host_cpu'].downcase
         case host_cpu
         when /i[3456]86/
           if workaround_older_macosx_misreported_cpu?
             # Workaround case: older 64-bit Darwin Rubies misreported as i686
-            "x86_64"
+            'x86_64'
           else
-            "i386"
+            'i386'
           end
         when /amd64|x86_64/
-          "x86_64"
+          'x86_64'
         when /ppc|powerpc/
-          "powerpc"
+          'powerpc'
         else
           host_cpu
         end
-      )
+      end
     end
 
     #
@@ -199,7 +196,6 @@ module ChildProcess
     def is_64_bit?
       1.size == 8
     end
-
   end # class << self
 end # ChildProcess
 

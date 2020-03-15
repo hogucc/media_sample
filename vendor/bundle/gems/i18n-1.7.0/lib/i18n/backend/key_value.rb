@@ -3,7 +3,6 @@
 require 'i18n/backend/base'
 
 module I18n
-
   begin
     require 'oj'
     class JSON
@@ -11,6 +10,7 @@ module I18n
         def encode(value)
           Oj::Rails.encode(value)
         end
+
         def decode(value)
           Oj.load(value)
         end
@@ -72,10 +72,12 @@ module I18n
       module Implementation
         attr_accessor :store
 
-        include Base, Flatten
+        include Flatten
+        include Base
 
-        def initialize(store, subtrees=true)
-          @store, @subtrees = store, subtrees
+        def initialize(store, subtrees = true)
+          @store = store
+          @subtrees = subtrees
         end
 
         def initialized?
@@ -94,7 +96,7 @@ module I18n
                 value = old_value.deep_symbolize_keys.deep_merge!(value) if old_value.is_a?(Hash)
               end
             when Proc
-              raise "Key-value stores cannot handle procs"
+              raise 'Key-value stores cannot handle procs'
             end
 
             @store[key] = JSON.encode(value) unless value.is_a?(Symbol)
@@ -105,11 +107,11 @@ module I18n
           locales = @store.keys.map { |k| k =~ /\./; $` }
           locales.uniq!
           locales.compact!
-          locales.map! { |k| k.to_sym }
+          locales.map!(&:to_sym)
           locales
         end
 
-      protected
+        protected
 
         # Queries the translations from the key-value store and converts
         # them into a hash such as the one returned from loading the
@@ -117,10 +119,10 @@ module I18n
         def translations
           @translations = @store.keys.clone.map do |main_key|
             main_value = JSON.decode(@store[main_key])
-            main_key.to_s.split(".").reverse.inject(main_value) do |value, key|
-              {key.to_sym => value}
+            main_key.to_s.split('.').reverse.inject(main_value) do |value, key|
+              { key.to_sym => value }
             end
-          end.inject{|hash, elem| hash.deep_merge!(elem)}.deep_symbolize_keys
+          end.inject { |hash, elem| hash.deep_merge!(elem) }.deep_symbolize_keys
         end
 
         def init_translations
@@ -154,6 +156,7 @@ module I18n
             super
           else
             return entry unless entry.is_a?(Hash)
+
             key = pluralization_key(entry, count)
             entry[key]
           end
@@ -168,7 +171,7 @@ module I18n
         end
 
         def has_key?(key)
-          @subtree && @subtree.has_key?(key) || self[key]
+          @subtree&.key?(key) || self[key]
         end
 
         def [](key)
@@ -185,7 +188,7 @@ module I18n
         def is_a?(klass)
           Hash == klass || super
         end
-        alias :kind_of? :is_a?
+        alias kind_of? is_a?
 
         def instance_of?(klass)
           Hash == klass || super

@@ -8,9 +8,9 @@ module ActiveSupport
       attr_writer :tagged_logger
 
       def before_setup
-        if tagged_logger && tagged_logger.info?
+        if tagged_logger&.info?
           heading = "#{self.class}: #{name}"
-          divider = "-" * heading.size
+          divider = '-' * heading.size
           tagged_logger.info divider
           tagged_logger.info heading
           tagged_logger.info divider
@@ -19,9 +19,10 @@ module ActiveSupport
       end
 
       private
-        def tagged_logger
-          @tagged_logger ||= (defined?(Rails.logger) && Rails.logger)
-        end
+
+      def tagged_logger
+        @tagged_logger ||= (defined?(Rails.logger) && Rails.logger)
+      end
     end
   end
 end

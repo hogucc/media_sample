@@ -29,8 +29,8 @@ module ActiveRecord
       extend ActiveSupport::Concern
 
       included do
-        attribute_method_suffix "_before_type_cast"
-        attribute_method_suffix "_came_from_user?"
+        attribute_method_suffix '_before_type_cast'
+        attribute_method_suffix '_came_from_user?'
       end
 
       # Returns the value of the attribute identified by +attr_name+ before
@@ -67,15 +67,15 @@ module ActiveRecord
 
       private
 
-        # Dispatch target for <tt>*_before_type_cast</tt> attribute methods.
-        def attribute_before_type_cast(attribute_name)
-          read_attribute_before_type_cast(attribute_name)
-        end
+      # Dispatch target for <tt>*_before_type_cast</tt> attribute methods.
+      def attribute_before_type_cast(attribute_name)
+        read_attribute_before_type_cast(attribute_name)
+      end
 
-        def attribute_came_from_user?(attribute_name)
-          sync_with_transaction_state if @transaction_state&.finalized?
-          @attributes[attribute_name].came_from_user?
-        end
+      def attribute_came_from_user?(attribute_name)
+        sync_with_transaction_state if @transaction_state&.finalized?
+        @attributes[attribute_name].came_from_user?
+      end
     end
   end
 end

@@ -1,5 +1,5 @@
-# encoding: utf-8
 # frozen_string_literal: true
+
 require 'mail/parsers/address_lists_parser'
 
 module Mail
@@ -96,7 +96,7 @@ module Mail
     #  a.address = 'mikel@test.lindsaar.net'
     #  a.display_name = 'Mikel Lindsaar'
     #  a.format #=> 'Mikel Lindsaar <mikel@test.lindsaar.net>'
-    def display_name=( str )
+    def display_name=(str)
       @display_name = str.nil? ? nil : str.dup # in case frozen
     end
 
@@ -163,7 +163,7 @@ module Mail
     #  a.inspect #=> "#<Mail::Address:14184910 Address: |Mikel <mikel@test.lindsaar.net> (My email)| >"
     def inspect
       parse unless @parsed
-      "#<#{self.class}:#{self.object_id} Address: |#{to_s}| >"
+      "#<#{self.class}:#{object_id} Address: |#{self}| >"
     end
 
     def encoded
@@ -175,7 +175,7 @@ module Mail
     end
 
     def group
-      @data && @data.group
+      @data&.group
     end
 
     private
@@ -207,18 +207,16 @@ module Mail
     def strip_domain_comments(value)
       unless Utilities.blank?(comments)
         comments.each do |comment|
-          if @data.domain && @data.domain.include?("(#{comment})")
-            value = value.gsub("(#{comment})", EMPTY)
-          end
+          value = value.gsub("(#{comment})", EMPTY) if @data.domain&.include?("(#{comment})")
         end
       end
       value.to_s.strip
     end
 
     def get_display_name
-      if @data && @data.display_name
+      if @data&.display_name
         str = strip_all_comments(@data.display_name.to_s)
-      elsif @data && @data.comments && @data.domain
+      elsif @data&.comments && @data&.domain
         str = strip_domain_comments(format_comments)
       end
       str unless Utilities.blank?(str)
@@ -236,23 +234,21 @@ module Mail
 
     def format_comments
       if comments
-        comment_text = comments.map {|c| escape_paren(c) }.join(SPACE).squeeze(SPACE)
+        comment_text = comments.map { |c| escape_paren(c) }.join(SPACE).squeeze(SPACE)
         @format_comments ||= "(#{comment_text})"
-      else
-        nil
       end
     end
 
     def get_local
-      @data && @data.local
+      @data&.local
     end
 
     def get_domain
-      @data && @data.domain
+      @data&.domain
     end
 
     def get_comments
-      @data && @data.comments
+      @data&.comments
     end
   end
 end

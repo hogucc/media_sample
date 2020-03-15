@@ -1,18 +1,18 @@
-require "bundler/setup"
-require "bundler/gem_tasks"
-require "rake/testtask"
+require 'bundler/setup'
+require 'bundler/gem_tasks'
+require 'rake/testtask'
 
-if !ENV["APPRAISAL_INITIALIZED"] && !ENV["TRAVIS"]
-  require "appraisal/task"
+if !ENV['APPRAISAL_INITIALIZED'] && !ENV['TRAVIS']
+  require 'appraisal/task'
   Appraisal::Task.new
   task default: :appraisal
 else
   Rake::TestTask.new do |test|
-    require "rails/version"
+    require 'rails/version'
 
-    test.libs << "test"
+    test.libs << 'test'
 
-    test.test_files = FileList["test/*_test.rb"]
+    test.test_files = FileList['test/*_test.rb']
   end
 
   task default: :test

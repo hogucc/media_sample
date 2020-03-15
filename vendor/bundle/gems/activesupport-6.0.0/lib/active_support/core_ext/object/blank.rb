@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "concurrent/map"
+require 'concurrent/map'
 
 class Object
   # An object is blank if it's false, empty, or a whitespace string.
@@ -87,7 +87,7 @@ class Array
   #   [1,2,3].blank? # => false
   #
   # @return [true, false]
-  alias_method :blank?, :empty?
+  alias blank? empty?
 end
 
 class Hash
@@ -97,11 +97,11 @@ class Hash
   #   { key: 'value' }.blank?  # => false
   #
   # @return [true, false]
-  alias_method :blank?, :empty?
+  alias blank? empty?
 end
 
 class String
-  BLANK_RE = /\A[[:space:]]*\z/
+  BLANK_RE = /\A[[:space:]]*\z/.freeze
   ENCODED_BLANKS = Concurrent::Map.new do |h, enc|
     h[enc] = Regexp.new(BLANK_RE.source.encode(enc), BLANK_RE.options | Regexp::FIXEDENCODING)
   end
@@ -126,7 +126,7 @@ class String
       begin
         BLANK_RE.match?(self)
       rescue Encoding::CompatibilityError
-        ENCODED_BLANKS[self.encoding].match?(self)
+        ENCODED_BLANKS[encoding].match?(self)
       end
   end
 end

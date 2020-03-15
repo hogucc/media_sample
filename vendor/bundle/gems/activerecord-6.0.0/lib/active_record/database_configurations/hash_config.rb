@@ -36,14 +36,14 @@ module ActiveRecord
       # connection. If the +replica+ key is present in the config, +replica?+ will
       # return +true+.
       def replica?
-        config["replica"]
+        config['replica']
       end
 
       # The migrations paths for a database configuration. If the
       # +migrations_paths+ key is present in the config, +migrations_paths+
       # will return its value.
       def migrations_paths
-        config["migrations_paths"]
+        config['migrations_paths']
       end
     end
   end

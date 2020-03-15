@@ -14,7 +14,7 @@ class Numeric
   def bytes
     self
   end
-  alias :byte :bytes
+  alias byte bytes
 
   # Returns the number of bytes equivalent to the kilobytes provided.
   #
@@ -22,7 +22,7 @@ class Numeric
   def kilobytes
     self * KILOBYTE
   end
-  alias :kilobyte :kilobytes
+  alias kilobyte kilobytes
 
   # Returns the number of bytes equivalent to the megabytes provided.
   #
@@ -30,7 +30,7 @@ class Numeric
   def megabytes
     self * MEGABYTE
   end
-  alias :megabyte :megabytes
+  alias megabyte megabytes
 
   # Returns the number of bytes equivalent to the gigabytes provided.
   #
@@ -38,7 +38,7 @@ class Numeric
   def gigabytes
     self * GIGABYTE
   end
-  alias :gigabyte :gigabytes
+  alias gigabyte gigabytes
 
   # Returns the number of bytes equivalent to the terabytes provided.
   #
@@ -46,7 +46,7 @@ class Numeric
   def terabytes
     self * TERABYTE
   end
-  alias :terabyte :terabytes
+  alias terabyte terabytes
 
   # Returns the number of bytes equivalent to the petabytes provided.
   #
@@ -54,7 +54,7 @@ class Numeric
   def petabytes
     self * PETABYTE
   end
-  alias :petabyte :petabytes
+  alias petabyte petabytes
 
   # Returns the number of bytes equivalent to the exabytes provided.
   #
@@ -62,5 +62,5 @@ class Numeric
   def exabytes
     self * EXABYTE
   end
-  alias :exabyte :exabytes
+  alias exabyte exabytes
 end

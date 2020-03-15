@@ -32,13 +32,14 @@ module I18n
         # This uses a deep merge for the translations hash, so existing
         # translations will be overwritten by new ones only at the deepest
         # level of the hash.
-        def store_translations(locale, data, options = EMPTY_HASH)
+        def store_translations(locale, data, _options = EMPTY_HASH)
           if I18n.enforce_available_locales &&
-            I18n.available_locales_initialized? &&
-            !I18n.available_locales.include?(locale.to_sym) &&
-            !I18n.available_locales.include?(locale.to_s)
+             I18n.available_locales_initialized? &&
+             !I18n.available_locales.include?(locale.to_sym) &&
+             !I18n.available_locales.include?(locale.to_s)
             return data
           end
+
           locale = locale.to_sym
           translations[locale] ||= {}
           data = data.deep_symbolize_keys
@@ -48,9 +49,8 @@ module I18n
         # Get available locales from the translations hash
         def available_locales
           init_translations unless initialized?
-          translations.inject([]) do |locales, (locale, data)|
-            locales << locale unless data.size <= 1 && (data.empty? || data.has_key?(:i18n))
-            locales
+          translations.each_with_object([]) do |(locale, data), locales|
+            locales << locale unless data.size <= 1 && (data.empty? || data.key?(:i18n))
           end
         end
 
@@ -74,7 +74,7 @@ module I18n
           @translations ||= {}
         end
 
-      protected
+        protected
 
         def init_translations
           load_translations
@@ -92,12 +92,13 @@ module I18n
 
           keys.inject(translations) do |result, _key|
             return nil unless result.is_a?(Hash)
-            unless result.has_key?(_key)
+
+            unless result.key?(_key)
               _key = _key.to_s.to_sym
-              return nil unless result.has_key?(_key)
+              return nil unless result.key?(_key)
             end
             result = result[_key]
-            result = resolve(locale, _key, result, options.merge(:scope => nil)) if result.is_a?(Symbol)
+            result = resolve(locale, _key, result, options.merge(scope: nil)) if result.is_a?(Symbol)
             result
           end
         end

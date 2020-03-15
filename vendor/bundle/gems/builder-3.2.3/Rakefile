@@ -30,36 +30,36 @@ SRC_RB = FileList['lib/**/*.rb']
 
 # The default task is run if rake is given no explicit arguments.
 
-desc "Default Task"
-task :default => :test_all
+desc 'Default Task'
+task default: :test_all
 
 # Test Tasks ---------------------------------------------------------
 
-desc "Run all tests"
-task :test_all => [:test_units]
-task :ta => [:test_all]
+desc 'Run all tests'
+task test_all: [:test_units]
+task ta: [:test_all]
 
-task :tu => [:test_units]
+task tu: [:test_units]
 
-Rake::TestTask.new("test_units") do |t|
+Rake::TestTask.new('test_units') do |t|
   t.test_files = FileList['test/test*.rb']
-  t.libs << "."
+  t.libs << '.'
   t.verbose = false
 end
 
 # Create a task to build the RDOC documentation tree.
 
-if defined?(RDoc)
-  rd = RDoc::Task.new("rdoc") { |rdoc|
-    rdoc.rdoc_dir = 'html'
-    rdoc.title    = "Builder for Markup"
-    rdoc.options << '--line-numbers' << '--inline-source' << '--main' << 'README.rdoc'
-    rdoc.rdoc_files.include('lib/**/*.rb', '[A-Z]*', 'doc/**/*.rdoc').exclude("TAGS")
-    rdoc.template = 'doc/jamis.rb'
-  }
-else
-  rd = Struct.new(:rdoc_files).new([])
-end
+rd = if defined?(RDoc)
+       RDoc::Task.new('rdoc') do |rdoc|
+         rdoc.rdoc_dir = 'html'
+         rdoc.title    = 'Builder for Markup'
+         rdoc.options << '--line-numbers' << '--inline-source' << '--main' << 'README.rdoc'
+         rdoc.rdoc_files.include('lib/**/*.rb', '[A-Z]*', 'doc/**/*.rdoc').exclude('TAGS')
+         rdoc.template = 'doc/jamis.rb'
+       end
+     else
+       Struct.new(:rdoc_files).new([])
+     end
 
 # ====================================================================
 # Create a task that will package the Rake software into distributable
@@ -81,70 +81,68 @@ BLANKSLATE_FILES = FileList[
   'test/test_blankslate.rb'
 ]
 
-if ! defined?(Gem)
-  puts "Package Target requires RubyGEMs"
+if !defined?(Gem)
+  puts 'Package Target requires RubyGEMs'
 else
   spec = Gem::Specification.new do |s|
-
     #### Basic information.
 
     s.name = 'builder'
     s.version = PKG_VERSION
-    s.summary = "Builders for MarkUp."
-    s.description = %{\
+    s.summary = 'Builders for MarkUp.'
+    s.description = %(\
 Builder provides a number of builder objects that make creating structured data
 simple to do.  Currently the following builder objects are supported:
 
 * XML Markup
 * XML Events
-}
+)
 
     s.files = PKG_FILES.to_a
     s.require_path = 'lib'
 
-    s.test_files = PKG_FILES.select { |fn| fn =~ /^test\/test/ }
+    s.test_files = PKG_FILES.select { |fn| fn =~ %r{^test/test} }
 
     s.has_rdoc = true
     s.extra_rdoc_files = rd.rdoc_files.reject { |fn| fn =~ /\.rb$/ }.to_a
     s.rdoc_options <<
-      '--title' <<  'Builder -- Easy XML Building' <<
-      '--main' << 'README.rdoc' <<
+      '--title' << 'Builder -- Easy XML Building' \
+      '--main' << 'README.rdoc' \
       '--line-numbers'
 
-    s.author = "Jim Weirich"
-    s.email = "jim.weirich@gmail.com"
-    s.homepage = "http://onestepback.org"
+    s.author = 'Jim Weirich'
+    s.email = 'jim.weirich@gmail.com'
+    s.homepage = 'http://onestepback.org'
     s.license = 'MIT'
   end
 
   blankslate_spec = Gem::Specification.new do |s|
-
     #### Basic information.
 
     s.name = 'blankslate'
     s.version = PKG_VERSION
-    s.summary = "Blank Slate base class."
-    s.description = %{\
+    s.summary = 'Blank Slate base class.'
+    s.description = %(\
 BlankSlate provides a base class where almost all of the methods from Object and
 Kernel have been removed.  This is useful when providing proxy object and other
 classes that make heavy use of method_missing.
-}
+)
 
     s.files = BLANKSLATE_FILES.to_a
     s.require_path = 'lib'
 
-    s.test_files = PKG_FILES.select { |fn| fn =~ /^test\/test/ }
+    s.test_files = PKG_FILES.select { |fn| fn =~ %r{^test/test} }
 
     s.has_rdoc = true
     s.extra_rdoc_files = rd.rdoc_files.reject { |fn| fn =~ /\.rb$/ }.to_a
     s.rdoc_options <<
-      '--title' <<  'BlankSlate -- Base Class for building proxies.' <<
-      '--main' << 'README.rdoc' <<
+      '--title' << 'BlankSlate -- Base Class for building proxies.' \
+      '--main' << 'README.rdoc' \
       '--line-numbers'
 
-    s.author = "Jim Weirich"
-    s.email = "jim.weirich@gmail.com"
-    s.homepage = "http://onestepback.org"
+    s.author = 'Jim Weirich'
+    s.email = 'jim.weirich@gmail.com'
+    s.homepage = 'http://onestepback.org'
     s.license = 'MIT'
   end
 
@@ -160,11 +158,13 @@ classes that make heavy use of method_missing.
     end
   end
 
-  task :package => [:remove_tags, 'builder:package', 'blankslate:package']
+  task package: [:remove_tags, 'builder:package', 'blankslate:package']
 end
 
 task :remove_tags do
-  rm "TAGS" rescue nil
+  rm 'TAGS'
+rescue StandardError
+  nil
 end
 
 # RCov ---------------------------------------------------------------
@@ -172,7 +172,7 @@ begin
   require 'rcov/rcovtask'
 
   Rcov::RcovTask.new do |t|
-    t.libs << "test"
+    t.libs << 'test'
     t.rcov_opts = [
       '-xRakefile', '--text-report'
     ]
@@ -186,10 +186,11 @@ rescue LoadError
   # No rcov available
 end
 
-desc "Install the jamis RDoc template"
+desc 'Install the jamis RDoc template'
 task :install_jamis_template do
   require 'rbconfig'
-  dest_dir = File.join(Config::CONFIG['rubylibdir'], "rdoc/generators/template/html")
-  fail "Unabled to write to #{dest_dir}" unless File.writable?(dest_dir)
-  install "doc/jamis.rb", dest_dir, :verbose => true
+  dest_dir = File.join(Config::CONFIG['rubylibdir'], 'rdoc/generators/template/html')
+  raise "Unabled to write to #{dest_dir}" unless File.writable?(dest_dir)
+
+  install 'doc/jamis.rb', dest_dir, verbose: true
 end

@@ -8,7 +8,7 @@ module ActiveStorage
       @service = service
     end
 
-    def open(key, checksum:, name: "ActiveStorage-", tmpdir: nil)
+    def open(key, checksum:, name: 'ActiveStorage-', tmpdir: nil)
       open_tempfile(name, tmpdir) do |file|
         download key, file
         verify_integrity_of file, checksum: checksum
@@ -17,27 +17,26 @@ module ActiveStorage
     end
 
     private
-      def open_tempfile(name, tmpdir = nil)
-        file = Tempfile.open(name, tmpdir)
 
-        begin
-          yield file
-        ensure
-          file.close!
-        end
-      end
+    def open_tempfile(name, tmpdir = nil)
+      file = Tempfile.open(name, tmpdir)
 
-      def download(key, file)
-        file.binmode
-        service.download(key) { |chunk| file.write(chunk) }
-        file.flush
-        file.rewind
+      begin
+        yield file
+      ensure
+        file.close!
       end
+    end
 
-      def verify_integrity_of(file, checksum:)
-        unless Digest::MD5.file(file).base64digest == checksum
-          raise ActiveStorage::IntegrityError
-        end
-      end
+    def download(key, file)
+      file.binmode
+      service.download(key) { |chunk| file.write(chunk) }
+      file.flush
+      file.rewind
+    end
+
+    def verify_integrity_of(file, checksum:)
+      raise ActiveStorage::IntegrityError unless Digest::MD5.file(file).base64digest == checksum
+    end
   end
 end

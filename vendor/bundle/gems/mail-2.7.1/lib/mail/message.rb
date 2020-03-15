@@ -1,6 +1,6 @@
-# encoding: utf-8
 # frozen_string_literal: true
-require "yaml"
+
+require 'yaml'
 
 module Mail
   # The Message class provides a single point of access to all things to do with an
@@ -46,7 +46,6 @@ module Mail
   #   follows the header and is separated from the header by an empty line
   #   (i.e., a line with nothing preceding the CRLF).
   class Message
-
     include Constants
     include Utilities
 
@@ -231,12 +230,17 @@ module Mail
     # define a delivery_handler
     attr_accessor :raise_delivery_errors
 
-    def self.default_charset; @@default_charset; end
-    def self.default_charset=(charset); @@default_charset = charset; end
+    def self.default_charset
+      @@default_charset
+    end
+
+    def self.default_charset=(charset)
+      @@default_charset = charset
+    end
     self.default_charset = 'UTF-8'
 
     def register_for_delivery_notification(observer)
-      warn("Message#register_for_delivery_notification is deprecated, please call Mail.register_observer instead")
+      warn('Message#register_for_delivery_notification is deprecated, please call Mail.register_observer instead')
       Mail.register_observer(observer)
     end
 
@@ -279,10 +283,10 @@ module Mail
     end
 
     def delivery_method(method = nil, settings = {})
-      unless method
-        @delivery_method
-      else
+      if method
         @delivery_method = Configuration.instance.lookup_delivery_method(method).new(settings)
+      else
+        @delivery_method
       end
     end
 
@@ -295,7 +299,7 @@ module Mail
             refs = [references].flatten.map { |r| "<#{r}>" }
             refs << bracketed_message_id
             reply.references = refs.join(' ')
-          elsif !in_reply_to.nil? && !in_reply_to.kind_of?(Array)
+          elsif !in_reply_to.nil? && !in_reply_to.is_a?(Array)
             reply.references = "<#{in_reply_to}> #{bracketed_message_id}"
           end
           reply.references ||= bracketed_message_id
@@ -306,9 +310,7 @@ module Mail
         if reply_to || from
           reply.to = self[reply_to ? :reply_to : :from].to_s
         end
-        if to
-          reply.from = self[:to].formatted.first.to_s
-        end
+        reply.from = self[:to].formatted.first.to_s if to
 
         unless args.empty?
           if args.flatten.first.respond_to?(:each_pair)
@@ -318,9 +320,7 @@ module Mail
           end
         end
 
-        if block_given?
-          reply.instance_eval(&block)
-        end
+        reply.instance_eval(&block) if block_given?
       end
     end
 
@@ -342,7 +342,7 @@ module Mail
       if other.nil?
         1
       else
-        self.date <=> other.date
+        date <=> other.date
       end
     end
 
@@ -380,8 +380,8 @@ module Mail
     def ==(other)
       return false unless other.respond_to?(:encoded)
 
-      if self.message_id && other.message_id
-        self.encoded == other.encoded
+      if message_id && other.message_id
+        encoded == other.encoded
       else
         dup.tap { |m| m.message_id = '<temp@test>' }.encoded ==
           other.dup.tap { |m| m.message_id = '<temp@test>' }.encoded
@@ -401,22 +401,18 @@ module Mail
     #
     #  mail = Mail.new('This is an invalid email message')
     #  mail.raw_source #=> "This is an invalid email message"
-    def raw_source
-      @raw_source
-    end
+    attr_reader :raw_source
 
     # Sets the envelope from for the email
-    def set_envelope( val )
+    def set_envelope(val)
       @raw_envelope = val
-      @envelope = Mail::Envelope.new( val )
+      @envelope = Mail::Envelope.new(val)
     end
 
     # The raw_envelope is the From mikel@test.lindsaar.net Mon May  2 16:07:05 2009
     # type field that you can see at the top of any email that has come
     # from a mailbox
-    def raw_envelope
-      @raw_envelope
-    end
+    attr_reader :raw_envelope
 
     def envelope_from
       @envelope ? @envelope.from : nil
@@ -453,7 +449,7 @@ module Mail
 
     # Provides a way to set custom headers, by passing in a hash
     def headers(hash = {})
-      hash.each_pair do |k,v|
+      hash.each_pair do |k, v|
         header[k] = v
       end
     end
@@ -504,7 +500,7 @@ module Mail
     #  mail.bcc 'Mikel <mikel@test.lindsaar.net>'
     #  mail.bcc << 'ada@test.lindsaar.net'
     #  mail.bcc #=> ['mikel@test.lindsaar.net', 'ada@test.lindsaar.net']
-    def bcc( val = nil )
+    def bcc(val = nil)
       default :bcc, val
     end
 
@@ -516,7 +512,7 @@ module Mail
     #  mail.bcc #=> ['mikel@test.lindsaar.net']
     #  mail.bcc = 'Mikel <mikel@test.lindsaar.net>, ada@test.lindsaar.net'
     #  mail.bcc #=> ['mikel@test.lindsaar.net', 'ada@test.lindsaar.net']
-    def bcc=( val )
+    def bcc=(val)
       header[:bcc] = val
     end
 
@@ -545,7 +541,7 @@ module Mail
     #  mail.cc 'Mikel <mikel@test.lindsaar.net>'
     #  mail.cc << 'ada@test.lindsaar.net'
     #  mail.cc #=> ['mikel@test.lindsaar.net', 'ada@test.lindsaar.net']
-    def cc( val = nil )
+    def cc(val = nil)
       default :cc, val
     end
 
@@ -557,75 +553,75 @@ module Mail
     #  mail.cc #=> ['mikel@test.lindsaar.net']
     #  mail.cc = 'Mikel <mikel@test.lindsaar.net>, ada@test.lindsaar.net'
     #  mail.cc #=> ['mikel@test.lindsaar.net', 'ada@test.lindsaar.net']
-    def cc=( val )
+    def cc=(val)
       header[:cc] = val
     end
 
-    def comments( val = nil )
+    def comments(val = nil)
       default :comments, val
     end
 
-    def comments=( val )
+    def comments=(val)
       header[:comments] = val
     end
 
-    def content_description( val = nil )
+    def content_description(val = nil)
       default :content_description, val
     end
 
-    def content_description=( val )
+    def content_description=(val)
       header[:content_description] = val
     end
 
-    def content_disposition( val = nil )
+    def content_disposition(val = nil)
       default :content_disposition, val
     end
 
-    def content_disposition=( val )
+    def content_disposition=(val)
       header[:content_disposition] = val
     end
 
-    def content_id( val = nil )
+    def content_id(val = nil)
       default :content_id, val
     end
 
-    def content_id=( val )
+    def content_id=(val)
       header[:content_id] = val
     end
 
-    def content_location( val = nil )
+    def content_location(val = nil)
       default :content_location, val
     end
 
-    def content_location=( val )
+    def content_location=(val)
       header[:content_location] = val
     end
 
-    def content_transfer_encoding( val = nil )
+    def content_transfer_encoding(val = nil)
       default :content_transfer_encoding, val
     end
 
-    def content_transfer_encoding=( val )
+    def content_transfer_encoding=(val)
       header[:content_transfer_encoding] = val
     end
 
-    def content_type( val = nil )
+    def content_type(val = nil)
       default :content_type, val
     end
 
-    def content_type=( val )
+    def content_type=(val)
       header[:content_type] = val
     end
 
-    def date( val = nil )
+    def date(val = nil)
       default :date, val
     end
 
-    def date=( val )
+    def date=(val)
       header[:date] = val
     end
 
-    def transport_encoding( val = nil)
+    def transport_encoding(val = nil)
       if val
         self.transport_encoding = val
       else
@@ -633,7 +629,7 @@ module Mail
       end
     end
 
-    def transport_encoding=( val )
+    def transport_encoding=(val)
       @transport_encoding = Mail::Encodings.get_encoding(val)
     end
 
@@ -662,7 +658,7 @@ module Mail
     #  mail.from 'Mikel <mikel@test.lindsaar.net>'
     #  mail.from << 'ada@test.lindsaar.net'
     #  mail.from #=> ['mikel@test.lindsaar.net', 'ada@test.lindsaar.net']
-    def from( val = nil )
+    def from(val = nil)
       default :from, val
     end
 
@@ -674,23 +670,23 @@ module Mail
     #  mail.from #=> ['mikel@test.lindsaar.net']
     #  mail.from = 'Mikel <mikel@test.lindsaar.net>, ada@test.lindsaar.net'
     #  mail.from #=> ['mikel@test.lindsaar.net', 'ada@test.lindsaar.net']
-    def from=( val )
+    def from=(val)
       header[:from] = val
     end
 
-    def in_reply_to( val = nil )
+    def in_reply_to(val = nil)
       default :in_reply_to, val
     end
 
-    def in_reply_to=( val )
+    def in_reply_to=(val)
       header[:in_reply_to] = val
     end
 
-    def keywords( val = nil )
+    def keywords(val = nil)
       default :keywords, val
     end
 
-    def keywords=( val )
+    def keywords=(val)
       header[:keywords] = val
     end
 
@@ -707,7 +703,7 @@ module Mail
     #
     #  mail.message_id '<1234@message.id>'
     #  mail.message_id #=> '1234@message.id'
-    def message_id( val = nil )
+    def message_id(val = nil)
       default :message_id, val
     end
 
@@ -716,7 +712,7 @@ module Mail
     #
     #  mail.message_id = '<1234@message.id>'
     #  mail.message_id #=> '1234@message.id'
-    def message_id=( val )
+    def message_id=(val)
       header[:message_id] = val
     end
 
@@ -733,7 +729,7 @@ module Mail
     #
     #  mail.mime_version '1.0'
     #  mail.mime_version #=> '1.0'
-    def mime_version( val = nil )
+    def mime_version(val = nil)
       default :mime_version, val
     end
 
@@ -743,11 +739,11 @@ module Mail
     #
     #  mail.mime_version = '1.0'
     #  mail.mime_version #=> '1.0'
-    def mime_version=( val )
+    def mime_version=(val)
       header[:mime_version] = val
     end
 
-    def received( val = nil )
+    def received(val = nil)
       if val
         header[:received] = val
       else
@@ -755,15 +751,15 @@ module Mail
       end
     end
 
-    def received=( val )
+    def received=(val)
       header[:received] = val
     end
 
-    def references( val = nil )
+    def references(val = nil)
       default :references, val
     end
 
-    def references=( val )
+    def references=(val)
       header[:references] = val
     end
 
@@ -792,7 +788,7 @@ module Mail
     #  mail.reply_to 'Mikel <mikel@test.lindsaar.net>'
     #  mail.reply_to << 'ada@test.lindsaar.net'
     #  mail.reply_to #=> ['mikel@test.lindsaar.net', 'ada@test.lindsaar.net']
-    def reply_to( val = nil )
+    def reply_to(val = nil)
       default :reply_to, val
     end
 
@@ -804,7 +800,7 @@ module Mail
     #  mail.reply_to #=> ['mikel@test.lindsaar.net']
     #  mail.reply_to = 'Mikel <mikel@test.lindsaar.net>, ada@test.lindsaar.net'
     #  mail.reply_to #=> ['mikel@test.lindsaar.net', 'ada@test.lindsaar.net']
-    def reply_to=( val )
+    def reply_to=(val)
       header[:reply_to] = val
     end
 
@@ -833,7 +829,7 @@ module Mail
     #  mail.resent_bcc 'Mikel <mikel@test.lindsaar.net>'
     #  mail.resent_bcc << 'ada@test.lindsaar.net'
     #  mail.resent_bcc #=> ['mikel@test.lindsaar.net', 'ada@test.lindsaar.net']
-    def resent_bcc( val = nil )
+    def resent_bcc(val = nil)
       default :resent_bcc, val
     end
 
@@ -845,7 +841,7 @@ module Mail
     #  mail.resent_bcc #=> ['mikel@test.lindsaar.net']
     #  mail.resent_bcc = 'Mikel <mikel@test.lindsaar.net>, ada@test.lindsaar.net'
     #  mail.resent_bcc #=> ['mikel@test.lindsaar.net', 'ada@test.lindsaar.net']
-    def resent_bcc=( val )
+    def resent_bcc=(val)
       header[:resent_bcc] = val
     end
 
@@ -874,7 +870,7 @@ module Mail
     #  mail.resent_cc 'Mikel <mikel@test.lindsaar.net>'
     #  mail.resent_cc << 'ada@test.lindsaar.net'
     #  mail.resent_cc #=> ['mikel@test.lindsaar.net', 'ada@test.lindsaar.net']
-    def resent_cc( val = nil )
+    def resent_cc(val = nil)
       default :resent_cc, val
     end
 
@@ -886,15 +882,15 @@ module Mail
     #  mail.resent_cc #=> ['mikel@test.lindsaar.net']
     #  mail.resent_cc = 'Mikel <mikel@test.lindsaar.net>, ada@test.lindsaar.net'
     #  mail.resent_cc #=> ['mikel@test.lindsaar.net', 'ada@test.lindsaar.net']
-    def resent_cc=( val )
+    def resent_cc=(val)
       header[:resent_cc] = val
     end
 
-    def resent_date( val = nil )
+    def resent_date(val = nil)
       default :resent_date, val
     end
 
-    def resent_date=( val )
+    def resent_date=(val)
       header[:resent_date] = val
     end
 
@@ -923,7 +919,7 @@ module Mail
     #  mail.resent_from 'Mikel <mikel@test.lindsaar.net>'
     #  mail.resent_from << 'ada@test.lindsaar.net'
     #  mail.resent_from #=> ['mikel@test.lindsaar.net', 'ada@test.lindsaar.net']
-    def resent_from( val = nil )
+    def resent_from(val = nil)
       default :resent_from, val
     end
 
@@ -935,15 +931,15 @@ module Mail
     #  mail.resent_from #=> ['mikel@test.lindsaar.net']
     #  mail.resent_from = 'Mikel <mikel@test.lindsaar.net>, ada@test.lindsaar.net'
     #  mail.resent_from #=> ['mikel@test.lindsaar.net', 'ada@test.lindsaar.net']
-    def resent_from=( val )
+    def resent_from=(val)
       header[:resent_from] = val
     end
 
-    def resent_message_id( val = nil )
+    def resent_message_id(val = nil)
       default :resent_message_id, val
     end
 
-    def resent_message_id=( val )
+    def resent_message_id=(val)
       header[:resent_message_id] = val
     end
 
@@ -962,7 +958,7 @@ module Mail
     #
     #  mail.resent_sender 'Mikel <mikel@test.lindsaar.net>'
     #  mail.resent_sender #=> 'mikel@test.lindsaar.net'
-    def resent_sender( val = nil )
+    def resent_sender(val = nil)
       default :resent_sender, val
     end
 
@@ -972,7 +968,7 @@ module Mail
     #
     #  mail.resent_sender = 'Mikel <mikel@test.lindsaar.net>'
     #  mail.resent_sender #=> 'mikel@test.lindsaar.net'
-    def resent_sender=( val )
+    def resent_sender=(val)
       header[:resent_sender] = val
     end
 
@@ -1001,7 +997,7 @@ module Mail
     #  mail.resent_to 'Mikel <mikel@test.lindsaar.net>'
     #  mail.resent_to << 'ada@test.lindsaar.net'
     #  mail.resent_to #=> ['mikel@test.lindsaar.net', 'ada@test.lindsaar.net']
-    def resent_to( val = nil )
+    def resent_to(val = nil)
       default :resent_to, val
     end
 
@@ -1013,17 +1009,17 @@ module Mail
     #  mail.resent_to #=> ['mikel@test.lindsaar.net']
     #  mail.resent_to = 'Mikel <mikel@test.lindsaar.net>, ada@test.lindsaar.net'
     #  mail.resent_to #=> ['mikel@test.lindsaar.net', 'ada@test.lindsaar.net']
-    def resent_to=( val )
+    def resent_to=(val)
       header[:resent_to] = val
     end
 
     # Returns the return path of the mail object, or sets it if you pass a string
-    def return_path( val = nil )
+    def return_path(val = nil)
       default :return_path, val
     end
 
     # Sets the return path of the object
-    def return_path=( val )
+    def return_path=(val)
       header[:return_path] = val
     end
 
@@ -1041,7 +1037,7 @@ module Mail
     #
     #  mail.sender 'Mikel <mikel@test.lindsaar.net>'
     #  mail.sender #=> 'mikel@test.lindsaar.net'
-    def sender( val = nil )
+    def sender(val = nil)
       default :sender, val
     end
 
@@ -1051,7 +1047,7 @@ module Mail
     #
     #  mail.sender = 'Mikel <mikel@test.lindsaar.net>'
     #  mail.sender #=> 'mikel@test.lindsaar.net'
-    def sender=( val )
+    def sender=(val)
       header[:sender] = val
     end
 
@@ -1071,7 +1067,7 @@ module Mail
     #
     #  mail.smtp_envelope_from 'Mikel <mikel@test.lindsaar.net>'
     #  mail.smtp_envelope_from #=> 'mikel@test.lindsaar.net'
-    def smtp_envelope_from( val = nil )
+    def smtp_envelope_from(val = nil)
       if val
         self.smtp_envelope_from = val
       else
@@ -1085,9 +1081,7 @@ module Mail
     #
     #  mail.smtp_envelope_from = 'Mikel <mikel@test.lindsaar.net>'
     #  mail.smtp_envelope_from #=> 'mikel@test.lindsaar.net'
-    def smtp_envelope_from=( val )
-      @smtp_envelope_from = val
-    end
+    attr_writer :smtp_envelope_from
 
     # Returns the SMTP Envelope To value of the mail object.
     #
@@ -1104,7 +1098,7 @@ module Mail
     #
     #  mail.smtp_envelope_to ['Mikel <mikel@test.lindsaar.net>', 'Lindsaar <lindsaar@test.lindsaar.net>']
     #  mail.smtp_envelope_to #=> ['mikel@test.lindsaar.net', 'lindsaar@test.lindsaar.net']
-    def smtp_envelope_to( val = nil )
+    def smtp_envelope_to(val = nil)
       if val
         self.smtp_envelope_to = val
       else
@@ -1121,7 +1115,7 @@ module Mail
     #
     #  mail.smtp_envelope_to = ['Mikel <mikel@test.lindsaar.net>', 'Lindsaar <lindsaar@test.lindsaar.net>']
     #  mail.smtp_envelope_to #=> ['mikel@test.lindsaar.net', 'lindsaar@test.lindsaar.net']
-    def smtp_envelope_to=( val )
+    def smtp_envelope_to=(val)
       @smtp_envelope_to =
         case val
         when Array, NilClass
@@ -1146,7 +1140,7 @@ module Mail
     #
     #  mail.subject "G'Day mate"
     #  mail.subject #=> "G'Day mate"
-    def subject( val = nil )
+    def subject(val = nil)
       default :subject, val
     end
 
@@ -1156,7 +1150,7 @@ module Mail
     #
     #  mail.subject = '=?UTF-8?Q?This_is_=E3=81=82_string?='
     #  mail.subject #=> "This is あ string"
-    def subject=( val )
+    def subject=(val)
       header[:subject] = val
     end
 
@@ -1185,7 +1179,7 @@ module Mail
     #  mail.to 'Mikel <mikel@test.lindsaar.net>'
     #  mail.to << 'ada@test.lindsaar.net'
     #  mail.to #=> ['mikel@test.lindsaar.net', 'ada@test.lindsaar.net']
-    def to( val = nil )
+    def to(val = nil)
       default :to, val
     end
 
@@ -1197,7 +1191,7 @@ module Mail
     #  mail.to #=> ['mikel@test.lindsaar.net']
     #  mail.to = 'Mikel <mikel@test.lindsaar.net>, ada@test.lindsaar.net'
     #  mail.to #=> ['mikel@test.lindsaar.net', 'ada@test.lindsaar.net']
-    def to=( val )
+    def to=(val)
       header[:to] = val
     end
 
@@ -1208,7 +1202,7 @@ module Mail
     # sent :default, the subject, or unstructured fields will return a decoded string of
     # their value, the address field types will return a single addr_spec or an array of
     # addr_specs if there is more than one.
-    def default( sym, val = nil )
+    def default(sym, val = nil)
       if val
         header[sym] = val
       elsif field = header[sym]
@@ -1385,7 +1379,7 @@ module Mail
       #:nodoc:
       # Only take the structured fields, as we could take _anything_ really
       # as it could become an optional field... "but therin lies the dark side"
-      field_name = underscoreize(name).chomp("=")
+      field_name = underscoreize(name).chomp('=')
       if Mail::Field::KNOWN_FIELDS.include?(field_name)
         if args.empty?
           header[field_name]
@@ -1423,12 +1417,20 @@ module Mail
     end
 
     def has_content_type?
-      tmp = header[:content_type].main_type rescue nil
+      tmp = begin
+              header[:content_type].main_type
+            rescue StandardError
+              nil
+            end
       !!tmp
     end
 
     def has_charset?
-      tmp = header[:content_type].parameters rescue nil
+      tmp = begin
+              header[:content_type].parameters
+            rescue StandardError
+              nil
+            end
       !!(has_content_type? && tmp && tmp['charset'])
     end
 
@@ -1482,10 +1484,10 @@ module Mail
     #
     # Otherwise raises a warning
     def add_charset
-      if !body.empty?
+      unless body.empty?
         # Only give a warning if this isn't an attachment, has non US-ASCII and the user
         # has not specified an encoding explicitly.
-        if @defaulted_charset && !body.raw_source.ascii_only? && !self.attachment?
+        if @defaulted_charset && !body.raw_source.ascii_only? && !attachment?
           warning = "Non US-ASCII detected and no charset defined.\nDefaulting to UTF-8, set your own if this is incorrect.\n"
           warn(warning)
         end
@@ -1510,7 +1512,9 @@ module Mail
 
     # Returns the MIME media type of part we are on, this is taken from the content-type header
     def mime_type
-      has_content_type? ? header[:content_type].string : nil rescue nil
+      has_content_type? ? header[:content_type].string : nil
+    rescue StandardError
+      nil
     end
 
     def message_content_type
@@ -1536,12 +1540,16 @@ module Mail
 
     # Returns the main content type
     def main_type
-      has_content_type? ? header[:content_type].main_type : nil rescue nil
+      has_content_type? ? header[:content_type].main_type : nil
+    rescue StandardError
+      nil
     end
 
     # Returns the sub content type
     def sub_type
-      has_content_type? ? header[:content_type].sub_type : nil rescue nil
+      has_content_type? ? header[:content_type].sub_type : nil
+    rescue StandardError
+      nil
     end
 
     # Returns the content type parameters
@@ -1552,7 +1560,9 @@ module Mail
 
     # Returns the content type parameters
     def content_type_parameters
-      has_content_type? ? header[:content_type].parameters : nil rescue nil
+      has_content_type? ? header[:content_type].parameters : nil
+    rescue StandardError
+      nil
     end
 
     # Returns true if the message is multipart
@@ -1574,40 +1584,38 @@ module Mail
     def delivery_status_part
       unless defined? @delivery_status_part
         @delivery_status_part =
-          if delivery_status_report?
-            parts.detect(&:delivery_status_report_part?)
-          end
+          (parts.detect(&:delivery_status_report_part?) if delivery_status_report?)
       end
 
       @delivery_status_part
     end
 
     def bounced?
-      delivery_status_part and delivery_status_part.bounced?
+      delivery_status_part&.bounced?
     end
 
     def action
-      delivery_status_part and delivery_status_part.action
+      delivery_status_part&.action
     end
 
     def final_recipient
-      delivery_status_part and delivery_status_part.final_recipient
+      delivery_status_part&.final_recipient
     end
 
     def error_status
-      delivery_status_part and delivery_status_part.error_status
+      delivery_status_part&.error_status
     end
 
     def diagnostic_code
-      delivery_status_part and delivery_status_part.diagnostic_code
+      delivery_status_part&.diagnostic_code
     end
 
     def remote_mta
-      delivery_status_part and delivery_status_part.remote_mta
+      delivery_status_part&.remote_mta
     end
 
     def retryable?
-      delivery_status_part and delivery_status_part.retryable?
+      delivery_status_part&.retryable?
     end
 
     # Returns the current boundary for this message part
@@ -1665,7 +1673,7 @@ module Mail
     # Accessor for html_part
     def html_part(&block)
       if block_given?
-        self.html_part = Mail::Part.new(:content_type => 'text/html', &block)
+        self.html_part = Mail::Part.new(content_type: 'text/html', &block)
       else
         @html_part || find_first_mime_type('text/html')
       end
@@ -1674,7 +1682,7 @@ module Mail
     # Accessor for text_part
     def text_part(&block)
       if block_given?
-        self.text_part = Mail::Part.new(:content_type => 'text/plain', &block)
+        self.text_part = Mail::Part.new(content_type: 'text/plain', &block)
       else
         @text_part || find_first_mime_type('text/plain')
       end
@@ -1686,7 +1694,7 @@ module Mail
     def html_part=(msg)
       # Assign the html part and set multipart/alternative if there's a text part.
       if msg
-        msg = Mail::Part.new(:body => msg) unless msg.kind_of?(Mail::Message)
+        msg = Mail::Part.new(body: msg) unless msg.is_a?(Mail::Message)
 
         @html_part = msg
         @html_part.content_type = 'text/html' unless @html_part.has_content_type?
@@ -1710,7 +1718,7 @@ module Mail
     def text_part=(msg)
       # Assign the text part and set multipart/alternative if there's an html part.
       if msg
-        msg = Mail::Part.new(:body => msg) unless msg.kind_of?(Mail::Message)
+        msg = Mail::Part.new(body: msg) unless msg.is_a?(Mail::Message)
 
         @text_part = msg
         @text_part.content_type = 'text/plain' unless @text_part.has_content_type?
@@ -1730,14 +1738,14 @@ module Mail
 
     # Adds a part to the parts list or creates the part list
     def add_part(part)
-      if !body.multipart? && !Utilities.blank?(self.body.decoded)
+      if !body.multipart? && !Utilities.blank?(body.decoded)
         @text_part = Mail::Part.new('Content-Type: text/plain;')
         @text_part.body = body.decoded
-        self.body << @text_part
+        body << @text_part
         add_multipart_alternate_header
       end
       add_boundary
-      self.body << part
+      body << part
     end
 
     # Allows you to add a part in block form to an existing mail message object
@@ -1786,25 +1794,25 @@ module Mail
     #
     # See also #attachments
     def add_file(values)
-      convert_to_multipart unless self.multipart? || Utilities.blank?(self.body.decoded)
+      convert_to_multipart unless multipart? || Utilities.blank?(body.decoded)
       add_multipart_mixed_header
       if values.is_a?(String)
         basename = File.basename(values)
-        filedata = File.open(values, 'rb') { |f| f.read }
+        filedata = File.open(values, 'rb', &:read)
       else
         basename = values[:filename]
         filedata = values
       end
-      self.attachments[basename] = filedata
+      attachments[basename] = filedata
     end
 
     def convert_to_multipart
       text = body.decoded
       self.body = ''
-      text_part = Mail::Part.new({:content_type => 'text/plain;',
-                                  :body => text})
+      text_part = Mail::Part.new(content_type: 'text/plain;',
+                                 body: text)
       text_part.charset = charset unless @defaulted_charset
-      self.body << text_part
+      body << text_part
     end
 
     # Encodes the message, calls encode on all its parts, gets an email message
@@ -1819,7 +1827,7 @@ module Mail
     end
 
     def encode!
-      warn("Deprecated in 1.1.0 in favour of :ready_to_send! as it is less confusing with encoding and decoding.")
+      warn('Deprecated in 1.1.0 in favour of :ready_to_send! as it is less confusing with encoding and decoding.')
       ready_to_send!
     end
 
@@ -1836,7 +1844,7 @@ module Mail
 
     def without_attachments!
       if has_attachments?
-        parts.delete_if { |p| p.attachment? }
+        parts.delete_if(&:attachment?)
 
         reencoded = parts.empty? ? '' : body.encoded(content_transfer_encoding)
         @body = nil # So the new parts won't be added to the existing body
@@ -1867,21 +1875,20 @@ module Mail
     end
 
     def self.from_yaml(str)
-      hash = YAML.load(str)
-      m = self.new(:headers => hash['headers'])
+      hash = YAML.safe_load(str)
+      m = new(headers: hash['headers'])
       hash.delete('headers')
-      hash.each do |k,v|
-        case
-        when k == 'delivery_handler'
+      hash.each do |k, v|
+        if k == 'delivery_handler'
           begin
             m.delivery_handler = Object.const_get(v) unless Utilities.blank?(v)
           rescue NameError
           end
-        when k == 'transport_encoding'
+        elsif k == 'transport_encoding'
           m.transport_encoding(v)
-        when k == 'multipart_body'
-          v.map {|part| m.add_part Mail::Part.from_yaml(part) }
-        when k =~ /^@/
+        elsif k == 'multipart_body'
+          v.map { |part| m.add_part Mail::Part.from_yaml(part) }
+        elsif k =~ /^@/
           m.instance_variable_set(k.to_sym, v)
         end
       end
@@ -1897,16 +1904,15 @@ module Mail
     end
 
     def inspect
-      "#<#{self.class}:#{self.object_id}, Multipart: #{multipart?}, Headers: #{header.field_summary}>"
+      "#<#{self.class}:#{object_id}, Multipart: #{multipart?}, Headers: #{header.field_summary}>"
     end
 
     def decoded
-      case
-      when self.text?
+      if text?
         decode_body_as_text
-      when self.attachment?
+      elsif attachment?
         decode_body
-      when !self.multipart?
+      elsif !multipart?
         body.decoded
       else
         raise NoMethodError, 'Can not decode an entire message, try calling #decoded on the various fields and body or parts if it is a multipart message.'
@@ -1914,7 +1920,7 @@ module Mail
     end
 
     def read
-      if self.attachment?
+      if attachment?
         decode_body
       else
         raise NoMethodError, 'Can not call read on a part unless it is an attachment.'
@@ -1932,9 +1938,7 @@ module Mail
     end
 
     # Returns the attachment data if there is any
-    def attachment
-      @attachment
-    end
+    attr_reader :attachment
 
     # Returns the filename of the attachment
     def filename
@@ -1975,16 +1979,16 @@ module Mail
     # However, if this method returns true, it *will be* marked on the
     # server after each block yields back to #find or #find_and_delete.
     def is_marked_for_delete?
-      return @mark_for_delete
+      @mark_for_delete
     end
 
     def text?
       has_content_type? ? !!(main_type =~ /^text$/i) : false
     end
 
-  private
+    private
 
-    HEADER_SEPARATOR = /#{Constants::CRLF}#{Constants::CRLF}/
+    HEADER_SEPARATOR = /#{Constants::CRLF}#{Constants::CRLF}/.freeze
 
     #  2.1. General Description
     #   A message consists of header fields (collectively called "the header
@@ -1999,25 +2003,21 @@ module Mail
       self.body   = body_part
     end
 
-    def raw_source=(value)
-      @raw_source = value
-    end
+    attr_writer :raw_source
 
     # see comments to body=. We take data and process it lazily
     def body_lazy(value)
       process_body_raw if @body_raw && value
-      case
-      when value == nil || value.length<=0
+      if value.nil? || value.length <= 0
         @body = Mail::Body.new('')
         @body_raw = nil
         add_encoding_to_body
-      when @body && @body.multipart?
+      elsif @body&.multipart?
         self.text_part = value
       else
         @body_raw = value
       end
     end
-
 
     def process_body_raw
       @body = Mail::Body.new(@body_raw)
@@ -2031,7 +2031,7 @@ module Mail
       raw_string = raw_source.to_s
       if match_data = raw_string.match(/\AFrom\s(#{TEXT}+)#{Constants::CRLF}/m)
         set_envelope(match_data[1])
-        self.raw_source = raw_string.sub(match_data[0], "")
+        self.raw_source = raw_string.sub(match_data[0], '')
       end
     end
 
@@ -2047,17 +2047,15 @@ module Mail
     end
 
     def add_encoding_to_body
-      if has_content_transfer_encoding?
-        @body.encoding = content_transfer_encoding
-      end
+      @body.encoding = content_transfer_encoding if has_content_transfer_encoding?
     end
 
     def identify_and_set_transfer_encoding
-      if body && body.multipart?
-        self.content_transfer_encoding = @transport_encoding
-      else
-        self.content_transfer_encoding = body.negotiate_best_encoding(@transport_encoding, allowed_encodings).to_s
-      end
+      self.content_transfer_encoding = if body&.multipart?
+                                         @transport_encoding
+                                       else
+                                         body.negotiate_best_encoding(@transport_encoding, allowed_encodings).to_s
+                                       end
     end
 
     def add_required_fields
@@ -2108,10 +2106,10 @@ module Mail
       # We need to store the body until last, as we need all headers added first
       body_content = nil
 
-      passed_in_options.each_pair do |k,v|
+      passed_in_options.each_pair do |k, v|
         k = underscoreize(k).to_sym if k.class == String
         if k == :headers
-          self.headers(v)
+          headers(v)
         elsif k == :body
           body_content = v
         else
@@ -2121,9 +2119,7 @@ module Mail
 
       if body_content
         self.body = body_content
-        if has_content_transfer_encoding?
-            body.encoding = content_transfer_encoding
-        end
+        body.encoding = content_transfer_encoding if has_content_transfer_encoding?
       end
     end
 
@@ -2136,31 +2132,40 @@ module Mail
 
     # Returns the filename of the attachment (if it exists) or returns nil
     def find_attachment
-      content_type_name = header[:content_type].filename rescue nil
-      content_disp_name = header[:content_disposition].filename rescue nil
-      content_loc_name  = header[:content_location].location rescue nil
-      case
-      when content_disposition && content_disp_name
-        filename = content_disp_name
-      when content_type && content_type_name
-        filename = content_type_name
-      when content_location && content_loc_name
-        filename = content_loc_name
-      else
-        filename = nil
+      content_type_name = begin
+                            header[:content_type].filename
+                          rescue StandardError
+                            nil
+                          end
+      content_disp_name = begin
+                            header[:content_disposition].filename
+                          rescue StandardError
+                            nil
+                          end
+      content_loc_name  = begin
+                            header[:content_location].location
+                          rescue StandardError
+                            nil
+                          end
+      filename = if content_disposition && content_disp_name
+                   content_disp_name
+                 elsif content_type && content_type_name
+                   content_type_name
+                 elsif content_location && content_loc_name
+                   content_loc_name
+                 end
+      begin
+        filename = Mail::Encodings.decode_encode(filename, :decode) if filename
+      rescue StandardError
+        filename
       end
-      filename = Mail::Encodings.decode_encode(filename, :decode) if filename rescue filename
       filename
     end
 
     def do_delivery
-      begin
-        if perform_deliveries
-          delivery_method.deliver!(self)
-        end
-      rescue => e # Net::SMTP errors or sendmail pipe errors
-        raise e if raise_delivery_errors
-      end
+      delivery_method.deliver!(self) if perform_deliveries
+    rescue StandardError => e # Net::SMTP errors or sendmail pipe errors
+      raise e if raise_delivery_errors
     end
 
     def decode_body_as_text

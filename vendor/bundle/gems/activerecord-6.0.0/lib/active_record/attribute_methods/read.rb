@@ -8,18 +8,18 @@ module ActiveRecord
       module ClassMethods # :nodoc:
         private
 
-          def define_method_attribute(name)
-            ActiveModel::AttributeMethods::AttrNames.define_attribute_accessor_method(
-              generated_attribute_methods, name
-            ) do |temp_method_name, attr_name_expr|
-              generated_attribute_methods.module_eval <<-RUBY, __FILE__, __LINE__ + 1
+        def define_method_attribute(name)
+          ActiveModel::AttributeMethods::AttrNames.define_attribute_accessor_method(
+            generated_attribute_methods, name
+          ) do |temp_method_name, attr_name_expr|
+            generated_attribute_methods.module_eval <<-RUBY, __FILE__, __LINE__ + 1
                 def #{temp_method_name}
                   name = #{attr_name_expr}
                   _read_attribute(name) { |n| missing_attribute(n, caller) }
                 end
-              RUBY
-            end
+            RUBY
           end
+        end
       end
 
       # Returns the value of the attribute identified by <tt>attr_name</tt> after
@@ -29,7 +29,7 @@ module ActiveRecord
         name = attr_name.to_s
         name = self.class.attribute_aliases[name] || name
 
-        name = @primary_key if name == "id" && @primary_key
+        name = @primary_key if name == 'id' && @primary_key
         _read_attribute(name, &block)
       end
 
@@ -40,7 +40,7 @@ module ActiveRecord
         @attributes.fetch_value(attr_name.to_s, &block)
       end
 
-      alias :attribute :_read_attribute
+      alias attribute _read_attribute
       private :attribute
     end
   end

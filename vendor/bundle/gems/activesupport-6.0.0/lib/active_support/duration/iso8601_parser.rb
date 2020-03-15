@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "strscan"
+require 'strscan'
 
 module ActiveSupport
   class Duration
@@ -12,21 +12,21 @@ module ActiveSupport
     class ISO8601Parser # :nodoc:
       class ParsingError < ::ArgumentError; end
 
-      PERIOD_OR_COMMA = /\.|,/
-      PERIOD = "."
-      COMMA = ","
+      PERIOD_OR_COMMA = /\.|,/.freeze
+      PERIOD = '.'
+      COMMA = ','
 
-      SIGN_MARKER = /\A\-|\+|/
-      DATE_MARKER = /P/
-      TIME_MARKER = /T/
-      DATE_COMPONENT = /(\-?\d+(?:[.,]\d+)?)(Y|M|D|W)/
-      TIME_COMPONENT = /(\-?\d+(?:[.,]\d+)?)(H|M|S)/
+      SIGN_MARKER = /\A\-|\+|/.freeze
+      DATE_MARKER = /P/.freeze
+      TIME_MARKER = /T/.freeze
+      DATE_COMPONENT = /(\-?\d+(?:[.,]\d+)?)(Y|M|D|W)/.freeze
+      TIME_COMPONENT = /(\-?\d+(?:[.,]\d+)?)(H|M|S)/.freeze
 
-      DATE_TO_PART = { "Y" => :years, "M" => :months, "W" => :weeks, "D" => :days }
-      TIME_TO_PART = { "H" => :hours, "M" => :minutes, "S" => :seconds }
+      DATE_TO_PART = { 'Y' => :years, 'M' => :months, 'W' => :weeks, 'D' => :days }.freeze
+      TIME_TO_PART = { 'H' => :hours, 'M' => :minutes, 'S' => :seconds }.freeze
 
-      DATE_COMPONENTS = [:years, :months, :days]
-      TIME_COMPONENTS = [:hours, :minutes, :seconds]
+      DATE_COMPONENTS = [:years, :months, :days].freeze
+      TIME_COMPONENTS = [:hours, :minutes, :seconds].freeze
 
       attr_reader :parts, :scanner
       attr_accessor :mode, :sign
@@ -39,11 +39,11 @@ module ActiveSupport
       end
 
       def parse!
-        while !finished?
+        until finished?
           case mode
           when :start
             if scan(SIGN_MARKER)
-              self.sign = (scanner.matched == "-") ? -1 : 1
+              self.sign = scanner.matched == '-' ? -1 : 1
               self.mode = :sign
             else
               raise_parsing_error
@@ -81,44 +81,38 @@ module ActiveSupport
 
       private
 
-        def finished?
-          scanner.eos?
-        end
+      def finished?
+        scanner.eos?
+      end
 
-        # Parses number which can be a float with either comma or period.
-        def number
-          PERIOD_OR_COMMA.match?(scanner[1]) ? scanner[1].tr(COMMA, PERIOD).to_f : scanner[1].to_i
-        end
+      # Parses number which can be a float with either comma or period.
+      def number
+        PERIOD_OR_COMMA.match?(scanner[1]) ? scanner[1].tr(COMMA, PERIOD).to_f : scanner[1].to_i
+      end
 
-        def scan(pattern)
-          scanner.scan(pattern)
-        end
+      def scan(pattern)
+        scanner.scan(pattern)
+      end
 
-        def raise_parsing_error(reason = nil)
-          raise ParsingError, "Invalid ISO 8601 duration: #{scanner.string.inspect} #{reason}".strip
-        end
+      def raise_parsing_error(reason = nil)
+        raise ParsingError, "Invalid ISO 8601 duration: #{scanner.string.inspect} #{reason}".strip
+      end
 
-        # Checks for various semantic errors as stated in ISO 8601 standard.
-        def validate!
-          raise_parsing_error("is empty duration") if parts.empty?
+      # Checks for various semantic errors as stated in ISO 8601 standard.
+      def validate!
+        raise_parsing_error('is empty duration') if parts.empty?
 
-          # Mixing any of Y, M, D with W is invalid.
-          if parts.key?(:weeks) && (parts.keys & DATE_COMPONENTS).any?
-            raise_parsing_error("mixing weeks with other date parts not allowed")
-          end
+        # Mixing any of Y, M, D with W is invalid.
+        raise_parsing_error('mixing weeks with other date parts not allowed') if parts.key?(:weeks) && (parts.keys & DATE_COMPONENTS).any?
 
-          # Specifying an empty T part is invalid.
-          if mode == :time && (parts.keys & TIME_COMPONENTS).empty?
-            raise_parsing_error("time part marker is present but time part is empty")
-          end
+        # Specifying an empty T part is invalid.
+        raise_parsing_error('time part marker is present but time part is empty') if mode == :time && (parts.keys & TIME_COMPONENTS).empty?
 
-          fractions = parts.values.reject(&:zero?).select { |a| (a % 1) != 0 }
-          unless fractions.empty? || (fractions.size == 1 && fractions.last == @parts.values.reject(&:zero?).last)
-            raise_parsing_error "(only last part can be fractional)"
-          end
+        fractions = parts.values.reject(&:zero?).reject { |a| (a % 1) == 0 }
+        raise_parsing_error '(only last part can be fractional)' unless fractions.empty? || (fractions.size == 1 && fractions.last == @parts.values.reject(&:zero?).last)
 
-          true
-        end
+        true
+      end
     end
   end
 end

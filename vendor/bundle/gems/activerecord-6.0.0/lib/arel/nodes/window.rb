@@ -49,7 +49,7 @@ module Arel # :nodoc: all
 
       def initialize_copy(other)
         super
-        @orders = @orders.map { |x| x.clone }
+        @orders = @orders.map(&:clone)
       end
 
       def hash
@@ -58,11 +58,11 @@ module Arel # :nodoc: all
 
       def eql?(other)
         self.class == other.class &&
-          self.orders == other.orders &&
-          self.framing == other.framing &&
-          self.partitions == other.partitions
+          orders == other.orders &&
+          framing == other.framing &&
+          partitions == other.partitions
       end
-      alias :== :eql?
+      alias == eql?
     end
 
     class NamedWindow < Window
@@ -83,9 +83,9 @@ module Arel # :nodoc: all
       end
 
       def eql?(other)
-        super && self.name == other.name
+        super && name == other.name
       end
-      alias :== :eql?
+      alias == eql?
     end
 
     class Rows < Unary
@@ -108,7 +108,7 @@ module Arel # :nodoc: all
       def eql?(other)
         self.class == other.class
       end
-      alias :== :eql?
+      alias == eql?
     end
 
     class Preceding < Unary

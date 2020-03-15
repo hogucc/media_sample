@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 require_relative('../explicit_require')
 
 Bootsnap::ExplicitRequire.with_gems('msgpack') { require('msgpack') }
@@ -43,11 +44,9 @@ module Bootsnap
       def transaction
         raise(NestedTransactionError) if @txn_mutex.owned?
         @txn_mutex.synchronize do
-          begin
-            yield
-          ensure
-            commit_transaction
-          end
+          yield
+        ensure
+          commit_transaction
         end
       end
 
@@ -63,11 +62,11 @@ module Bootsnap
       def load_data
         @data = begin
           MessagePack.load(File.binread(@store_path))
-          # handle malformed data due to upgrade incompatability
-        rescue Errno::ENOENT, MessagePack::MalformedFormatError, MessagePack::UnknownExtTypeError, EOFError
-          {}
-        rescue ArgumentError => e
-          e.message =~ /negative array size/ ? {} : raise
+                # handle malformed data due to upgrade incompatability
+                rescue Errno::ENOENT, MessagePack::MalformedFormatError, MessagePack::UnknownExtTypeError, EOFError
+                  {}
+                rescue ArgumentError => e
+                  e.message =~ /negative array size/ ? {} : raise
         end
       end
 

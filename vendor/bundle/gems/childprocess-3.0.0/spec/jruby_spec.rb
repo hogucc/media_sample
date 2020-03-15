@@ -1,11 +1,11 @@
-require File.expand_path('../spec_helper', __FILE__)
-require "pid_behavior"
+require File.expand_path('spec_helper', __dir__)
+require 'pid_behavior'
 
 if ChildProcess.jruby? && !ChildProcess.windows?
   describe ChildProcess::JRuby::IO do
     let(:io) { ChildProcess::JRuby::IO.new }
 
-    it "raises an ArgumentError if given IO does not respond to :to_outputstream" do
+    it 'raises an ArgumentError if given IO does not respond to :to_outputstream' do
       expect { io.stdout = nil }.to raise_error(ArgumentError)
     end
   end

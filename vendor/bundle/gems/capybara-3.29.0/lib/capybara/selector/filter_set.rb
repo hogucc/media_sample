@@ -20,7 +20,7 @@ module Capybara
           add_filter(name, Filters::NodeFilter, *types_and_options, &block)
         end
       end
-      alias_method :filter, :node_filter
+      alias filter node_filter
 
       def expression_filter(name, *types_and_options, &block)
         add_filter(name, Filters::ExpressionFilter, *types_and_options, &block)
@@ -84,7 +84,7 @@ module Capybara
         end
       end
 
-    protected
+      protected
 
       def undeclared_descriptions
         @descriptions[:undeclared]
@@ -98,7 +98,7 @@ module Capybara
         @descriptions[:expression_filters]
       end
 
-    private
+      private
 
       def options_with_defaults(options)
         options = options.dup

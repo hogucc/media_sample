@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require "active_support/core_ext/object/deep_dup"
-require "active_model/attribute_set/builder"
-require "active_model/attribute_set/yaml_encoder"
+require 'active_support/core_ext/object/deep_dup'
+require 'active_model/attribute_set/builder'
+require 'active_model/attribute_set/yaml_encoder'
 
 module ActiveModel
   class AttributeSet # :nodoc:
@@ -27,7 +27,7 @@ module ActiveModel
     def to_hash
       initialized_attributes.transform_values(&:value)
     end
-    alias_method :to_h, :to_hash
+    alias to_h to_hash
 
     def key?(name)
       attributes.key?(name) && self[name].initialized?
@@ -75,9 +75,7 @@ module ActiveModel
     end
 
     def reset(key)
-      if key?(key)
-        write_from_database(key, nil)
-      end
+      write_from_database(key, nil) if key?(key)
     end
 
     def accessed
@@ -95,12 +93,12 @@ module ActiveModel
 
     protected
 
-      attr_reader :attributes
+    attr_reader :attributes
 
     private
 
-      def initialized_attributes
-        attributes.select { |_, attr| attr.initialized? }
-      end
+    def initialized_attributes
+      attributes.select { |_, attr| attr.initialized? }
+    end
   end
 end

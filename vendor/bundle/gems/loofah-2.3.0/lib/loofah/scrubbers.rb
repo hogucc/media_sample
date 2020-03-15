@@ -99,6 +99,7 @@ module Loofah
 
       def scrub(node)
         return CONTINUE if html5lib_sanitize(node) == CONTINUE
+
         if node.children.length == 1 && node.children.first.cdata?
           sanitized_text = Loofah.fragment(node.children.first.to_html).scrub!(:strip).to_html
           node.before Nokogiri::XML::Text.new(sanitized_text, node.document)
@@ -125,8 +126,9 @@ module Loofah
 
       def scrub(node)
         return CONTINUE if html5lib_sanitize(node) == CONTINUE
+
         node.remove
-        return STOP
+        STOP
       end
     end
 
@@ -146,9 +148,10 @@ module Loofah
 
       def scrub(node)
         return CONTINUE if html5lib_sanitize(node) == CONTINUE
+
         node.add_next_sibling Nokogiri::XML::Text.new(node.to_s, node.document)
         node.remove
-        return STOP
+        STOP
       end
     end
 
@@ -206,8 +209,9 @@ module Loofah
 
       def scrub(node)
         return CONTINUE unless (node.type == Nokogiri::XML::Node::ELEMENT_NODE) && (node.name == 'a')
+
         append_attribute(node, 'rel', 'nofollow')
-        return STOP
+        STOP
       end
     end
 
@@ -227,8 +231,9 @@ module Loofah
 
       def scrub(node)
         return CONTINUE unless (node.type == Nokogiri::XML::Node::ELEMENT_NODE) && (node.name == 'a')
+
         append_attribute(node, 'rel', 'noopener')
-        return STOP
+        STOP
       end
     end
 
@@ -240,6 +245,7 @@ module Loofah
 
       def scrub(node)
         return CONTINUE unless Loofah::Elements::BLOCK_LEVEL.include?(node.name)
+
         node.add_next_sibling Nokogiri::XML::Text.new("\n#{node.content}\n", node.document)
         node.remove
       end
@@ -266,9 +272,7 @@ module Loofah
       end
 
       def scrub(node)
-        if node.type == Nokogiri::XML::Node::TEXT_NODE || node.type == Nokogiri::XML::Node::CDATA_SECTION_NODE
-          node.content = node.content.gsub(/\u2028|\u2029/, '')
-        end
+        node.content = node.content.gsub(/\u2028|\u2029/, '') if node.type == Nokogiri::XML::Node::TEXT_NODE || node.type == Nokogiri::XML::Node::CDATA_SECTION_NODE
         CONTINUE
       end
     end
@@ -277,15 +281,15 @@ module Loofah
     #  A hash that maps a symbol (like +:prune+) to the appropriate Scrubber (Loofah::Scrubbers::Prune).
     #
     MAP = {
-      :escape    => Escape,
-      :prune     => Prune,
-      :whitewash => Whitewash,
-      :strip     => Strip,
-      :nofollow  => NoFollow,
-      :noopener => NoOpener,
-      :newline_block_elements => NewlineBlockElements,
-      :unprintable => Unprintable
-    }
+      escape: Escape,
+      prune: Prune,
+      whitewash: Whitewash,
+      strip: Strip,
+      nofollow: NoFollow,
+      noopener: NoOpener,
+      newline_block_elements: NewlineBlockElements,
+      unprintable: Unprintable
+    }.freeze
 
     #
     #  Returns an array of symbols representing the built-in scrubbers

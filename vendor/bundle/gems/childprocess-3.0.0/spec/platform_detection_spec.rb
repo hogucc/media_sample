@@ -1,9 +1,8 @@
-require File.expand_path('../spec_helper', __FILE__)
+require File.expand_path('spec_helper', __dir__)
 
 # Q: Should platform detection concern be extracted from ChildProcess?
 describe ChildProcess do
-
-  describe ".arch" do
+  describe '.arch' do
     subject { described_class.arch }
 
     before(:each) { described_class.instance_variable_set(:@arch, nil) }
@@ -13,10 +12,10 @@ describe ChildProcess do
     shared_examples 'expected_arch_for_host_cpu' do |host_cpu, expected_arch|
       context "when host_cpu is '#{host_cpu}'" do
         before :each do
-          allow(RbConfig::CONFIG).
-            to receive(:[]).
-            with('host_cpu').
-            and_return(expected_arch)
+          allow(RbConfig::CONFIG)
+            .to receive(:[])
+            .with('host_cpu')
+            .and_return(expected_arch)
         end
 
         it { is_expected.to eq expected_arch }
@@ -38,7 +37,7 @@ describe ChildProcess do
         { host_cpu: 'x86_64',  expected_arch: 'x86_64'  },
         { host_cpu: 'ppc',     expected_arch: 'powerpc' },
         { host_cpu: 'powerpc', expected_arch: 'powerpc' },
-        { host_cpu: 'unknown', expected_arch: 'unknown' },
+        { host_cpu: 'unknown', expected_arch: 'unknown' }
       ].each do |args|
         include_context 'expected_arch_for_host_cpu', args.values
       end
@@ -54,9 +53,9 @@ describe ChildProcess do
         shared_examples 'expected_arch_on_macosx_i686' do |is_64, expected_arch|
           context "when Ruby is #{is_64 ? 64 : 32}-bit" do
             before :each do
-              allow(described_class).
-                to receive(:is_64_bit?).
-                and_return(is_64)
+              allow(described_class)
+                .to receive(:is_64_bit?)
+                .and_return(is_64)
             end
 
             include_context 'expected_arch_for_host_cpu', 'i686', expected_arch
@@ -76,11 +75,10 @@ describe ChildProcess do
         { host_cpu: 'x86_64',  expected_arch: 'x86_64'  },
         { host_cpu: 'ppc',     expected_arch: 'powerpc' },
         { host_cpu: 'powerpc', expected_arch: 'powerpc' },
-        { host_cpu: 'unknown', expected_arch: 'unknown' },
+        { host_cpu: 'unknown', expected_arch: 'unknown' }
       ].each do |args|
         include_context 'expected_arch_for_host_cpu', args.values
       end
     end
   end
-
 end

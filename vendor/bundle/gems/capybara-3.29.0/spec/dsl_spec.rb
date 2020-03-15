@@ -7,9 +7,7 @@ class TestClass
   include Capybara::DSL
 end
 
-Capybara::SpecHelper.run_specs TestClass.new, 'DSL', capybara_skip: %i[
-  js modals screenshot frames windows send_keys server hover about_scheme psc download css driver scroll spatial
-] do |example|
+Capybara::SpecHelper.run_specs TestClass.new, 'DSL', capybara_skip: [:js, :modals, :screenshot, :frames, :windows, :send_keys, :server, :hover, :about_scheme, :psc, :download, :css, :driver, :scroll, :spatial] do |example|
   case example.metadata[:full_description]
   when /has_css\? should support case insensitive :class and :id options/
     pending "Nokogiri doesn't support case insensitive CSS attribute matchers"
@@ -72,7 +70,7 @@ RSpec.describe Capybara::DSL do
 
   describe '#using_driver' do
     before do
-      expect(Capybara.current_driver).not_to eq(:selenium) # rubocop:disable RSpec/ExpectInHook
+      expect(Capybara.current_driver).not_to eq(:selenium)
     end
 
     it 'should set the driver using Capybara.current_driver=' do
@@ -114,8 +112,6 @@ RSpec.describe Capybara::DSL do
       expect(called).to eq(true)
     end
   end
-
-  # rubocop:disable RSpec/InstanceVariable
   describe '#using_wait_time' do
     before { @previous_wait_time = Capybara.default_max_wait_time }
 
@@ -139,7 +135,6 @@ RSpec.describe Capybara::DSL do
       expect(Capybara.default_max_wait_time).to eq(@previous_wait_time)
     end
   end
-  # rubocop:enable RSpec/InstanceVariable
 
   describe '#app' do
     it 'should be changeable' do

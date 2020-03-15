@@ -2,7 +2,6 @@ require 'concurrent/utility/engine'
 require 'concurrent/executor/thread_pool_executor'
 
 module Concurrent
-
   # A thread pool that dynamically grows and shrinks to fit the current workload.
   # New threads are created as needed, existing threads are reused, and threads
   # that remain idle for too long are killed and removed from the pool. These
@@ -25,7 +24,6 @@ module Concurrent
   #
   # @!macro thread_pool_options
   class CachedThreadPool < ThreadPoolExecutor
-
     # @!macro cached_thread_pool_method_initialize
     #
     #   Create a new thread pool.
@@ -40,7 +38,7 @@ module Concurrent
       defaults  = { idletime:    DEFAULT_THREAD_IDLETIMEOUT }
       overrides = { min_threads: 0,
                     max_threads: DEFAULT_MAX_POOL_SIZE,
-                    max_queue:   DEFAULT_MAX_QUEUE_SIZE }
+                    max_queue: DEFAULT_MAX_QUEUE_SIZE }
       super(defaults.merge(opts).merge(overrides))
     end
 

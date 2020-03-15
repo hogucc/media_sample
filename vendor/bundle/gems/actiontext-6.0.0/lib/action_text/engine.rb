@@ -1,24 +1,24 @@
 # frozen_string_literal: true
 
-require "rails"
-require "action_controller/railtie"
-require "active_record/railtie"
-require "active_storage/engine"
+require 'rails'
+require 'action_controller/railtie'
+require 'active_record/railtie'
+require 'active_storage/engine'
 
-require "action_text"
+require 'action_text'
 
 module ActionText
   class Engine < Rails::Engine
     isolate_namespace ActionText
     config.eager_load_namespaces << ActionText
 
-    initializer "action_text.attribute" do
+    initializer 'action_text.attribute' do
       ActiveSupport.on_load(:active_record) do
         include ActionText::Attribute
       end
     end
 
-    initializer "action_text.attachable" do
+    initializer 'action_text.attachable' do
       ActiveSupport.on_load(:active_storage_blob) do
         include ActionText::Attachable
 
@@ -32,13 +32,13 @@ module ActionText
       end
     end
 
-    initializer "action_text.helper" do
+    initializer 'action_text.helper' do
       ActiveSupport.on_load(:action_controller_base) do
         helper ActionText::Engine.helpers
       end
     end
 
-    initializer "action_text.renderer" do |app|
+    initializer 'action_text.renderer' do |app|
       app.executor.to_run      { ActionText::Content.renderer = ApplicationController.renderer }
       app.executor.to_complete { ActionText::Content.renderer = ApplicationController.renderer }
 

@@ -1,17 +1,17 @@
 # frozen_string_literal: true
 
-require "active_support/inflector/methods"
-require "active_support/values/time_zone"
+require 'active_support/inflector/methods'
+require 'active_support/values/time_zone'
 
 class Time
   DATE_FORMATS = {
-    db: "%Y-%m-%d %H:%M:%S",
-    number: "%Y%m%d%H%M%S",
-    nsec: "%Y%m%d%H%M%S%9N",
-    usec: "%Y%m%d%H%M%S%6N",
-    time: "%H:%M",
-    short: "%d %b %H:%M",
-    long: "%B %d, %Y %H:%M",
+    db: '%Y-%m-%d %H:%M:%S',
+    number: '%Y%m%d%H%M%S',
+    nsec: '%Y%m%d%H%M%S%9N',
+    usec: '%Y%m%d%H%M%S%6N',
+    time: '%H:%M',
+    short: '%d %b %H:%M',
+    long: '%B %d, %Y %H:%M',
     long_ordinal: lambda { |time|
       day_format = ActiveSupport::Inflector.ordinalize(time.day)
       time.strftime("%B #{day_format}, %Y %H:%M")
@@ -20,8 +20,8 @@ class Time
       offset_format = time.formatted_offset(false)
       time.strftime("%a, %d %b %Y %H:%M:%S #{offset_format}")
     },
-    iso8601: lambda { |time| time.iso8601 }
-  }
+    iso8601: ->(time) { time.iso8601 }
+  }.freeze
 
   # Converts to a formatted string. See DATE_FORMATS for built-in formats.
   #
@@ -55,8 +55,8 @@ class Time
       to_default_s
     end
   end
-  alias_method :to_default_s, :to_s
-  alias_method :to_s, :to_formatted_s
+  alias to_default_s to_s
+  alias to_s to_formatted_s
 
   # Returns a formatted string of the offset from UTC, or an alternative
   # string if the time zone is already UTC.
@@ -68,5 +68,5 @@ class Time
   end
 
   # Aliased to +xmlschema+ for compatibility with +DateTime+
-  alias_method :rfc3339, :xmlschema
+  alias rfc3339 xmlschema
 end

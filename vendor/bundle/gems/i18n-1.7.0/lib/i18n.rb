@@ -12,28 +12,14 @@ module I18n
   autoload :Gettext, 'i18n/gettext'
   autoload :Locale,  'i18n/locale'
   autoload :Tests,   'i18n/tests'
-  autoload :Middleware,   'i18n/middleware'
+  autoload :Middleware, 'i18n/middleware'
 
-  RESERVED_KEYS = %i[
-    cascade
-    deep_interpolation
-    default
-    exception_handler
-    fallback
-    fallback_in_progress
-    format
-    object
-    raise
-    resolve
-    scope
-    separator
-    throw
-  ].freeze
-  RESERVED_KEYS_PATTERN = /%\{(#{RESERVED_KEYS.join("|")})\}/
+  RESERVED_KEYS = [:cascade, :deep_interpolation, :default, :exception_handler, :fallback, :fallback_in_progress, :format, :object, :raise, :resolve, :scope, :separator, :throw].freeze
+  RESERVED_KEYS_PATTERN = /%\{(#{RESERVED_KEYS.join("|")})\}/.freeze
   EMPTY_HASH = {}.freeze
 
   def self.new_double_nested_cache # :nodoc:
-    Concurrent::Map.new { |h,k| h[k] = Concurrent::Map.new }
+    Concurrent::Map.new { |h, k| h[k] = Concurrent::Map.new }
   end
 
   module Base
@@ -48,8 +34,8 @@ module I18n
     end
 
     # Write methods which delegates to the configuration object
-    %w(locale backend default_locale available_locales default_separator
-      exception_handler load_path enforce_available_locales).each do |method|
+    %w[locale backend default_locale available_locales default_separator
+       exception_handler load_path enforce_available_locales].each do |method|
       module_eval <<-DELEGATORS, __FILE__, __LINE__ + 1
         def #{method}
           config.#{method}
@@ -176,9 +162,10 @@ module I18n
     # from the argument values passed to #translate. Therefore your lambdas should
     # always return the same translations/values per unique combination of argument
     # values.
-    def translate(key = nil, *, throw: false, raise: false, locale: nil, **options) # TODO deprecate :raise
+    def translate(key = nil, *, throw: false, raise: false, locale: nil, **options) # TODO: deprecate :raise
       locale ||= config.locale
-      raise Disabled.new('t') if locale == false
+      raise Disabled, 't' if locale == false
+
       enforce_available_locales!(locale)
 
       backend = config.backend
@@ -197,20 +184,21 @@ module I18n
         result
       end
     end
-    alias :t :translate
+    alias t translate
 
     # Wrapper for <tt>translate</tt> that adds <tt>:raise => true</tt>. With
     # this option, if no translation is found, it will raise <tt>I18n::MissingTranslationData</tt>
     def translate!(key, options = EMPTY_HASH)
-      translate(key, **options.merge(:raise => true))
+      translate(key, **options.merge(raise: true))
     end
-    alias :t! :translate!
+    alias t! translate!
 
     # Returns true if a translation exists for a given key, otherwise returns false.
     def exists?(key, _locale = nil, locale: _locale)
       locale ||= config.locale
-      raise Disabled.new('exists?') if locale == false
+      raise Disabled, 'exists?' if locale == false
       raise I18n::ArgumentError if key.is_a?(String) && key.empty?
+
       config.backend.exists?(locale, key)
     end
 
@@ -267,31 +255,33 @@ module I18n
     #     I18n.transliterate("Jürgen", :locale => :de) # => "Juergen"
     def transliterate(key, *, throw: false, raise: false, locale: nil, replacement: nil, **options)
       locale ||= config.locale
-      raise Disabled.new('transliterate') if locale == false
+      raise Disabled, 'transliterate' if locale == false
+
       enforce_available_locales!(locale)
 
       config.backend.transliterate(locale, key, replacement)
-    rescue I18n::ArgumentError => exception
-      handle_exception((throw && :throw || raise && :raise), exception, locale, key, options)
+    rescue I18n::ArgumentError => e
+      handle_exception((throw && :throw || raise && :raise), e, locale, key, options)
     end
 
     # Localizes certain objects, such as dates and numbers to local formatting.
     def localize(object, locale: nil, format: nil, **options)
       locale ||= config.locale
-      raise Disabled.new('l') if locale == false
+      raise Disabled, 'l' if locale == false
+
       enforce_available_locales!(locale)
 
       format ||= :default
       config.backend.localize(locale, object, format, options)
     end
-    alias :l :localize
+    alias l localize
 
     # Executes block with given I18n.locale set.
     def with_locale(tmp_locale = nil)
-      if tmp_locale == nil
+      if tmp_locale.nil?
         yield
       else
-        current_locale = self.locale
+        current_locale = locale
         self.locale = tmp_locale
         begin
           yield
@@ -323,7 +313,7 @@ module I18n
     # Raises an InvalidLocale exception when the passed locale is not available.
     def enforce_available_locales!(locale)
       if locale != false && config.enforce_available_locales
-        raise I18n::InvalidLocale.new(locale) if !locale_available?(locale)
+        raise I18n::InvalidLocale, locale unless locale_available?(locale)
       end
     end
 
@@ -331,7 +321,7 @@ module I18n
       config.available_locales_initialized?
     end
 
-  private
+    private
 
     # Any exceptions thrown in translate will be sent to the @@exception_handler
     # which can be a Symbol, a Proc or any other Object unless they're forced to

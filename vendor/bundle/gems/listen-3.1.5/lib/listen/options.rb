@@ -11,13 +11,14 @@ module Listen
 
       msg = "Unknown options: #{given_options.inspect}"
       Listen::Logger.warn msg
-      fail msg
+      raise msg
     end
 
     def method_missing(name, *_)
       return @options[name] if @options.key?(name)
+
       msg = "Bad option: #{name.inspect} (valid:#{@options.keys.inspect})"
-      fail NameError, msg
+      raise NameError, msg
     end
   end
 end

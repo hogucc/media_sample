@@ -6,7 +6,7 @@ module ActionDispatch
       module UndefMethods # :nodoc:
         extend ActiveSupport::Concern
         included do
-          METHODS = %i(get post put patch delete).freeze
+          METHODS = [:get, :post, :put, :patch, :delete].freeze
 
           METHODS.each do |verb|
             undef_method verb

@@ -25,7 +25,7 @@ if dependency_tracker
         \w+\.partial!     # json.partial!
         \(?\s*            # optional parenthesis
         (['"])([^'"]+)\1  # quoted value
-      /x
+      /x.freeze
 
       # Matches:
       #   json.partial! partial: "comments/comment"
@@ -37,7 +37,7 @@ if dependency_tracker
         (?::partial\s*=>|partial:)  # partial: or :partial =>
         \s*                         # optional whitespace
         (['"])([^'"]+)\1            # quoted value
-      /x
+      /x.freeze
 
       def dependencies
         direct_dependencies + indirect_dependencies + explicit_dependencies
@@ -56,6 +56,6 @@ if dependency_tracker
   end
 
   ::Jbuilder::DependencyTracker = Class.new(dependency_tracker::ERBTracker)
-  ::Jbuilder::DependencyTracker.send :include, ::Jbuilder::DependencyTrackerMethods
+  ::Jbuilder::DependencyTracker.include ::Jbuilder::DependencyTrackerMethods
   dependency_tracker.register_tracker :jbuilder, ::Jbuilder::DependencyTracker
 end

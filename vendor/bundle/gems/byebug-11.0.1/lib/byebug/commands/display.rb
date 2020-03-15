@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "byebug/command"
-require "byebug/helpers/eval"
+require 'byebug/command'
+require 'byebug/helpers/eval'
 
 module Byebug
   #
@@ -29,7 +29,7 @@ module Byebug
     end
 
     def self.short_description
-      "Evaluates expressions every time the debugger stops"
+      'Evaluates expressions every time the debugger stops'
     end
 
     def execute
@@ -42,13 +42,13 @@ module Byebug
     private
 
     def display_expression(exp)
-      print pr("display.result", n: Byebug.displays.size,
+      print pr('display.result', n: Byebug.displays.size,
                                  exp: exp,
                                  result: eval_expr(exp))
     end
 
     def print_display_expressions
-      result = prc("display.result", Byebug.displays) do |item, index|
+      result = prc('display.result', Byebug.displays) do |item, index|
         active, exp = item
 
         { n: index + 1, exp: exp, result: eval_expr(exp) } if active
@@ -60,7 +60,7 @@ module Byebug
     def eval_expr(expression)
       error_eval(expression).inspect
     rescue StandardError
-      "(undefined)"
+      '(undefined)'
     end
   end
 end

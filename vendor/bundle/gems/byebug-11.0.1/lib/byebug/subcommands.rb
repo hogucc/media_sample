@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require "forwardable"
+require 'forwardable'
 
-require "byebug/helpers/reflection"
-require "byebug/command_list"
+require 'byebug/helpers/reflection'
+require 'byebug/command_list'
 
 module Byebug
   #
@@ -15,7 +15,7 @@ module Byebug
     end
 
     extend Forwardable
-    def_delegators "self.class", :subcommand_list
+    def_delegators 'self.class', :subcommand_list
 
     #
     # Delegates to subcommands or prints help if no subcommand specified.

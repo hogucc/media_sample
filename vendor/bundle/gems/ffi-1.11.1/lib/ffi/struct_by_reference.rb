@@ -37,9 +37,8 @@ module FFI
 
     # @param [Struct] struct_class
     def initialize(struct_class)
-      unless Class === struct_class and struct_class < FFI::Struct
-        raise TypeError, 'wrong type (expected subclass of FFI::Struct)'
-      end
+      raise TypeError, 'wrong type (expected subclass of FFI::Struct)' unless (Class === struct_class) && (struct_class < FFI::Struct)
+
       @struct_class = struct_class
     end
 
@@ -51,12 +50,10 @@ module FFI
     # @param [nil, Struct] value
     # @param [nil] ctx
     # @return [AbstractMemory] Pointer on +value+.
-    def to_native(value, ctx)
+    def to_native(value, _ctx)
       return Pointer::NULL if value.nil?
 
-      unless @struct_class === value
-        raise TypeError, "wrong argument type #{value.class} (expected #{@struct_class})"
-      end
+      raise TypeError, "wrong argument type #{value.class} (expected #{@struct_class})" unless @struct_class === value
 
       value.pointer
     end
@@ -65,7 +62,7 @@ module FFI
     # @param [nil] ctx
     # @return [Struct]
     # Create a struct from content of memory +value+.
-    def from_native(value, ctx)
+    def from_native(value, _ctx)
       @struct_class.new(value)
     end
   end

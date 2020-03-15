@@ -226,17 +226,17 @@ module ActionView
         end
       end
 
-    private
+      private
 
       def fragment_name_with_digest(name, virtual_path, digest_path)
         virtual_path ||= @virtual_path
 
         if virtual_path || digest_path
-          name = controller.url_for(name).split("://").last if name.is_a?(Hash)
+          name = controller.url_for(name).split('://').last if name.is_a?(Hash)
 
           digest_path ||= digest_path_from_template(@current_template)
 
-          [ digest_path, name ]
+          [digest_path, name]
         else
           name
         end
@@ -261,9 +261,7 @@ module ActionView
         yield
         output_safe = output_buffer.html_safe?
         fragment = output_buffer.slice!(pos..-1)
-        if output_safe
-          self.output_buffer = output_buffer.class.new(output_buffer)
-        end
+        self.output_buffer = output_buffer.class.new(output_buffer) if output_safe
         controller.write_fragment(name, fragment, options)
       end
     end

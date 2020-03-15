@@ -24,9 +24,10 @@ module ActiveSupport
         end
 
         private
-          def build_rotation(secret = @secret, sign_secret = @sign_secret, options)
-            self.class.new(secret, sign_secret, options)
-          end
+
+        def build_rotation(secret = @secret, sign_secret = @sign_secret, options)
+          self.class.new(secret, sign_secret, options)
+        end
       end
 
       module Verifier
@@ -37,20 +38,26 @@ module ActiveSupport
         end
 
         private
-          def build_rotation(secret = @secret, options)
-            self.class.new(secret, options)
-          end
+
+        def build_rotation(secret = @secret, options)
+          self.class.new(secret, options)
+        end
       end
 
       private
-        def run_rotations(on_rotation)
-          @rotations.find do |rotation|
-            if message = yield(rotation) rescue next
-              on_rotation.call if on_rotation
-              return message
-            end
-          end
+
+      def run_rotations(on_rotation)
+        @rotations.find do |rotation|
+          next unless message = begin
+                           yield(rotation)
+                                rescue StandardError
+                                  next
+                         end
+
+          on_rotation&.call
+          return message
         end
+      end
     end
   end
 end

@@ -5,9 +5,7 @@ module ActiveRecord
     class SingularAssociation < Association #:nodoc:
       # Implements the reader method, e.g. foo.bar for Foo.has_one :bar
       def reader
-        if !loaded? || stale_target?
-          reload
-        end
+        reload if !loaded? || stale_target?
 
         target
       end
@@ -31,29 +29,31 @@ module ActiveRecord
       end
 
       private
-        def scope_for_create
-          super.except!(klass.primary_key)
-        end
 
-        def find_target
-          super.first
-        end
+      def scope_for_create
+        super.except!(klass.primary_key)
+      end
 
-        def replace(record)
-          raise NotImplementedError, "Subclasses must implement a replace(record) method"
-        end
+      def find_target
+        super.first
+      end
 
-        def set_new_record(record)
-          replace(record)
-        end
+      def replace(_record)
+        raise NotImplementedError, 'Subclasses must implement a replace(record) method'
+      end
 
-        def _create_record(attributes, raise_error = false, &block)
-          record = build_record(attributes, &block)
-          saved = record.save
-          set_new_record(record)
-          raise RecordInvalid.new(record) if !saved && raise_error
-          record
-        end
+      def set_new_record(record)
+        replace(record)
+      end
+
+      def _create_record(attributes, raise_error = false, &block)
+        record = build_record(attributes, &block)
+        saved = record.save
+        set_new_record(record)
+        raise RecordInvalid, record if !saved && raise_error
+
+        record
+      end
     end
   end
 end

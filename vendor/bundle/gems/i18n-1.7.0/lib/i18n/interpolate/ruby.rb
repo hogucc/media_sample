@@ -14,8 +14,9 @@ module I18n
     # Return String or raises MissingInterpolationArgument exception.
     # Missing argument's logic is handled by I18n.config.missing_interpolation_argument_handler.
     def interpolate(string, values)
-      raise ReservedInterpolationKey.new($1.to_sym, string) if string =~ RESERVED_KEYS_PATTERN
-      raise ArgumentError.new('Interpolation values must be a Hash.') unless values.kind_of?(Hash)
+      raise ReservedInterpolationKey.new(Regexp.last_match(1).to_sym, string) if string =~ RESERVED_KEYS_PATTERN
+      raise ArgumentError, 'Interpolation values must be a Hash.' unless values.is_a?(Hash)
+
       interpolate_hash(string, values)
     end
 
@@ -24,14 +25,14 @@ module I18n
         if match == '%%'
           '%'
         else
-          key = ($1 || $2 || match.tr("%{}", "")).to_sym
+          key = (Regexp.last_match(1) || Regexp.last_match(2) || match.tr('%{}', '')).to_sym
           value = if values.key?(key)
                     values[key]
                   else
                     config.missing_interpolation_argument_handler.call(key, values, string)
                   end
           value = value.call(values) if value.respond_to?(:call)
-          $3 ? sprintf("%#{$3}", value) : value
+          Regexp.last_match(3) ? format("%#{Regexp.last_match(3)}", value) : value
         end
       end
     end

@@ -67,7 +67,7 @@ module Capybara
       make_predicate(options) { assert_no_current_path(path, options) }
     end
 
-  private
+    private
 
     def _verify_current_path(path, options)
       query = Capybara::Queries::CurrentPathQuery.new(path, options)

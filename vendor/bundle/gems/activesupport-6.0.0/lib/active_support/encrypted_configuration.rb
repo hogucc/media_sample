@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require "yaml"
-require "active_support/encrypted_file"
-require "active_support/ordered_options"
-require "active_support/core_ext/object/inclusion"
-require "active_support/core_ext/module/delegation"
+require 'yaml'
+require 'active_support/encrypted_file'
+require 'active_support/ordered_options'
+require 'active_support/core_ext/object/inclusion'
+require 'active_support/core_ext/module/delegation'
 
 module ActiveSupport
   class EncryptedConfiguration < EncryptedFile
@@ -13,14 +13,14 @@ module ActiveSupport
 
     def initialize(config_path:, key_path:, env_key:, raise_if_missing_key:)
       super content_path: config_path, key_path: key_path,
-        env_key: env_key, raise_if_missing_key: raise_if_missing_key
+            env_key: env_key, raise_if_missing_key: raise_if_missing_key
     end
 
     # Allow a config to be started without a file present
     def read
       super
     rescue ActiveSupport::EncryptedFile::MissingContentError
-      ""
+      ''
     end
 
     def write(contents)
@@ -34,12 +34,13 @@ module ActiveSupport
     end
 
     private
-      def options
-        @options ||= ActiveSupport::InheritableOptions.new(config)
-      end
 
-      def deserialize(config)
-        YAML.load(config).presence || {}
-      end
+    def options
+      @options ||= ActiveSupport::InheritableOptions.new(config)
+    end
+
+    def deserialize(config)
+      YAML.safe_load(config).presence || {}
+    end
   end
 end

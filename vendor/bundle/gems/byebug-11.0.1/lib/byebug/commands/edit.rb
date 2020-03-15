@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "byebug/command"
+require 'byebug/command'
 
 module Byebug
   #
@@ -27,13 +27,13 @@ module Byebug
     end
 
     def self.short_description
-      "Edits source files"
+      'Edits source files'
     end
 
     def execute
       file, line = location(@match[1])
-      return edit_error("not_exist", file) unless File.exist?(file)
-      return edit_error("not_readable", file) unless File.readable?(file)
+      return edit_error('not_exist', file) unless File.exist?(file)
+      return edit_error('not_readable', file) unless File.readable?(file)
 
       cmd = line ? "#{editor} +#{line} #{file}" : "#{editor} #{file}"
 
@@ -45,7 +45,7 @@ module Byebug
     def location(matched)
       if matched.nil?
         file = frame.file
-        return errmsg(pr("edit.errors.state")) unless file
+        return errmsg(pr('edit.errors.state')) unless file
 
         line = frame.line
       elsif (@pos_match = /([^:]+)[:]([0-9]+)/.match(matched))
@@ -59,7 +59,7 @@ module Byebug
     end
 
     def editor
-      ENV["EDITOR"] || "vim"
+      ENV['EDITOR'] || 'vim'
     end
 
     def edit_error(type, file)

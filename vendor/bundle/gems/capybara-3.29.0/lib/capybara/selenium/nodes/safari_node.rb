@@ -88,7 +88,7 @@ class Capybara::Selenium::SafariNode < Capybara::Selenium::Node
     scroll_if_needed { browser_action.move_to(native, 0, 0).move_to(native).perform }
   end
 
-private
+  private
 
   def _send_keys(keys, actions = browser_action, down_keys = ModifierKeysStack.new)
     case keys
@@ -110,9 +110,5 @@ private
     actions
   end
 
-  MODIFIER_KEYS = %i[control left_control right_control
-                     alt left_alt right_alt
-                     shift left_shift right_shift
-                     meta left_meta right_meta
-                     command].freeze
+  MODIFIER_KEYS = [:control, :left_control, :right_control, :alt, :left_alt, :right_alt, :shift, :left_shift, :right_shift, :meta, :left_meta, :right_meta, :command].freeze
 end

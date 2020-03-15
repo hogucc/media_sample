@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "forwardable"
-require "byebug/helpers/string"
+require 'forwardable'
+require 'byebug/helpers/string'
 
 module Byebug
   #
@@ -49,16 +49,16 @@ module Byebug
     end
 
     def arguments
-      @match[0].split(" ").drop(1).join(" ")
+      @match[0].split(' ').drop(1).join(' ')
     end
 
-    def_delegators "self.class", :help, :match
+    def_delegators 'self.class', :help, :match
 
-    def_delegator "processor.printer", :print, :pr
-    def_delegator "processor.printer", :print_collection, :prc
-    def_delegator "processor.printer", :print_variables, :prv
+    def_delegator 'processor.printer', :print, :pr
+    def_delegator 'processor.printer', :print_collection, :prc
+    def_delegator 'processor.printer', :print_variables, :prv
 
-    def_delegators "processor.interface", :errmsg, :puts, :print, :confirm
+    def_delegators 'processor.interface', :errmsg, :puts, :print, :confirm
 
     class << self
       include Helpers::StringHelper
@@ -79,10 +79,10 @@ module Byebug
       #
       def to_s
         name
-          .split("::")
-          .map { |n| n.gsub(/Command$/, "").downcase if n =~ /Command$/ }
+          .split('::')
+          .map { |n| n.gsub(/Command$/, '').downcase if n =~ /Command$/ }
           .compact
-          .join(" ")
+          .join(' ')
       end
 
       def columnize(width)

@@ -185,7 +185,7 @@ module Capybara
         {}
       end
 
-    private
+      private
 
       def option_value(option)
         return nil if option.nil?

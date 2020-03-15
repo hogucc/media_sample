@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "active_support/dependencies"
+require 'active_support/dependencies'
 
 module AbstractController
   module Helpers
@@ -8,17 +8,17 @@ module AbstractController
 
     included do
       class_attribute :_helpers, default: Module.new
-      class_attribute :_helper_methods, default: Array.new
+      class_attribute :_helper_methods, default: []
     end
 
-    class MissingHelperError < LoadError
+    class MissingHelperError < RuntimeError
       def initialize(error, path)
         @error = error
         @path  = "helpers/#{path}.rb"
         set_backtrace error.backtrace
 
         if /^#{path}(\.rb)?$/.match?(error.path)
-          super("Missing helper file helpers/%s.rb" % path)
+          super('Missing helper file helpers/%s.rb' % path)
         else
           raise error
         end
@@ -117,7 +117,7 @@ module AbstractController
       def clear_helpers
         inherited_helper_methods = _helper_methods
         self._helpers = Module.new
-        self._helper_methods = Array.new
+        self._helper_methods = []
 
         inherited_helper_methods.each { |meth| helper_method meth }
         default_helper_module! unless anonymous?
@@ -164,31 +164,32 @@ module AbstractController
           when Module
             arg
           else
-            raise ArgumentError, "helper must be a String, Symbol, or Module"
+            raise ArgumentError, 'helper must be a String, Symbol, or Module'
           end
         end
       end
 
       private
-        # Makes all the (instance) methods in the helper module available to templates
-        # rendered through this controller.
-        #
-        # ==== Parameters
-        # * <tt>module</tt> - The module to include into the current helper module
-        #   for the class
-        def add_template_helper(mod)
-          _helpers.module_eval { include mod }
-        end
 
-        def default_helper_module!
-          module_name = name.sub(/Controller$/, "")
-          module_path = module_name.underscore
-          helper module_path
-        rescue LoadError => e
-          raise e unless e.is_missing? "helpers/#{module_path}_helper"
-        rescue NameError => e
-          raise e unless e.missing_name? "#{module_name}Helper"
-        end
+      # Makes all the (instance) methods in the helper module available to templates
+      # rendered through this controller.
+      #
+      # ==== Parameters
+      # * <tt>module</tt> - The module to include into the current helper module
+      #   for the class
+      def add_template_helper(mod)
+        _helpers.module_eval { include mod }
+      end
+
+      def default_helper_module!
+        module_name = name.sub(/Controller$/, '')
+        module_path = module_name.underscore
+        helper module_path
+      rescue LoadError => e
+        raise e unless e.is_missing? "helpers/#{module_path}_helper"
+      rescue NameError => e
+        raise e unless e.missing_name? "#{module_name}Helper"
+      end
     end
   end
 end

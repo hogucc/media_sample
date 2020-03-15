@@ -1,0 +1,31 @@
+.brand-logo {
+  margin-left: 10px;
+}
+
+.card-list {
+  max-width: 1280px;
+}
+
+.card {
+  display: inline-block;
+}
+
+.card-content {
+  display: flex;
+  justify-content: space-between;
+  cursor: pointer;
+}
+
+.card-more {
+  display: flex;
+  padding-top: 5px;
+  float: right;
+}
+
+.card-detail {
+  padding: 10px 10px 30px 20px;
+}
+
+.post-delete-btn {
+  padding: 0 24px;
+}

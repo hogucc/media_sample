@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "active_support/concern"
-require "active_support/ordered_options"
+require 'active_support/concern'
+require 'active_support/ordered_options'
 
 module ActiveSupport
   # Configurable provides a <tt>config</tt> method to store and retrieve
@@ -27,10 +27,10 @@ module ActiveSupport
     module ClassMethods
       def config
         @_config ||= if respond_to?(:superclass) && superclass.respond_to?(:config)
-          superclass.config.inheritable_copy
-        else
-          # create a new "anonymous" class that will host the compiled reader methods
-          Class.new(Configuration).new
+                       superclass.config.inheritable_copy
+                     else
+                       # create a new "anonymous" class that will host the compiled reader methods
+                       Class.new(Configuration).new
         end
       end
 
@@ -106,10 +106,12 @@ module ActiveSupport
       #   User.hair_colors # => [:brown, :black, :blonde, :red]
       def config_accessor(*names, instance_reader: true, instance_writer: true, instance_accessor: true) # :doc:
         names.each do |name|
-          raise NameError.new("invalid config attribute name") unless /\A[_A-Za-z]\w*\z/.match?(name)
+          raise NameError, 'invalid config attribute name' unless /\A[_A-Za-z]\w*\z/.match?(name)
 
-          reader, reader_line = "def #{name}; config.#{name}; end", __LINE__
-          writer, writer_line = "def #{name}=(value); config.#{name} = value; end", __LINE__
+          reader = "def #{name}; config.#{name}; end"
+          reader_line = __LINE__
+          writer = "def #{name}=(value); config.#{name} = value; end"
+          writer_line = __LINE__
 
           singleton_class.class_eval reader, __FILE__, reader_line
           singleton_class.class_eval writer, __FILE__, writer_line

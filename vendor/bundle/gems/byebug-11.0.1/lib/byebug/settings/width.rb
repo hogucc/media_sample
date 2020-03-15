@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "byebug/setting"
+require 'byebug/setting'
 
 module Byebug
   #

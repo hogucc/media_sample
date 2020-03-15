@@ -32,13 +32,11 @@
 #
 
 module FFI
-
   class StructLayout
-
     # @return [Array<Array(Symbol, Numeric)>
     # Get an array of tuples (field name, offset of the field).
     def offsets
-      members.map { |m| [ m, self[m].offset ] }
+      members.map { |m| [m, self[m].offset] }
     end
 
     # @return [Numeric]
@@ -49,7 +47,6 @@ module FFI
 
     # An enum {Field} in a {StructLayout}.
     class Enum < Field
-
       # @param [AbstractMemory] ptr pointer on a {Struct}
       # @return [Object]
       # Get an object of type {#type} from memory pointed by +ptr+.
@@ -64,18 +61,18 @@ module FFI
       def put(ptr, value)
         ptr.put_int(offset, type.find(value))
       end
-
     end
 
     class InnerStruct < Field
       def get(ptr)
-        type.struct_class.new(ptr.slice(self.offset, self.size))
+        type.struct_class.new(ptr.slice(offset, size))
       end
 
-     def put(ptr, value)
-       raise TypeError, "wrong value type (expected #{type.struct_class})" unless value.is_a?(type.struct_class)
-       ptr.slice(self.offset, self.size).__copy_from__(value.pointer, self.size)
-     end
+      def put(ptr, value)
+        raise TypeError, "wrong value type (expected #{type.struct_class})" unless value.is_a?(type.struct_class)
+
+        ptr.slice(offset, size).__copy_from__(value.pointer, size)
+      end
     end
 
     class Mapped < Field

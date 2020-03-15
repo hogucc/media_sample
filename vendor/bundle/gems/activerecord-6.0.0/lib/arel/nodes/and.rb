@@ -24,9 +24,9 @@ module Arel # :nodoc: all
 
       def eql?(other)
         self.class == other.class &&
-          self.children == other.children
+          children == other.children
       end
-      alias :== :eql?
+      alias == eql?
     end
   end
 end

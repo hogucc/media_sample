@@ -115,7 +115,7 @@ module Capybara
     def eql?(other)
       other.is_a?(self.class) && @session == other.session && @handle == other.handle
     end
-    alias_method :==, :eql?
+    alias == eql?
 
     def hash
       @session.hash ^ @handle.hash
@@ -125,7 +125,7 @@ module Capybara
       "#<Window @handle=#{@handle.inspect}>"
     end
 
-  private
+    private
 
     def wait_for_stable_size(seconds = session.config.default_max_wait_time)
       res = yield if block_given?

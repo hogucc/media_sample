@@ -3,14 +3,12 @@
 require 'builder/blankslate'
 
 module Builder
-
   # Generic error for builder
   class IllegalBlockError < RuntimeError; end
 
   # XmlBase is a base class for building XML builders.  See
   # Builder::XmlMarkup and Builder::XmlEvents for examples.
   class XmlBase < BlankSlate
-
     class << self
       attr_accessor :cache_method_calls
     end
@@ -25,7 +23,7 @@ module Builder
     # encoding :: When <tt>encoding</tt> and $KCODE are set to 'utf-8'
     #             characters aren't converted to character entities in
     #             the output stream.
-    def initialize(indent=0, initial=0, encoding='utf-8')
+    def initialize(indent = 0, initial = 0, encoding = 'utf-8')
       @indent = indent
       @level  = initial
       @encoding = encoding.downcase
@@ -41,7 +39,7 @@ module Builder
     def tag!(sym, *args, &block)
       text = nil
       attrs = nil
-      sym = "#{sym}:#{args.shift}" if args.first.kind_of?(::Symbol)
+      sym = "#{sym}:#{args.shift}" if args.first.is_a?(::Symbol)
       sym = sym.to_sym unless sym.class == ::Symbol
       args.each do |arg|
         case arg
@@ -50,7 +48,7 @@ module Builder
           attrs.merge!(arg)
         when nil
           attrs ||= {}
-          attrs.merge!({:nil => true}) if explicit_nil_handling?
+          attrs.merge!(nil: true) if explicit_nil_handling?
         else
           text ||= ''
           text << arg.to_s
@@ -58,8 +56,8 @@ module Builder
       end
       if block
         unless text.nil?
-          ::Kernel::raise ::ArgumentError,
-            "XmlMarkup cannot mix a text argument with a block"
+          ::Kernel.raise ::ArgumentError,
+                         'XmlMarkup cannot mix a text argument with a block'
         end
         _indent
         _start_tag(sym, attrs)
@@ -135,39 +133,42 @@ module Builder
       def _escape(text)
         result = XChar.encode(text)
         begin
-          encoding = ::Encoding::find(@encoding)
+          encoding = ::Encoding.find(@encoding)
           raise Exception if encoding.dummy?
+
           result.encode(encoding)
-        rescue
+        rescue StandardError
           # if the encoding can't be supported, use numeric character references
-          result.
-            gsub(/[^\u0000-\u007F]/) {|c| "&##{c.ord};"}.
-            force_encoding('ascii')
+          result
+            .gsub(/[^\u0000-\u007F]/) { |c| "&##{c.ord};" }
+            .force_encoding('ascii')
         end
       end
     else
       def _escape(text)
-        if (text.method(:to_xs).arity == 0)
+        if text.method(:to_xs).arity == 0
           text.to_xs
         else
-          text.to_xs((@encoding != 'utf-8' or $KCODE != 'UTF8'))
+          text.to_xs(((@encoding != 'utf-8') || ($KCODE != 'UTF8')))
         end
       end
     end
 
     def _escape_attribute(text)
-      _escape(text).gsub("\n", "&#10;").gsub("\r", "&#13;").
-        gsub(%r{"}, '&quot;') # " WART
+      _escape(text).gsub("\n", '&#10;').gsub("\r", '&#13;')
+                   .gsub(/"/, '&quot;') # " WART
     end
 
     def _newline
       return if @indent == 0
+
       text! "\n"
     end
 
     def _indent
       return if @indent == 0 || @level == 0
-      text!(" " * (@level * @indent))
+
+      text!(' ' * (@level * @indent))
     end
 
     def _nested_structures(block)
@@ -195,5 +196,4 @@ module Builder
   end
 
   XmlBase.cache_method_calls = true
-
 end

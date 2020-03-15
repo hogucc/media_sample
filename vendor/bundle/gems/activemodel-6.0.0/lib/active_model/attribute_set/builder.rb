@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "active_model/attribute"
+require 'active_model/attribute'
 
 module ActiveModel
   class AttributeSet # :nodoc:
@@ -40,9 +40,8 @@ module ActiveModel
     end
 
     def []=(key, value)
-      if frozen?
-        raise RuntimeError, "Can't modify frozen hash"
-      end
+      raise "Can't modify frozen hash" if frozen?
+
       delegate_hash[key] = value
     end
 
@@ -61,18 +60,16 @@ module ActiveModel
       keys = types.keys | values.keys | delegate_hash.keys
       keys.each_with_object({}) do |key, hash|
         attribute = self[key]
-        if yield(key, attribute)
-          hash[key] = attribute
-        end
+        hash[key] = attribute if yield(key, attribute)
       end
     end
 
     def ==(other)
-      if other.is_a?(LazyAttributeHash)
-        materialize == other.materialize
-      else
-        materialize == other
-      end
+      materialize == if other.is_a?(LazyAttributeHash)
+                       other.materialize
+                     else
+                       other
+                     end
     end
 
     def marshal_dump
@@ -90,35 +87,35 @@ module ActiveModel
     end
 
     protected
-      def materialize
-        unless @materialized
-          values.each_key { |key| self[key] }
-          types.each_key { |key| self[key] }
-          unless frozen?
-            @materialized = true
-          end
-        end
-        delegate_hash
+
+    def materialize
+      unless @materialized
+        values.each_key { |key| self[key] }
+        types.each_key { |key| self[key] }
+        @materialized = true unless frozen?
       end
+      delegate_hash
+    end
 
     private
-      attr_reader :types, :values, :additional_types, :delegate_hash, :default_attributes
 
-      def assign_default_value(name)
-        type = additional_types.fetch(name, types[name])
-        value_present = true
-        value = values.fetch(name) { value_present = false }
+    attr_reader :types, :values, :additional_types, :delegate_hash, :default_attributes
 
-        if value_present
-          delegate_hash[name] = Attribute.from_database(name, value, type)
-        elsif types.key?(name)
-          attr = default_attributes[name]
-          if attr
-            delegate_hash[name] = attr.dup
-          else
-            delegate_hash[name] = Attribute.uninitialized(name, type)
-          end
-        end
+    def assign_default_value(name)
+      type = additional_types.fetch(name, types[name])
+      value_present = true
+      value = values.fetch(name) { value_present = false }
+
+      if value_present
+        delegate_hash[name] = Attribute.from_database(name, value, type)
+      elsif types.key?(name)
+        attr = default_attributes[name]
+        delegate_hash[name] = if attr
+                                attr.dup
+                              else
+                                Attribute.uninitialized(name, type)
+                              end
       end
+    end
   end
 end

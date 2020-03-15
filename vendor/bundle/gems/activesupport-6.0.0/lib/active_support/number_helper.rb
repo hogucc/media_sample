@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "active_support/dependencies/autoload"
+require 'active_support/dependencies/autoload'
 
 module ActiveSupport
   module NumberHelper
@@ -18,7 +18,7 @@ module ActiveSupport
       autoload :NumberToPercentageConverter
     end
 
-    extend self
+    module_function
 
     # Formats a +number+ into a phone number (US by default e.g., (555)
     # 123-9876). You can customize the format in the +options+ hash.

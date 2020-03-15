@@ -6,10 +6,10 @@ module Capybara
   module Queries
     class SelectorQuery < Queries::BaseQuery
       attr_reader :expression, :selector, :locator, :options
-      SPATIAL_KEYS = %i[above below left_of right_of near].freeze
+      SPATIAL_KEYS = [:above, :below, :left_of, :right_of, :near].freeze
       VALID_KEYS = SPATIAL_KEYS + COUNT_KEYS +
-                   %i[text id class style visible obscured exact exact_text normalize_ws match wait filter_set]
-      VALID_MATCH = %i[first smart prefer_exact one].freeze
+                   [:text, :id, :class, :style, :visible, :obscured, :exact, :exact_text, :normalize_ws, :match, :wait, :filter_set]
+      VALID_MATCH = [:first, :smart, :prefer_exact, :one].freeze
 
       def initialize(*args,
                      session_options:,
@@ -44,8 +44,13 @@ module Capybara
         assert_valid_keys
       end
 
-      def name; selector.name; end
-      def label; selector.label || selector.name; end
+      def name
+        selector.name
+      end
+
+      def label
+        selector.label || selector.name
+      end
 
       def description(only_applied = false)
         desc = +''
@@ -67,16 +72,16 @@ module Capybara
         desc << " with classes [#{Array(options[:class]).join(',')}]" if options[:class]
 
         desc << case options[:style]
-        when String
-          " with style attribute #{options[:style].inspect}"
-        when Regexp
-          " with style attribute matching #{options[:style].inspect}"
-        when Hash
-          " with styles #{options[:style].inspect}"
-        else ''
+                when String
+                  " with style attribute #{options[:style].inspect}"
+                when Regexp
+                  " with style attribute matching #{options[:style].inspect}"
+                when Hash
+                  " with styles #{options[:style].inspect}"
+                else ''
         end
 
-        %i[above below left_of right_of near].each do |spatial_filter|
+        [:above, :below, :left_of, :right_of, :near].each do |spatial_filter|
           desc << " #{spatial_filter} #{options[spatial_filter] rescue '<ERROR>'}" if options[spatial_filter] && show_for[:spatial] # rubocop:disable Style/RescueModifier
         end
 
@@ -167,7 +172,7 @@ module Capybara
         +"expected not to find #{applied_description}" << count_message
       end
 
-    private
+      private
 
       def selector_format
         @selector.format
@@ -316,9 +321,7 @@ module Capybara
       end
 
       def assert_valid_keys
-        unless VALID_MATCH.include?(match)
-          raise ArgumentError, "Invalid option #{match.inspect} for :match, should be one of #{VALID_MATCH.map(&:inspect).join(', ')}"
-        end
+        raise ArgumentError, "Invalid option #{match.inspect} for :match, should be one of #{VALID_MATCH.map(&:inspect).join(', ')}" unless VALID_MATCH.include?(match)
 
         unhandled_options = @options.keys.reject do |option_name|
           valid_keys.include?(option_name) ||
@@ -511,12 +514,12 @@ module Capybara
         return (visible != :hidden) && (node.initial_cache[:visible] != false) && !node.obscured? if obscured == false
 
         vis = case visible
-        when :visible
-          node.initial_cache[:visible] || (node.initial_cache[:visible].nil? && node.visible?)
-        when :hidden
-          (node.initial_cache[:visible] == false) || (node.initial_cache[:visbile].nil? && !node.visible?)
-        else
-          true
+              when :visible
+                node.initial_cache[:visible] || (node.initial_cache[:visible].nil? && node.visible?)
+              when :hidden
+                (node.initial_cache[:visible] == false) || (node.initial_cache[:visbile].nil? && !node.visible?)
+              else
+                true
         end
 
         vis && case obscured
@@ -606,7 +609,7 @@ module Capybara
           distance(other) <= 50
         end
 
-      protected
+        protected
 
         def line_segments
           [
@@ -617,7 +620,7 @@ module Capybara
           ]
         end
 
-      private
+        private
 
         def distance_segment_segment(l1p1, l1p2, l2p1, l2p2)
           # See http://geomalgorithms.com/a07-_distance.html

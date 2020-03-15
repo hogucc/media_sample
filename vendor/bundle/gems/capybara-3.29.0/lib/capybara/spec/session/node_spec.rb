@@ -411,7 +411,7 @@ Capybara::SpecHelper.spec 'node' do
     end
   end
 
-  describe '#trigger', requires: %i[js trigger] do
+  describe '#trigger', requires: [:js, :trigger] do
     it 'should allow triggering of custom JS events' do
       @session.visit('/with_js')
       @session.find(:css, '#with_focus_event').trigger(:focus)
@@ -419,7 +419,7 @@ Capybara::SpecHelper.spec 'node' do
     end
   end
 
-  describe '#drag_to', requires: %i[js drag] do
+  describe '#drag_to', requires: [:js, :drag] do
     it 'should drag and drop an object' do
       @session.visit('/with_js')
       element = @session.find('//div[@id="drag"]')
@@ -468,7 +468,7 @@ Capybara::SpecHelper.spec 'node' do
       end
     end
 
-    context 'HTML5', requires: %i[js html5_drag] do
+    context 'HTML5', requires: [:js, :html5_drag] do
       it 'should HTML5 drag and drop an object' do
         @session.visit('/with_js')
         element = @session.find('//div[@id="drag_html5"]')
@@ -539,7 +539,7 @@ Capybara::SpecHelper.spec 'node' do
     end
   end
 
-  describe 'Element#drop', requires: %i[js html5_drag] do
+  describe 'Element#drop', requires: [:js, :html5_drag] do
     it 'can drop a file' do
       @session.visit('/with_js')
       target = @session.find('//div[@id="drop_html5"]')
@@ -942,14 +942,14 @@ Capybara::SpecHelper.spec 'node' do
       expect(@session.find(:css, '#address1_city').value).to eq 'oceanSIDE'
     end
 
-    it 'should generate key events', requires: %i[send_keys js] do
+    it 'should generate key events', requires: [:send_keys, :js] do
       @session.visit('/with_js')
       @session.find(:css, '#with-key-events').send_keys([:shift, 't'], [:shift, 'w'])
       expect(@session.find(:css, '#key-events-output')).to have_text('keydown:16 keydown:84 keydown:16 keydown:87')
     end
   end
 
-  describe '#execute_script', requires: %i[js es_args] do
+  describe '#execute_script', requires: [:js, :es_args] do
     it 'should execute the given script in the context of the element and return nothing' do
       @session.visit('/with_js')
       expect(@session.find(:css, '#change').execute_script("this.textContent = 'Funky Doodle'")).to be_nil
@@ -963,7 +963,7 @@ Capybara::SpecHelper.spec 'node' do
     end
   end
 
-  describe '#evaluate_script', requires: %i[js es_args] do
+  describe '#evaluate_script', requires: [:js, :es_args] do
     it 'should evaluate the given script in the context of the element and  return whatever it produces' do
       @session.visit('/with_js')
       el = @session.find(:css, '#with_change_event')
@@ -1010,7 +1010,7 @@ Capybara::SpecHelper.spec 'node' do
     end
   end
 
-  describe '#evaluate_async_script', requires: %i[js es_args] do
+  describe '#evaluate_async_script', requires: [:js, :es_args] do
     it 'should evaluate the given script in the context of the element' do
       @session.visit('/with_js')
       el = @session.find(:css, '#with_change_event')
@@ -1138,7 +1138,7 @@ Capybara::SpecHelper.spec 'node' do
   end
 
   context 'when #synchronize raises server errors' do
-    it 'sets an explanatory exception as the cause of server exceptions', requires: %i[server js] do
+    it 'sets an explanatory exception as the cause of server exceptions', requires: [:server, :js] do
       quietly { @session.visit('/error') }
       expect do
         @session.find(:css, 'span')
@@ -1148,7 +1148,7 @@ Capybara::SpecHelper.spec 'node' do
       end)
     end
 
-    it 'sets an explanatory exception as the cause of server exceptions with errors with initializers', requires: %i[server js] do
+    it 'sets an explanatory exception as the cause of server exceptions with errors with initializers', requires: [:server, :js] do
       quietly { @session.visit('/other_error') }
       expect do
         @session.find(:css, 'span')

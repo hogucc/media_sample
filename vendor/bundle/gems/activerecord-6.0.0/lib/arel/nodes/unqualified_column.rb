@@ -3,8 +3,8 @@
 module Arel # :nodoc: all
   module Nodes
     class UnqualifiedColumn < Arel::Nodes::Unary
-      alias :attribute :expr
-      alias :attribute= :expr=
+      alias attribute expr
+      alias attribute= expr=
 
       def relation
         @expr.relation

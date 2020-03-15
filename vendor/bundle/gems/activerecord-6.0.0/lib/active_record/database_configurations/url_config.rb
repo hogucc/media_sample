@@ -45,35 +45,35 @@ module ActiveRecord
       # connection. If the +replica+ key is present in the config, +replica?+ will
       # return +true+.
       def replica?
-        config["replica"]
+        config['replica']
       end
 
       # The migrations paths for a database configuration. If the
       # +migrations_paths+ key is present in the config, +migrations_paths+
       # will return its value.
       def migrations_paths
-        config["migrations_paths"]
+        config['migrations_paths']
       end
 
       private
 
-        def build_url_hash(url)
-          if url.nil? || /^jdbc:/.match?(url)
-            { "url" => url }
-          else
-            ActiveRecord::ConnectionAdapters::ConnectionSpecification::ConnectionUrlResolver.new(url).to_hash
-          end
+      def build_url_hash(url)
+        if url.nil? || /^jdbc:/.match?(url)
+          { 'url' => url }
+        else
+          ActiveRecord::ConnectionAdapters::ConnectionSpecification::ConnectionUrlResolver.new(url).to_hash
         end
+      end
 
-        def build_config(original_config, url)
-          hash = build_url_hash(url)
+      def build_config(original_config, url)
+        hash = build_url_hash(url)
 
-          if original_config[env_name]
-            original_config[env_name].merge(hash)
-          else
-            original_config.merge(hash)
-          end
+        if original_config[env_name]
+          original_config[env_name].merge(hash)
+        else
+          original_config.merge(hash)
         end
+      end
     end
   end
 end

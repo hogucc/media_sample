@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "set"
+require 'set'
 
 module ActiveJob
   # The <tt>ActiveJob::Serializers</tt> module is used to store a list of known serializers
@@ -25,7 +25,8 @@ module ActiveJob
       # Raises <tt>ActiveJob::SerializationError</tt> if it can't find a proper serializer.
       def serialize(argument)
         serializer = serializers.detect { |s| s.serialize?(argument) }
-        raise SerializationError.new("Unsupported argument type: #{argument.class.name}") unless serializer
+        raise SerializationError, "Unsupported argument type: #{argument.class.name}" unless serializer
+
         serializer.serialize(argument)
       end
 
@@ -44,7 +45,7 @@ module ActiveJob
 
       # Returns list of known serializers.
       def serializers
-        self._additional_serializers
+        _additional_serializers
       end
 
       # Adds new serializers to a list of known serializers.
@@ -54,10 +55,10 @@ module ActiveJob
     end
 
     add_serializers SymbolSerializer,
-      DurationSerializer,
-      DateTimeSerializer,
-      DateSerializer,
-      TimeWithZoneSerializer,
-      TimeSerializer
+                    DurationSerializer,
+                    DateTimeSerializer,
+                    DateSerializer,
+                    TimeWithZoneSerializer,
+                    TimeSerializer
   end
 end

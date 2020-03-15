@@ -35,7 +35,7 @@ module ActiveRecord
         @sql = sql
       end
 
-      def sql_for(binds, connection)
+      def sql_for(_binds, _connection)
         @sql
       end
     end
@@ -43,9 +43,9 @@ module ActiveRecord
     class PartialQuery < Query # :nodoc:
       def initialize(values)
         @values = values
-        @indexes = values.each_with_index.find_all { |thing, i|
+        @indexes = values.each_with_index.find_all do |thing, _i|
           Substitute === thing
-        }.map(&:last)
+        end.map(&:last)
       end
 
       def sql_for(binds, connection)
@@ -91,7 +91,9 @@ module ActiveRecord
     end
 
     class Params # :nodoc:
-      def bind; Substitute.new; end
+      def bind
+        Substitute.new
+      end
     end
 
     class BindMap # :nodoc:
@@ -100,9 +102,7 @@ module ActiveRecord
         @bound_attributes = bound_attributes
 
         bound_attributes.each_with_index do |attr, i|
-          if Substitute === attr.value
-            @indexes << i
-          end
+          @indexes << i if Substitute === attr.value
         end
       end
 
@@ -143,6 +143,7 @@ module ActiveRecord
     end
 
     private
-      attr_reader :query_builder, :bind_map, :klass
+
+    attr_reader :query_builder, :bind_map, :klass
   end
 end

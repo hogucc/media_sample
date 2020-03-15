@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "date"
+require 'date'
 
 class DateTime
   class << self
@@ -51,13 +51,14 @@ class DateTime
   def change(options)
     if new_nsec = options[:nsec]
       raise ArgumentError, "Can't change both :nsec and :usec at the same time: #{options.inspect}" if options[:usec]
-      new_fraction = Rational(new_nsec, 1000000000)
+
+      new_fraction = Rational(new_nsec, 1_000_000_000)
     else
-      new_usec = options.fetch(:usec, (options[:hour] || options[:min] || options[:sec]) ? 0 : Rational(nsec, 1000))
-      new_fraction = Rational(new_usec, 1000000)
+      new_usec = options.fetch(:usec, options[:hour] || options[:min] || options[:sec] ? 0 : Rational(nsec, 1000))
+      new_fraction = Rational(new_usec, 1_000_000)
     end
 
-    raise ArgumentError, "argument out of range" if new_fraction >= 1
+    raise ArgumentError, 'argument out of range' if new_fraction >= 1
 
     ::DateTime.civil(
       options.fetch(:year, year),
@@ -65,7 +66,7 @@ class DateTime
       options.fetch(:day, day),
       options.fetch(:hour, hour),
       options.fetch(:min, options[:hour] ? 0 : min),
-      options.fetch(:sec, (options[:hour] || options[:min]) ? 0 : sec) + new_fraction,
+      options.fetch(:sec, options[:hour] || options[:min] ? 0 : sec) + new_fraction,
       options.fetch(:offset, offset),
       options.fetch(:start, start)
     )
@@ -110,57 +111,57 @@ class DateTime
   # instance time. Do not use this method in combination with x.months, use
   # months_since instead!
   def since(seconds)
-    self + Rational(seconds, 86400)
+    self + Rational(seconds, 86_400)
   end
-  alias :in :since
+  alias in since
 
   # Returns a new DateTime representing the start of the day (0:00).
   def beginning_of_day
     change(hour: 0)
   end
-  alias :midnight :beginning_of_day
-  alias :at_midnight :beginning_of_day
-  alias :at_beginning_of_day :beginning_of_day
+  alias midnight beginning_of_day
+  alias at_midnight beginning_of_day
+  alias at_beginning_of_day beginning_of_day
 
   # Returns a new DateTime representing the middle of the day (12:00)
   def middle_of_day
     change(hour: 12)
   end
-  alias :midday :middle_of_day
-  alias :noon :middle_of_day
-  alias :at_midday :middle_of_day
-  alias :at_noon :middle_of_day
-  alias :at_middle_of_day :middle_of_day
+  alias midday middle_of_day
+  alias noon middle_of_day
+  alias at_midday middle_of_day
+  alias at_noon middle_of_day
+  alias at_middle_of_day middle_of_day
 
   # Returns a new DateTime representing the end of the day (23:59:59).
   def end_of_day
-    change(hour: 23, min: 59, sec: 59, usec: Rational(999999999, 1000))
+    change(hour: 23, min: 59, sec: 59, usec: Rational(999_999_999, 1000))
   end
-  alias :at_end_of_day :end_of_day
+  alias at_end_of_day end_of_day
 
   # Returns a new DateTime representing the start of the hour (hh:00:00).
   def beginning_of_hour
     change(min: 0)
   end
-  alias :at_beginning_of_hour :beginning_of_hour
+  alias at_beginning_of_hour beginning_of_hour
 
   # Returns a new DateTime representing the end of the hour (hh:59:59).
   def end_of_hour
-    change(min: 59, sec: 59, usec: Rational(999999999, 1000))
+    change(min: 59, sec: 59, usec: Rational(999_999_999, 1000))
   end
-  alias :at_end_of_hour :end_of_hour
+  alias at_end_of_hour end_of_hour
 
   # Returns a new DateTime representing the start of the minute (hh:mm:00).
   def beginning_of_minute
     change(sec: 0)
   end
-  alias :at_beginning_of_minute :beginning_of_minute
+  alias at_beginning_of_minute beginning_of_minute
 
   # Returns a new DateTime representing the end of the minute (hh:mm:59).
   def end_of_minute
-    change(sec: 59, usec: Rational(999999999, 1000))
+    change(sec: 59, usec: Rational(999_999_999, 1000))
   end
-  alias :at_end_of_minute :end_of_minute
+  alias at_end_of_minute end_of_minute
 
   # Returns a <tt>Time</tt> instance of the simultaneous time in the system timezone.
   def localtime(utc_offset = nil)
@@ -171,7 +172,7 @@ class DateTime
       utc.hour, utc.min, utc.sec + utc.sec_fraction
     ).getlocal(utc_offset)
   end
-  alias_method :getlocal, :localtime
+  alias getlocal localtime
 
   # Returns a <tt>Time</tt> instance of the simultaneous time in the UTC timezone.
   #
@@ -185,9 +186,9 @@ class DateTime
       utc.hour, utc.min, utc.sec + utc.sec_fraction
     )
   end
-  alias_method :getgm, :utc
-  alias_method :getutc, :utc
-  alias_method :gmtime, :utc
+  alias getgm utc
+  alias getutc utc
+  alias gmtime utc
 
   # Returns +true+ if <tt>offset == 0</tt>.
   def utc?
@@ -196,14 +197,18 @@ class DateTime
 
   # Returns the offset value in seconds.
   def utc_offset
-    (offset * 86400).to_i
+    (offset * 86_400).to_i
   end
 
   # Layers additional behavior on DateTime#<=> so that Time and
   # ActiveSupport::TimeWithZone instances can be compared with a DateTime.
   def <=>(other)
     if other.respond_to? :to_datetime
-      super other.to_datetime rescue nil
+      begin
+        super other.to_datetime
+      rescue StandardError
+        nil
+      end
     else
       super
     end

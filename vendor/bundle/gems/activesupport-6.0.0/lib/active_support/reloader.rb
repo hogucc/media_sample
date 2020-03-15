@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "active_support/execution_wrapper"
-require "active_support/executor"
+require 'active_support/execution_wrapper'
+require 'active_support/executor'
 
 module ActiveSupport
   #--
@@ -74,7 +74,7 @@ module ActiveSupport
     end
 
     class_attribute :executor, default: Executor
-    class_attribute :check, default: lambda { false }
+    class_attribute :check, default: -> { false }
 
     def self.check! # :nodoc:
       @should_reload ||= check.call

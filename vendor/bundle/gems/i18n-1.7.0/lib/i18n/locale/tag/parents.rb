@@ -5,7 +5,7 @@ module I18n
         def parent
           @parent ||= begin
             segs = to_a.compact
-            segs.length > 1 ? self.class.tag(*segs[0..(segs.length-2)].join('-')) : nil
+            segs.length > 1 ? self.class.tag(*segs[0..(segs.length - 2)].join('-')) : nil
           end
         end
 

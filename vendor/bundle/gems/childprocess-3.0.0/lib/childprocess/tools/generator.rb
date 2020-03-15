@@ -3,9 +3,9 @@ require 'fileutils'
 module ChildProcess
   module Tools
     class Generator
-      EXE_NAME         = "childprocess-sizeof-generator"
-      TMP_PROGRAM      = "childprocess-sizeof-generator.c"
-      DEFAULT_INCLUDES = %w[stdio.h stddef.h]
+      EXE_NAME         = 'childprocess-sizeof-generator'.freeze
+      TMP_PROGRAM      = 'childprocess-sizeof-generator.c'.freeze
+      DEFAULT_INCLUDES = %w[stdio.h stddef.h].freeze
 
       def self.generate
         new.generate
@@ -19,18 +19,16 @@ module ChildProcess
       end
 
       def generate
-        fetch_size 'posix_spawn_file_actions_t', :include => "spawn.h"
-        fetch_size 'posix_spawnattr_t', :include => "spawn.h"
-        fetch_size 'sigset_t', :include => "signal.h"
+        fetch_size 'posix_spawn_file_actions_t', include: 'spawn.h'
+        fetch_size 'posix_spawnattr_t', include: 'spawn.h'
+        fetch_size 'sigset_t', include: 'signal.h'
 
-        fetch_constant 'POSIX_SPAWN_RESETIDS',   :include  => 'spawn.h'
-        fetch_constant 'POSIX_SPAWN_SETPGROUP',  :include  => 'spawn.h'
-        fetch_constant 'POSIX_SPAWN_SETSIGDEF',  :include  => 'spawn.h'
-        fetch_constant 'POSIX_SPAWN_SETSIGMASK', :include  => 'spawn.h'
+        fetch_constant 'POSIX_SPAWN_RESETIDS',   include: 'spawn.h'
+        fetch_constant 'POSIX_SPAWN_SETPGROUP',  include: 'spawn.h'
+        fetch_constant 'POSIX_SPAWN_SETSIGDEF',  include: 'spawn.h'
+        fetch_constant 'POSIX_SPAWN_SETSIGMASK', include: 'spawn.h'
 
-        if ChildProcess.linux?
-          fetch_constant 'POSIX_SPAWN_USEVFORK', :include => 'spawn.h', :define => {'_GNU_SOURCE' => nil}
-        end
+        fetch_constant 'POSIX_SPAWN_USEVFORK', include: 'spawn.h', define: { '_GNU_SOURCE' => nil } if ChildProcess.linux?
 
         write
       end
@@ -46,18 +44,16 @@ module ChildProcess
 
       def fetch_size(type_name, opts = {})
         print "sizeof(#{type_name}): "
-        src = <<-EOF
-int main() {
-  printf("%d", (unsigned int)sizeof(#{type_name}));
-  return 0;
-}
+        src = <<~EOF
+          int main() {
+            printf("%d", (unsigned int)sizeof(#{type_name}));
+            return 0;
+          }
         EOF
 
         output = execute(src, opts)
 
-        if output.to_i < 1
-          raise "sizeof(#{type_name}) == #{output.to_i} (output=#{output})"
-        end
+        raise "sizeof(#{type_name}) == #{output.to_i} (output=#{output})" if output.to_i < 1
 
         size = output.to_i
         @sizeof[type_name] = size
@@ -67,11 +63,11 @@ int main() {
 
       def fetch_constant(name, opts)
         print "#{name}: "
-        src = <<-EOF
-int main() {
-  printf("%d", (unsigned int)#{name});
-  return 0;
-}
+        src = <<~EOF
+          int main() {
+            printf("%d", (unsigned int)#{name});
+            return 0;
+          }
         EOF
 
         output = execute(src, opts)
@@ -81,13 +77,12 @@ int main() {
         puts value
       end
 
-
       def execute(src, opts)
         program = Array(opts[:define]).map do |key, value|
-          <<-SRC
-#ifndef #{key}
-#define #{key} #{value}
-#endif
+          <<~SRC
+            #ifndef #{key}
+            #define #{key} #{value}
+            #endif
           SRC
         end.join("\n")
         program << "\n"
@@ -102,15 +97,11 @@ int main() {
 
         cmd = "#{@cc} #{TMP_PROGRAM} -o #{EXE_NAME}"
         system cmd
-        unless $?.success?
-          raise "failed to compile program: #{cmd.inspect}\n#{program}"
-        end
+        raise "failed to compile program: #{cmd.inspect}\n#{program}" unless $?.success?
 
         output = `./#{EXE_NAME} 2>&1`
 
-        unless $?.success?
-          raise "failed to run program: #{cmd.inspect}\n#{output}"
-        end
+        raise "failed to run program: #{cmd.inspect}\n#{output}" unless $?.success?
 
         output.chomp
       ensure
@@ -119,20 +110,18 @@ int main() {
       end
 
       def result
-        if @sizeof.empty? && @constants.empty?
-          raise "no data collected, nothing to do"
-        end
+        raise 'no data collected, nothing to do' if @sizeof.empty? && @constants.empty?
 
         out =  ['module ChildProcess::Unix::Platform']
         out << '  SIZEOF = {'
 
-        max = @sizeof.keys.map { |e| e.length }.max
+        max = @sizeof.keys.map(&:length).max
         @sizeof.each_with_index do |(type, size), idx|
           out << "     :#{type.ljust max} => #{size}#{',' unless idx == @sizeof.size - 1}"
         end
         out << '  }'
 
-        max = @constants.keys.map { |e| e.length }.max
+        max = @constants.keys.map(&:length).max
         @constants.each do |name, val|
           out << "  #{name.ljust max} = #{val}"
         end
@@ -140,7 +129,6 @@ int main() {
 
         out.join "\n"
       end
-
     end
   end
 end

@@ -72,8 +72,9 @@ module ActiveStorage
     end
 
     private
-      def write_attachment(attachment)
-        record.public_send("#{name}_attachment=", attachment)
-      end
+
+    def write_attachment(attachment)
+      record.public_send("#{name}_attachment=", attachment)
+    end
   end
 end

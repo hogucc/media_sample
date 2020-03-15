@@ -1,5 +1,5 @@
-$LOAD_PATH.unshift(File.dirname(__FILE__))
-$LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
+$:.unshift(File.dirname(__FILE__))
+$:.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 
 unless defined?(JRUBY_VERSION)
   require 'coveralls'
@@ -17,23 +17,23 @@ module ChildProcessSpecHelper
   RUBY = defined?(Gem) ? Gem.ruby : 'ruby'
 
   def ruby_process(*args)
-    @process = ChildProcess.build(RUBY , *args)
+    @process = ChildProcess.build(RUBY, *args)
   end
 
   def windows_process(*args)
-    @process = ChildProcess.build("powershell", *args)
+    @process = ChildProcess.build('powershell', *args)
   end
 
   def sleeping_ruby(seconds = nil)
     if seconds
-      ruby_process("-e", "sleep #{seconds}")
+      ruby_process('-e', "sleep #{seconds}")
     else
-      ruby_process("-e", "sleep")
+      ruby_process('-e', 'sleep')
     end
   end
 
   def invalid_process
-    @process = ChildProcess.build("unlikelytoexist")
+    @process = ChildProcess.build('unlikelytoexist')
   end
 
   def ignored(signal)
@@ -47,7 +47,7 @@ module ChildProcessSpecHelper
 
   def write_env(path)
     if ChildProcess.os == :windows
-      ps_env_file_path = File.expand_path(File.dirname(__FILE__))
+      ps_env_file_path = __dir__
       args = ['-File', "#{ps_env_file_path}/get_env.ps1", path]
       windows_process(*args)
     else
@@ -87,7 +87,7 @@ module ChildProcessSpecHelper
   end
 
   def with_env(hash)
-    hash.each { |k,v| ENV[k] = v }
+    hash.each { |k, v| ENV[k] = v }
     begin
       yield
     ensure
@@ -97,7 +97,7 @@ module ChildProcessSpecHelper
 
   def tmp_script(code)
     # use an ivar to avoid GC
-    @tf = Tempfile.new("childprocess-temp")
+    @tf = Tempfile.new('childprocess-temp')
     @tf << code
     @tf.close
 
@@ -113,7 +113,7 @@ module ChildProcessSpecHelper
             IO.copy_stream(STDIN, STDOUT)
       CODE
     else
-      ChildProcess.build("cat")
+      ChildProcess.build('cat')
     end
   end
 
@@ -126,7 +126,7 @@ module ChildProcessSpecHelper
             puts "hello"
       CODE
     else
-      ChildProcess.build("echo", "hello")
+      ChildProcess.build('echo', 'hello')
     end
   end
 
@@ -134,15 +134,15 @@ module ChildProcessSpecHelper
     ruby_process(tmp_script(code))
   end
 
-  def with_executable_at(path, &blk)
+  def with_executable_at(path)
     if ChildProcess.os == :windows
-      path << ".cmd"
+      path << '.cmd'
       content = "#{RUBY} -e 'sleep 10' \n @echo foo"
     else
       content = "#!/bin/sh\nsleep 10\necho foo"
     end
 
-    File.open(path, 'w', 0744) { |io| io << content }
+    File.open(path, 'w', 0o744) { |io| io << content }
     proc = ChildProcess.build(path)
 
     begin
@@ -165,8 +165,8 @@ module ChildProcessSpecHelper
     port
   end
 
-  def with_tmpdir(&blk)
-    name = "#{Time.now.strftime("%Y%m%d")}-#{$$}-#{rand(0x100000000).to_s(36)}"
+  def with_tmpdir
+    name = "#{Time.now.strftime('%Y%m%d')}-#{$$}-#{rand(0x100000000).to_s(36)}"
     FileUtils.mkdir_p(name)
 
     begin
@@ -176,7 +176,7 @@ module ChildProcessSpecHelper
     end
   end
 
-  def wait_until(timeout = 10, &blk)
+  def wait_until(timeout = 10)
     end_time       = Time.now + timeout
     last_exception = nil
 
@@ -184,8 +184,8 @@ module ChildProcessSpecHelper
       begin
         result = yield
         return result if result
-      rescue RSpec::Expectations::ExpectationNotMetError => ex
-        last_exception = ex
+      rescue RSpec::Expectations::ExpectationNotMetError => e
+        last_exception = e
       end
 
       sleep 0.01
@@ -200,7 +200,7 @@ module ChildProcessSpecHelper
   def can_bind?(host, port)
     TCPServer.new(host, port).close
     true
-  rescue
+  rescue StandardError
     false
   end
 
@@ -249,22 +249,17 @@ module ChildProcessSpecHelper
     process.wait
     process.poll_for_exit(0.1)
   end
-
 end # ChildProcessSpecHelper
 
 Thread.abort_on_exception = true
 
 RSpec.configure do |c|
   c.include(ChildProcessSpecHelper)
-  c.after(:each) {
+  c.after(:each) do
     defined?(@process) && @process.alive? && @process.stop
-  }
-
-  if ChildProcess.jruby? && ChildProcess.new("true").instance_of?(ChildProcess::JRuby::Process)
-    c.filter_run_excluding :process_builder => false
   end
 
-  if ChildProcess.linux? && ChildProcess.posix_spawn?
-    c.filter_run_excluding :posix_spawn_on_linux => false
-  end
+  c.filter_run_excluding process_builder: false if ChildProcess.jruby? && ChildProcess.new('true').instance_of?(ChildProcess::JRuby::Process)
+
+  c.filter_run_excluding posix_spawn_on_linux: false if ChildProcess.linux? && ChildProcess.posix_spawn?
 end

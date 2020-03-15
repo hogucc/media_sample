@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 module Mail
   module Matchers
     def have_sent_email
@@ -6,12 +7,11 @@ module Mail
     end
 
     class HasSentEmailMatcher
-      def initialize(_context)
-      end
+      def initialize(_context); end
 
-      def matches?(subject)
+      def matches?(_subject)
         matching_deliveries = filter_matched_deliveries(Mail::TestMailer.deliveries)
-        !(matching_deliveries.empty?)
+        !matching_deliveries.empty?
       end
 
       def from(sender)
@@ -22,7 +22,7 @@ module Mail
       def to(recipient_or_list)
         @recipients ||= []
 
-        if recipient_or_list.kind_of?(Array)
+        if recipient_or_list.is_a?(Array)
           @recipients += recipient_or_list
         else
           @recipients << recipient_or_list
@@ -33,7 +33,7 @@ module Mail
       def cc(recipient_or_list)
         @copy_recipients ||= []
 
-        if recipient_or_list.kind_of?(Array)
+        if recipient_or_list.is_a?(Array)
           @copy_recipients += recipient_or_list
         else
           @copy_recipients << recipient_or_list
@@ -94,19 +94,19 @@ module Mail
       end
 
       def description
-        result = "send a matching email"
+        result = 'send a matching email'
         result
       end
 
       def failure_message
-        result = "Expected email to be sent "
+        result = 'Expected email to be sent '
         result += explain_expectations
         result += dump_deliveries
         result
       end
 
       def failure_message_when_negated
-        result = "Expected no email to be sent "
+        result = 'Expected no email to be sent '
         result += explain_expectations
         result += dump_deliveries
         result
@@ -117,11 +117,12 @@ module Mail
       def filter_matched_deliveries(deliveries)
         candidate_deliveries = deliveries
         modifiers =
-          %w(sender recipients copy_recipients blind_copy_recipients subject
-          subject_matcher body body_matcher html_part_body text_part_body  having_attachments attachments)
+          %w[sender recipients copy_recipients blind_copy_recipients subject
+             subject_matcher body body_matcher html_part_body text_part_body having_attachments attachments]
         modifiers.each do |modifier_name|
           next unless instance_variable_defined?("@#{modifier_name}")
-          candidate_deliveries = candidate_deliveries.select{|matching_delivery| self.send("matches_on_#{modifier_name}?", matching_delivery)}
+
+          candidate_deliveries = candidate_deliveries.select { |matching_delivery| send("matches_on_#{modifier_name}?", matching_delivery) }
         end
 
         candidate_deliveries
@@ -132,15 +133,15 @@ module Mail
       end
 
       def matches_on_recipients?(delivery)
-        @recipients.all? {|recipient| delivery.to.include?(recipient) }
+        @recipients.all? { |recipient| delivery.to.include?(recipient) }
       end
 
       def matches_on_copy_recipients?(delivery)
-        @copy_recipients.all? {|recipient| delivery.cc.include?(recipient) }
+        @copy_recipients.all? { |recipient| delivery.cc.include?(recipient) }
       end
 
       def matches_on_blind_copy_recipients?(delivery)
-        @blind_copy_recipients.all? {|recipient| delivery.bcc.include?(recipient) }
+        @blind_copy_recipients.all? { |recipient| delivery.bcc.include?(recipient) }
       end
 
       def matches_on_subject?(delivery)
@@ -157,7 +158,7 @@ module Mail
       end
 
       def matches_on_attachments?(delivery)
-        @attachments.each_with_index.inject( true ) do |sent_attachments, (attachment, index)|
+        @attachments.each_with_index.inject(true) do |sent_attachments, (attachment, index)|
           sent_attachments &&= (attachment === delivery.attachments[index])
         end
       end
@@ -194,7 +195,7 @@ module Mail
       end
 
       def dump_deliveries
-        "(actual deliveries: " + Mail::TestMailer.deliveries.inspect + ")"
+        '(actual deliveries: ' + Mail::TestMailer.deliveries.inspect + ')'
       end
     end
   end

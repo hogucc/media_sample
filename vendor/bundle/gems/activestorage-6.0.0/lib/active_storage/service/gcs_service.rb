@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-gem "google-cloud-storage", "~> 1.11"
-require "google/cloud/storage"
+gem 'google-cloud-storage', '~> 1.11'
+require 'google/cloud/storage'
 
 module ActiveStorage
   # Wraps the Google Cloud Storage as an Active Storage service. See ActiveStorage::Service for the generic API
@@ -84,8 +84,8 @@ module ActiveStorage
     def url(key, expires_in:, filename:, content_type:, disposition:)
       instrument :url, key: key do |payload|
         generated_url = file_for(key).signed_url expires: expires_in, query: {
-          "response-content-disposition" => content_disposition_with(type: disposition, filename: filename),
-          "response-content-type" => content_type
+          'response-content-disposition' => content_disposition_with(type: disposition, filename: filename),
+          'response-content-type' => content_type
         }
 
         payload[:url] = generated_url
@@ -96,7 +96,7 @@ module ActiveStorage
 
     def url_for_direct_upload(key, expires_in:, checksum:, **)
       instrument :url, key: key do |payload|
-        generated_url = bucket.signed_url key, method: "PUT", expires: expires_in, content_md5: checksum
+        generated_url = bucket.signed_url key, method: 'PUT', expires: expires_in, content_md5: checksum
 
         payload[:url] = generated_url
 
@@ -104,38 +104,39 @@ module ActiveStorage
       end
     end
 
-    def headers_for_direct_upload(key, checksum:, **)
-      { "Content-MD5" => checksum }
+    def headers_for_direct_upload(_key, checksum:, **)
+      { 'Content-MD5' => checksum }
     end
 
     private
-      attr_reader :config
 
-      def file_for(key, skip_lookup: true)
-        bucket.file(key, skip_lookup: skip_lookup)
+    attr_reader :config
+
+    def file_for(key, skip_lookup: true)
+      bucket.file(key, skip_lookup: skip_lookup)
+    end
+
+    # Reads the file for the given key in chunks, yielding each to the block.
+    def stream(key)
+      file = file_for(key, skip_lookup: false)
+
+      chunk_size = 5.megabytes
+      offset = 0
+
+      raise ActiveStorage::FileNotFoundError unless file.present?
+
+      while offset < file.size
+        yield file.download(range: offset..(offset + chunk_size - 1)).string
+        offset += chunk_size
       end
+    end
 
-      # Reads the file for the given key in chunks, yielding each to the block.
-      def stream(key)
-        file = file_for(key, skip_lookup: false)
+    def bucket
+      @bucket ||= client.bucket(config.fetch(:bucket), skip_lookup: true)
+    end
 
-        chunk_size = 5.megabytes
-        offset = 0
-
-        raise ActiveStorage::FileNotFoundError unless file.present?
-
-        while offset < file.size
-          yield file.download(range: offset..(offset + chunk_size - 1)).string
-          offset += chunk_size
-        end
-      end
-
-      def bucket
-        @bucket ||= client.bucket(config.fetch(:bucket), skip_lookup: true)
-      end
-
-      def client
-        @client ||= Google::Cloud::Storage.new(config.except(:bucket))
-      end
+    def client
+      @client ||= Google::Cloud::Storage.new(config.except(:bucket))
+    end
   end
 end

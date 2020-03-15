@@ -14,13 +14,13 @@ module ActionDispatch
         @filename = filename
       end
 
-      TRADITIONAL_ESCAPED_CHAR = /[^ A-Za-z0-9!#$+.^_`|~-]/
+      TRADITIONAL_ESCAPED_CHAR = /[^ A-Za-z0-9!#{$+}.^_`|~-]/.freeze
 
       def ascii_filename
         'filename="' + percent_escape(I18n.transliterate(filename), TRADITIONAL_ESCAPED_CHAR) + '"'
       end
 
-      RFC_5987_ESCAPED_CHAR = /[^A-Za-z0-9!#$&+.^_`|~-]/
+      RFC_5987_ESCAPED_CHAR = /[^A-Za-z0-9!#{$&}+.^_`|~-]/.freeze
 
       def utf8_filename
         "filename*=UTF-8''" + percent_escape(filename, RFC_5987_ESCAPED_CHAR)
@@ -30,16 +30,17 @@ module ActionDispatch
         if filename
           "#{disposition}; #{ascii_filename}; #{utf8_filename}"
         else
-          "#{disposition}"
+          disposition.to_s
         end
       end
 
       private
-        def percent_escape(string, pattern)
-          string.gsub(pattern) do |char|
-            char.bytes.map { |byte| "%%%02X" % byte }.join
-          end
+
+      def percent_escape(string, pattern)
+        string.gsub(pattern) do |char|
+          char.bytes.map { |byte| '%%%02X' % byte }.join
         end
+      end
     end
   end
 end

@@ -8,7 +8,7 @@ module ActiveRecord
 
         attr_reader :extra
 
-        def initialize(type_metadata, extra: "")
+        def initialize(type_metadata, extra: '')
           super(type_metadata)
           @extra = extra
         end

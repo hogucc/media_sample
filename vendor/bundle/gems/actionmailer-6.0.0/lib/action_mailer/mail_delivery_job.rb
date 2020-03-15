@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "active_job"
+require 'active_job'
 
 module ActionMailer
   # The <tt>ActionMailer::MailDeliveryJob</tt> class is used when you
@@ -19,20 +19,21 @@ module ActionMailer
     end
 
     private
-      # "Deserialize" the mailer class name by hand in case another argument
-      # (like a Global ID reference) raised DeserializationError.
-      def mailer_class
-        if mailer = Array(@serialized_arguments).first || Array(arguments).first
-          mailer.constantize
-        end
-      end
 
-      def handle_exception_with_mailer_class(exception)
-        if klass = mailer_class
-          klass.handle_exception exception
-        else
-          raise exception
-        end
+    # "Deserialize" the mailer class name by hand in case another argument
+    # (like a Global ID reference) raised DeserializationError.
+    def mailer_class
+      if mailer = Array(@serialized_arguments).first || Array(arguments).first
+        mailer.constantize
       end
+    end
+
+    def handle_exception_with_mailer_class(exception)
+      if klass = mailer_class
+        klass.handle_exception exception
+      else
+        raise exception
+      end
+    end
   end
 end

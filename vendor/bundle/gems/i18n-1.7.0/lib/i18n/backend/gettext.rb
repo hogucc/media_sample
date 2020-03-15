@@ -40,46 +40,45 @@ module I18n
       end
 
       protected
-        def load_po(filename)
-          locale = ::File.basename(filename, '.po').to_sym
-          data = normalize(locale, parse(filename))
-          { locale => data }
-        end
 
-        def parse(filename)
-          GetText::PoParser.new.parse(::File.read(filename), PoData.new)
-        end
+      def load_po(filename)
+        locale = ::File.basename(filename, '.po').to_sym
+        data = normalize(locale, parse(filename))
+        { locale => data }
+      end
 
-        def normalize(locale, data)
-          data.inject({}) do |result, (key, value)|
-            unless key.nil? || key.empty?
-              key = key.gsub(I18n::Gettext::CONTEXT_SEPARATOR, '|')
-              key, value = normalize_pluralization(locale, key, value) if key.index("\000")
+      def parse(filename)
+        GetText::PoParser.new.parse(::File.read(filename), PoData.new)
+      end
 
-              parts = key.split('|').reverse
-              normalized = parts.inject({}) do |_normalized, part|
-                { part => _normalized.empty? ? value : _normalized }
-              end
+      def normalize(locale, data)
+        data.each_with_object({}) do |(key, value), result|
+          next if key.nil? || key.empty?
 
-              result.deep_merge!(normalized)
-            end
-            result
+          key = key.gsub(I18n::Gettext::CONTEXT_SEPARATOR, '|')
+          key, value = normalize_pluralization(locale, key, value) if key.index("\000")
+
+          parts = key.split('|').reverse
+          normalized = parts.inject({}) do |_normalized, part|
+            { part => _normalized.empty? ? value : _normalized }
           end
+
+          result.deep_merge!(normalized)
         end
+      end
 
-        def normalize_pluralization(locale, key, value)
-          # FIXME po_parser includes \000 chars that can not be turned into Symbols
-          key = key.gsub("\000", I18n::Gettext::PLURAL_SEPARATOR).split(I18n::Gettext::PLURAL_SEPARATOR).first
+      def normalize_pluralization(locale, key, value)
+        # FIXME: po_parser includes \000 chars that can not be turned into Symbols
+        key = key.gsub("\000", I18n::Gettext::PLURAL_SEPARATOR).split(I18n::Gettext::PLURAL_SEPARATOR).first
 
-          keys = I18n::Gettext.plural_keys(locale)
-          values = value.split("\000")
-          raise "invalid number of plurals: #{values.size}, keys: #{keys.inspect} on #{locale} locale for msgid #{key.inspect} with values #{values.inspect}" if values.size != keys.size
+        keys = I18n::Gettext.plural_keys(locale)
+        values = value.split("\000")
+        raise "invalid number of plurals: #{values.size}, keys: #{keys.inspect} on #{locale} locale for msgid #{key.inspect} with values #{values.inspect}" if values.size != keys.size
 
-          result = {}
-          values.each_with_index { |_value, ix| result[keys[ix]] = _value }
-          [key, result]
-        end
-
+        result = {}
+        values.each_with_index { |_value, ix| result[keys[ix]] = _value }
+        [key, result]
+      end
     end
   end
 end

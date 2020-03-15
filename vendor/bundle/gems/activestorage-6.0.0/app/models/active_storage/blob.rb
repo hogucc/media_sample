@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "active_storage/downloader"
+require 'active_storage/downloader'
 
 # A blob is a record that contains the metadata about a file and a key for where that file resides on the service.
 # Blobs can be created in two ways:
@@ -16,18 +16,18 @@ require "active_storage/downloader"
 # update a blob's metadata on a subsequent pass, but you should not update the key or change the uploaded file.
 # If you need to create a derivative or otherwise change the blob, simply create a new blob and purge the old one.
 class ActiveStorage::Blob < ActiveRecord::Base
-  require_dependency "active_storage/blob/analyzable"
-  require_dependency "active_storage/blob/identifiable"
-  require_dependency "active_storage/blob/representable"
+  require_dependency 'active_storage/blob/analyzable'
+  require_dependency 'active_storage/blob/identifiable'
+  require_dependency 'active_storage/blob/representable'
 
   include Analyzable
   include Identifiable
   include Representable
 
-  self.table_name = "active_storage_blobs"
+  self.table_name = 'active_storage_blobs'
 
   has_secure_token :key
-  store :metadata, accessors: [ :analyzed, :identified ], coder: ActiveRecord::Coders::JSON
+  store :metadata, accessors: [:analyzed, :identified], coder: ActiveRecord::Coders::JSON
 
   class_attribute :service
 
@@ -114,24 +114,23 @@ class ActiveStorage::Blob < ActiveRecord::Base
 
   # Returns true if the content_type of this blob is in the image range, like image/png.
   def image?
-    content_type.start_with?("image")
+    content_type.start_with?('image')
   end
 
   # Returns true if the content_type of this blob is in the audio range, like audio/mpeg.
   def audio?
-    content_type.start_with?("audio")
+    content_type.start_with?('audio')
   end
 
   # Returns true if the content_type of this blob is in the video range, like video/mp4.
   def video?
-    content_type.start_with?("video")
+    content_type.start_with?('video')
   end
 
   # Returns true if the content_type of this blob is in the text range, like text/plain.
   def text?
-    content_type.start_with?("text")
+    content_type.start_with?('text')
   end
-
 
   # Returns the URL of the blob on the service. This URL is intended to be short-lived for security and not used directly
   # with users. Instead, the +service_url+ should only be exposed as a redirect from a stable, possibly authenticated URL.
@@ -141,7 +140,7 @@ class ActiveStorage::Blob < ActiveRecord::Base
     filename = ActiveStorage::Filename.wrap(filename || self.filename)
 
     service.url key, expires_in: expires_in, filename: filename, content_type: content_type_for_service_url,
-      disposition: forced_disposition_for_service_url || disposition, **options
+                     disposition: forced_disposition_for_service_url || disposition, **options
   end
 
   # Returns a URL that can be used to directly upload a file for this blob on the service. This URL is intended to be
@@ -154,7 +153,6 @@ class ActiveStorage::Blob < ActiveRecord::Base
   def service_headers_for_direct_upload
     service.headers_for_direct_upload key, filename: filename, content_type: content_type, content_length: byte_size, checksum: checksum
   end
-
 
   # Uploads the +io+ to the service on the +key+ for this blob. Blobs are intended to be immutable, so you shouldn't be
   # using this method after a file has already been uploaded to fit with a blob. If you want to create a derivative blob,
@@ -204,9 +202,8 @@ class ActiveStorage::Blob < ActiveRecord::Base
   # Raises ActiveStorage::IntegrityError if the downloaded data does not match the blob's checksum.
   def open(tmpdir: nil, &block)
     service.open key, checksum: checksum,
-      name: [ "ActiveStorage-#{id}-", filename.extension_with_delimiter ], tmpdir: tmpdir, &block
+                      name: ["ActiveStorage-#{id}-", filename.extension_with_delimiter], tmpdir: tmpdir, &block
   end
-
 
   # Deletes the files on the service associated with the blob. This should only be done if the blob is going to be
   # deleted as well or you will essentially have a dead reference. It's recommended to use #purge and #purge_later
@@ -232,47 +229,46 @@ class ActiveStorage::Blob < ActiveRecord::Base
   end
 
   private
-    def compute_checksum_in_chunks(io)
-      Digest::MD5.new.tap do |checksum|
-        while chunk = io.read(5.megabytes)
-          checksum << chunk
-        end
 
-        io.rewind
-      end.base64digest
-    end
-
-    def extract_content_type(io)
-      Marcel::MimeType.for io, name: filename.to_s, declared_type: content_type
-    end
-
-    def forcibly_serve_as_binary?
-      ActiveStorage.content_types_to_serve_as_binary.include?(content_type)
-    end
-
-    def allowed_inline?
-      ActiveStorage.content_types_allowed_inline.include?(content_type)
-    end
-
-    def content_type_for_service_url
-      forcibly_serve_as_binary? ? ActiveStorage.binary_content_type : content_type
-    end
-
-    def forced_disposition_for_service_url
-      if forcibly_serve_as_binary? || !allowed_inline?
-        :attachment
+  def compute_checksum_in_chunks(io)
+    Digest::MD5.new.tap do |checksum|
+      while chunk = io.read(5.megabytes)
+        checksum << chunk
       end
-    end
 
-    def service_metadata
-      if forcibly_serve_as_binary?
-        { content_type: ActiveStorage.binary_content_type, disposition: :attachment, filename: filename }
-      elsif !allowed_inline?
-        { content_type: content_type, disposition: :attachment, filename: filename }
-      else
-        { content_type: content_type }
-      end
+      io.rewind
+    end.base64digest
+  end
+
+  def extract_content_type(io)
+    Marcel::MimeType.for io, name: filename.to_s, declared_type: content_type
+  end
+
+  def forcibly_serve_as_binary?
+    ActiveStorage.content_types_to_serve_as_binary.include?(content_type)
+  end
+
+  def allowed_inline?
+    ActiveStorage.content_types_allowed_inline.include?(content_type)
+  end
+
+  def content_type_for_service_url
+    forcibly_serve_as_binary? ? ActiveStorage.binary_content_type : content_type
+  end
+
+  def forced_disposition_for_service_url
+    :attachment if forcibly_serve_as_binary? || !allowed_inline?
+  end
+
+  def service_metadata
+    if forcibly_serve_as_binary?
+      { content_type: ActiveStorage.binary_content_type, disposition: :attachment, filename: filename }
+    elsif !allowed_inline?
+      { content_type: content_type, disposition: :attachment, filename: filename }
+    else
+      { content_type: content_type }
     end
+  end
 end
 
 ActiveSupport.run_load_hooks :active_storage_blob, ActiveStorage::Blob

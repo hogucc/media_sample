@@ -14,7 +14,7 @@
 # Builder namespace for compatibility.
 #
 module Builder
-  if Object::const_defined?(:BasicObject)
+  if Object.const_defined?(:BasicObject)
     BlankSlate = ::BasicObject
   else
     require 'blankslate'

@@ -141,7 +141,7 @@ Capybara::SpecHelper.spec '#has_text?' do
 
   it 'should warn when passed nil' do
     @session.visit('/with_html')
-    expect_any_instance_of(Kernel).to receive(:warn).with(/Checking for expected text of nil is confusing/) # rubocop:disable RSpec/AnyInstance
+    expect_any_instance_of(Kernel).to receive(:warn).with(/Checking for expected text of nil is confusing/)
     expect(@session).to have_text(nil)
   end
 

@@ -29,12 +29,13 @@ module I18n
       # either pick a special :zero translation even for languages where the
       # pluralizer does not return a :zero key.
       def pluralize(locale, entry, count)
-        return entry unless entry.is_a?(Hash) and count
+        return entry unless entry.is_a?(Hash) && count
 
         pluralizer = pluralizer(locale)
         if pluralizer.respond_to?(:call)
-          key = count == 0 && entry.has_key?(:zero) ? :zero : pluralizer.call(count)
-          raise InvalidPluralizationData.new(entry, count, key) unless entry.has_key?(key)
+          key = count == 0 && entry.key?(:zero) ? :zero : pluralizer.call(count)
+          raise InvalidPluralizationData.new(entry, count, key) unless entry.key?(key)
+
           entry[key]
         else
           super
@@ -43,13 +44,13 @@ module I18n
 
       protected
 
-        def pluralizers
-          @pluralizers ||= {}
-        end
+      def pluralizers
+        @pluralizers ||= {}
+      end
 
-        def pluralizer(locale)
-          pluralizers[locale] ||= I18n.t(:'i18n.plural.rule', :locale => locale, :resolve => false)
-        end
+      def pluralizer(locale)
+        pluralizers[locale] ||= I18n.t(:'i18n.plural.rule', locale: locale, resolve: false)
+      end
     end
   end
 end

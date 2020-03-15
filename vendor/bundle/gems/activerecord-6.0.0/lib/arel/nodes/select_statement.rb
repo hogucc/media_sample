@@ -18,8 +18,8 @@ module Arel # :nodoc: all
 
       def initialize_copy(other)
         super
-        @cores  = @cores.map { |x| x.clone }
-        @orders = @orders.map { |x| x.clone }
+        @cores  = @cores.map(&:clone)
+        @orders = @orders.map(&:clone)
       end
 
       def hash
@@ -28,14 +28,14 @@ module Arel # :nodoc: all
 
       def eql?(other)
         self.class == other.class &&
-          self.cores == other.cores &&
-          self.orders == other.orders &&
-          self.limit == other.limit &&
-          self.lock == other.lock &&
-          self.offset == other.offset &&
-          self.with == other.with
+          cores == other.cores &&
+          orders == other.orders &&
+          limit == other.limit &&
+          lock == other.lock &&
+          offset == other.offset &&
+          with == other.with
       end
-      alias :== :eql?
+      alias == eql?
     end
   end
 end

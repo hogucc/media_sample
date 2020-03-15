@@ -32,20 +32,18 @@
 
 # see {file:README}
 module FFI
-
   # @param [Type, DataConverter, Symbol] old type definition used by {FFI.find_type}
   # @param [Symbol] add new type definition's name to add
   # @return [Type]
   # Add a definition type to type definitions.
   def self.typedef(old, add)
-    TypeDefs[add] = self.find_type(old)
+    TypeDefs[add] = find_type(old)
   end
 
   # (see FFI.typedef)
   def self.add_typedef(old, add)
     typedef old, add
   end
-
 
   # @param [Type, DataConverter, Symbol] name
   # @param [Hash] type_map if nil, {FFI::TypeDefs} is used
@@ -57,10 +55,10 @@ module FFI
     if name.is_a?(Type)
       name
 
-    elsif type_map && type_map.has_key?(name)
+    elsif type_map&.key?(name)
       type_map[name]
 
-    elsif TypeDefs.has_key?(name)
+    elsif TypeDefs.key?(name)
       TypeDefs[name]
 
     elsif name.is_a?(DataConverter)
@@ -71,82 +69,82 @@ module FFI
   end
 
   # List of type definitions
-  TypeDefs.merge!({
-      # The C void type; only useful for function return types
-      :void => Type::VOID,
+  TypeDefs.merge!(
+    # The C void type; only useful for function return types
+    void: Type::VOID,
 
-      # C boolean type
-      :bool => Type::BOOL,
+    # C boolean type
+    bool: Type::BOOL,
 
-      # C nul-terminated string
-      :string => Type::STRING,
+    # C nul-terminated string
+    string: Type::STRING,
 
-      # C signed char
-      :char => Type::CHAR,
-      # C unsigned char
-      :uchar => Type::UCHAR,
+    # C signed char
+    char: Type::CHAR,
+    # C unsigned char
+    uchar: Type::UCHAR,
 
-      # C signed short
-      :short => Type::SHORT,
-      # C unsigned short
-      :ushort => Type::USHORT,
+    # C signed short
+    short: Type::SHORT,
+    # C unsigned short
+    ushort: Type::USHORT,
 
-      # C signed int
-      :int => Type::INT,
-      # C unsigned int
-      :uint => Type::UINT,
+    # C signed int
+    int: Type::INT,
+    # C unsigned int
+    uint: Type::UINT,
 
-      # C signed long
-      :long => Type::LONG,
+    # C signed long
+    long: Type::LONG,
 
-      # C unsigned long
-      :ulong => Type::ULONG,
+    # C unsigned long
+    ulong: Type::ULONG,
 
-      # C signed long long integer
-      :long_long => Type::LONG_LONG,
+    # C signed long long integer
+    long_long: Type::LONG_LONG,
 
-      # C unsigned long long integer
-      :ulong_long => Type::ULONG_LONG,
+    # C unsigned long long integer
+    ulong_long: Type::ULONG_LONG,
 
-      # C single precision float
-      :float => Type::FLOAT,
+    # C single precision float
+    float: Type::FLOAT,
 
-      # C double precision float
-      :double => Type::DOUBLE,
+    # C double precision float
+    double: Type::DOUBLE,
 
-      # C long double
-      :long_double => Type::LONGDOUBLE,
+    # C long double
+    long_double: Type::LONGDOUBLE,
 
-      # Native memory address
-      :pointer => Type::POINTER,
+    # Native memory address
+    pointer: Type::POINTER,
 
-      # 8 bit signed integer
-      :int8 => Type::INT8,
-      # 8 bit unsigned integer
-      :uint8 => Type::UINT8,
+    # 8 bit signed integer
+    int8: Type::INT8,
+    # 8 bit unsigned integer
+    uint8: Type::UINT8,
 
-      # 16 bit signed integer
-      :int16 => Type::INT16,
-      # 16 bit unsigned integer
-      :uint16 => Type::UINT16,
+    # 16 bit signed integer
+    int16: Type::INT16,
+    # 16 bit unsigned integer
+    uint16: Type::UINT16,
 
-      # 32 bit signed integer
-      :int32 => Type::INT32,
-      # 32 bit unsigned integer
-      :uint32 => Type::UINT32,
+    # 32 bit signed integer
+    int32: Type::INT32,
+    # 32 bit unsigned integer
+    uint32: Type::UINT32,
 
-      # 64 bit signed integer
-      :int64 => Type::INT64,
-      # 64 bit unsigned integer
-      :uint64 => Type::UINT64,
+    # 64 bit signed integer
+    int64: Type::INT64,
+    # 64 bit unsigned integer
+    uint64: Type::UINT64,
 
-      :buffer_in => Type::BUFFER_IN,
-      :buffer_out => Type::BUFFER_OUT,
-      :buffer_inout => Type::BUFFER_INOUT,
+    buffer_in: Type::BUFFER_IN,
+    buffer_out: Type::BUFFER_OUT,
+    buffer_inout: Type::BUFFER_INOUT,
 
-      # Used in function prototypes to indicate the arguments are variadic
-      :varargs => Type::VARARGS,
-  })
+    # Used in function prototypes to indicate the arguments are variadic
+    varargs: Type::VARARGS
+  )
 
   # This will convert a pointer to a Ruby string (just like `:string`), but
   # also allow to work with the pointer itself. This is useful when you want
@@ -163,8 +161,8 @@ module FFI
     # @param ctx not used
     # @return [Array(String, Pointer)]
     # Returns a [ String, Pointer ] tuple so the C memory for the string can be freed
-    def self.from_native(val, ctx)
-      [ val.null? ? nil : val.get_string(0), val ]
+    def self.from_native(val, _ctx)
+      [val.null? ? nil : val.get_string(0), val]
     end
   end
 
@@ -179,14 +177,14 @@ module FFI
 
   # Load all the platform dependent types
   begin
-    File.open(File.join(Platform::CONF_DIR, 'types.conf'), "r") do |f|
-      prefix = "rbx.platform.typedef."
-      f.each_line { |line|
+    File.open(File.join(Platform::CONF_DIR, 'types.conf'), 'r') do |f|
+      prefix = 'rbx.platform.typedef.'
+      f.each_line do |line|
         if line.index(prefix) == 0
           new_type, orig_type = line.chomp.slice(prefix.length..-1).split(/\s*=\s*/)
           typedef(orig_type.to_sym, new_type.to_sym)
         end
-      }
+      end
     end
     typedef :pointer, :caddr_t
   rescue Errno::ENOENT

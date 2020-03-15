@@ -3,7 +3,6 @@ require 'concurrent/thread_safe/util'
 require 'set'
 
 module Concurrent
-
   # @!macro concurrent_set
   #
   #   A thread-safe subclass of Set. This version locks against the object
@@ -19,15 +18,13 @@ module Concurrent
   #
   #   @see http://ruby-doc.org/stdlib-2.4.0/libdoc/set/rdoc/Set.html Ruby standard library `Set`
 
-
   # @!macro internal_implementation_note
-  SetImplementation = case
-                      when Concurrent.on_cruby?
+  SetImplementation = if Concurrent.on_cruby?
                         # Because MRI never runs code in parallel, the existing
                         # non-thread-safe structures should usually work fine.
                         ::Set
 
-                      when Concurrent.on_jruby?
+                      elsif Concurrent.on_jruby?
                         require 'jruby/synchronized'
 
                         class JRubySet < ::Set
@@ -35,7 +32,7 @@ module Concurrent
                         end
                         JRubySet
 
-                      when Concurrent.on_rbx?
+                      elsif Concurrent.on_rbx?
                         require 'monitor'
                         require 'concurrent/thread_safe/util/data_structures'
 
@@ -44,7 +41,7 @@ module Concurrent
                         ThreadSafe::Util.make_synchronized_on_rbx Concurrent::RbxSet
                         RbxSet
 
-                      when Concurrent.on_truffleruby?
+                      elsif Concurrent.on_truffleruby?
                         require 'concurrent/thread_safe/util/data_structures'
 
                         class TruffleRubySet < ::Set
@@ -63,4 +60,3 @@ module Concurrent
   class Set < SetImplementation
   end
 end
-

@@ -14,7 +14,6 @@ require 'preload'
 require 'builder'
 
 class TestMethodCaching < Builder::Test
-
   # We can directly ask if xml object responds to the cache_me or
   # do_not_cache_me methods because xml is derived from BasicObject
   # (and repond_to? is not defined in BasicObject).
@@ -30,16 +29,16 @@ class TestMethodCaching < Builder::Test
 
   def test_caching_does_not_break_weird_symbols
     xml = Builder::XmlMarkup.new
-    xml.__send__("work-order", 1)
-    assert_equal "<work-order>1</work-order>", xml.target!
+    xml.__send__('work-order', 1)
+    assert_equal '<work-order>1</work-order>', xml.target!
   end
 
   def test_method_call_caching
     xml = Builder::XmlMarkup.new
     xml.cache_me
 
-    def xml.method_missing(*args)
-      ::Kernel.fail StandardError, "SHOULD NOT BE CALLED"
+    def xml.method_missing(*_args)
+      ::Kernel.fail StandardError, 'SHOULD NOT BE CALLED'
     end
     assert_nothing_raised do
       xml.cache_me
@@ -51,12 +50,11 @@ class TestMethodCaching < Builder::Test
     xml = Builder::XmlMarkup.new
     xml.do_not_cache_me
 
-    def xml.method_missing(*args)
-      ::Kernel.fail StandardError, "SHOULD BE CALLED"
+    def xml.method_missing(*_args)
+      ::Kernel.fail StandardError, 'SHOULD BE CALLED'
     end
-    assert_raise(StandardError, "SHOULD BE CALLED") do
+    assert_raise(StandardError, 'SHOULD BE CALLED') do
       xml.do_not_cache_me
     end
   end
-
 end

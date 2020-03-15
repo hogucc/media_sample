@@ -15,7 +15,7 @@ module ActiveRecord
         end
 
         def auto_increment?
-          extra == "auto_increment"
+          extra == 'auto_increment'
         end
 
         def virtual?

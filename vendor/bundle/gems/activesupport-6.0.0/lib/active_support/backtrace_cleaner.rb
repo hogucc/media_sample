@@ -30,7 +30,8 @@ module ActiveSupport
   # Inspired by the Quiet Backtrace gem by thoughtbot.
   class BacktraceCleaner
     def initialize
-      @filters, @silencers = [], []
+      @filters = []
+      @silencers = []
       add_gem_filter
       add_gem_silencer
       add_stdlib_silencer
@@ -50,7 +51,7 @@ module ActiveSupport
         filtered
       end
     end
-    alias :filter :clean
+    alias filter clean
 
     # Adds a filter from the block provided. Each line in the backtrace will be
     # mapped against this filter.
@@ -86,47 +87,47 @@ module ActiveSupport
 
     private
 
-      FORMATTED_GEMS_PATTERN = /\A[^\/]+ \([\w.]+\) /
+    FORMATTED_GEMS_PATTERN = %r{\A[^/]+ \([\w.]+\) }.freeze
 
-      def add_gem_filter
-        gems_paths = (Gem.path | [Gem.default_dir]).map { |p| Regexp.escape(p) }
-        return if gems_paths.empty?
+    def add_gem_filter
+      gems_paths = (Gem.path | [Gem.default_dir]).map { |p| Regexp.escape(p) }
+      return if gems_paths.empty?
 
-        gems_regexp = %r{(#{gems_paths.join('|')})/(bundler/)?gems/([^/]+)-([\w.]+)/(.*)}
-        gems_result = '\3 (\4) \5'
-        add_filter { |line| line.sub(gems_regexp, gems_result) }
+      gems_regexp = %r{(#{gems_paths.join('|')})/(bundler/)?gems/([^/]+)-([\w.]+)/(.*)}
+      gems_result = '\3 (\4) \5'
+      add_filter { |line| line.sub(gems_regexp, gems_result) }
+    end
+
+    def add_gem_silencer
+      add_silencer { |line| FORMATTED_GEMS_PATTERN.match?(line) }
+    end
+
+    def add_stdlib_silencer
+      add_silencer { |line| line.start_with?(RbConfig::CONFIG['rubylibdir']) }
+    end
+
+    def filter_backtrace(backtrace)
+      @filters.each do |f|
+        backtrace = backtrace.map { |line| f.call(line) }
       end
 
-      def add_gem_silencer
-        add_silencer { |line| FORMATTED_GEMS_PATTERN.match?(line) }
+      backtrace
+    end
+
+    def silence(backtrace)
+      @silencers.each do |s|
+        backtrace = backtrace.reject { |line| s.call(line) }
       end
 
-      def add_stdlib_silencer
-        add_silencer { |line| line.start_with?(RbConfig::CONFIG["rubylibdir"]) }
-      end
+      backtrace
+    end
 
-      def filter_backtrace(backtrace)
-        @filters.each do |f|
-          backtrace = backtrace.map { |line| f.call(line) }
+    def noise(backtrace)
+      backtrace.select do |line|
+        @silencers.any? do |s|
+          s.call(line)
         end
-
-        backtrace
       end
-
-      def silence(backtrace)
-        @silencers.each do |s|
-          backtrace = backtrace.reject { |line| s.call(line) }
-        end
-
-        backtrace
-      end
-
-      def noise(backtrace)
-        backtrace.select do |line|
-          @silencers.any? do |s|
-            s.call(line)
-          end
-        end
-      end
+    end
   end
 end

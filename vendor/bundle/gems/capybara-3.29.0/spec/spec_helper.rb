@@ -62,11 +62,11 @@ module Capybara
     end
 
     def ie?(session)
-      %i[internet_explorer ie].include?(browser_name(session))
+      [:internet_explorer, :ie].include?(browser_name(session))
     end
 
     def safari?(session)
-      %i[safari Safari Safari_Technology_Preview].include?(browser_name(session))
+      [:safari, :Safari, :Safari_Technology_Preview].include?(browser_name(session))
     end
 
     def browser_name(session)

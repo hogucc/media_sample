@@ -260,7 +260,7 @@ module Capybara
         @current_driver
       end || default_driver
     end
-    alias_method :mode, :current_driver
+    alias mode current_driver
 
     def current_driver=(name)
       if threadsafe
@@ -321,7 +321,7 @@ module Capybara
       # reset in reverse so sessions that started servers are reset last
       session_pool.reverse_each { |_mode, session| session.reset! }
     end
-    alias_method :reset!, :reset_sessions!
+    alias reset! reset_sessions!
 
     ##
     #
@@ -404,7 +404,7 @@ module Capybara
       config.session_options
     end
 
-  private
+    private
 
     def config
       @config ||= Capybara::Config.new

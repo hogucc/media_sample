@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require "active_support/core_ext/module/attribute_accessors"
-require "active_support/core_ext/class/attribute"
-require "active_support/subscriber"
+require 'active_support/core_ext/module/attribute_accessors'
+require 'active_support/core_ext/class/attribute'
+require 'active_support/subscriber'
 
 module ActiveSupport
   # <tt>ActiveSupport::LogSubscriber</tt> is an object set to consume
@@ -78,9 +78,7 @@ module ActiveSupport
 
     class << self
       def logger
-        @logger ||= if defined?(Rails) && Rails.respond_to?(:logger)
-          Rails.logger
-        end
+        @logger ||= Rails.logger if defined?(Rails) && Rails.respond_to?(:logger)
       end
 
       attr_writer :logger
@@ -105,15 +103,13 @@ module ActiveSupport
 
     def finish(name, id, payload)
       super if logger
-    rescue => e
-      if logger
-        logger.error "Could not log #{name.inspect} event. #{e.class}: #{e.message} #{e.backtrace}"
-      end
+    rescue StandardError => e
+      logger&.error "Could not log #{name.inspect} event. #{e.class}: #{e.message} #{e.backtrace}"
     end
 
-  private
+    private
 
-    %w(info debug warn error fatal unknown).each do |level|
+    %w[info debug warn error fatal unknown].each do |level|
       class_eval <<-METHOD, __FILE__, __LINE__ + 1
         def #{level}(progname = nil, &block)
           logger.#{level}(progname, &block) if logger
@@ -127,8 +123,9 @@ module ActiveSupport
     # end of the returned String.
     def color(text, color, bold = false) # :doc:
       return text unless colorize_logging
+
       color = self.class.const_get(color.upcase) if color.is_a?(Symbol)
-      bold  = bold ? BOLD : ""
+      bold  = bold ? BOLD : ''
       "#{bold}#{color}#{text}#{CLEAR}"
     end
   end

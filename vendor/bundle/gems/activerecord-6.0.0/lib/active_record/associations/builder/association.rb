@@ -18,13 +18,13 @@ module ActiveRecord::Associations::Builder # :nodoc:
     end
     self.extensions = []
 
-    VALID_OPTIONS = [:class_name, :anonymous_class, :foreign_key, :validate] # :nodoc:
+    VALID_OPTIONS = [:class_name, :anonymous_class, :foreign_key, :validate].freeze # :nodoc:
 
     def self.build(model, name, scope, options, &block)
       if model.dangerous_attribute_method?(name)
         raise ArgumentError, "You tried to define an association named #{name} on the model #{model.name}, but " \
                              "this will conflict with a method #{name} already defined by Active Record. " \
-                             "Please choose a different association name."
+                             'Please choose a different association name.'
       end
 
       reflection = create_reflection(model, name, scope, options, &block)
@@ -35,7 +35,7 @@ module ActiveRecord::Associations::Builder # :nodoc:
     end
 
     def self.create_reflection(model, name, scope, options, &block)
-      raise ArgumentError, "association names must be a Symbol" unless name.kind_of?(Symbol)
+      raise ArgumentError, 'association names must be a Symbol' unless name.is_a?(Symbol)
 
       validate_options(options)
 
@@ -59,7 +59,7 @@ module ActiveRecord::Associations::Builder # :nodoc:
       raise NotImplementedError
     end
 
-    def self.valid_options(options)
+    def self.valid_options(_options)
       VALID_OPTIONS + Association.extensions.flat_map(&:valid_options)
     end
 
@@ -67,8 +67,7 @@ module ActiveRecord::Associations::Builder # :nodoc:
       options.assert_valid_keys(valid_options(options))
     end
 
-    def self.define_extensions(model, name)
-    end
+    def self.define_extensions(model, name); end
 
     def self.define_callbacks(model, reflection)
       if dependent = reflection.options[:dependent]
@@ -119,18 +118,16 @@ module ActiveRecord::Associations::Builder # :nodoc:
     end
 
     def self.check_dependent_options(dependent)
-      unless valid_dependent_options.include? dependent
-        raise ArgumentError, "The :dependent option must be one of #{valid_dependent_options}, but is :#{dependent}"
-      end
+      raise ArgumentError, "The :dependent option must be one of #{valid_dependent_options}, but is :#{dependent}" unless valid_dependent_options.include? dependent
     end
 
     def self.add_destroy_callbacks(model, reflection)
       name = reflection.name
-      model.before_destroy lambda { |o| o.association(name).handle_dependency }
+      model.before_destroy ->(o) { o.association(name).handle_dependency }
     end
 
     private_class_method :build_scope, :macro, :valid_options, :validate_options, :define_extensions,
-      :define_callbacks, :define_accessors, :define_readers, :define_writers, :define_validations,
-      :valid_dependent_options, :check_dependent_options, :add_destroy_callbacks
+                         :define_callbacks, :define_accessors, :define_readers, :define_writers, :define_validations,
+                         :valid_dependent_options, :check_dependent_options, :add_destroy_callbacks
   end
 end

@@ -8,7 +8,6 @@ require 'concurrent/executor/safe_task_executor'
 require 'concurrent/scheduled_task'
 
 module Concurrent
-
   # A very common concurrency pattern is to run a thread that performs a task at
   # regular intervals. The thread that performs the task sleeps for the given
   # interval then wakes up and performs the task. Lather, rinse, repeat... This
@@ -188,7 +187,8 @@ module Concurrent
     #
     #   @return [TimerTask] the new `TimerTask`
     def initialize(opts = {}, &task)
-      raise ArgumentError.new('no block given') unless block_given?
+      raise ArgumentError, 'no block given' unless block_given?
+
       super
       set_deref_options opts
     end
@@ -246,7 +246,7 @@ module Concurrent
     #   task is performed again.
     def execution_interval=(value)
       if (value = value.to_f) <= 0.0
-        raise ArgumentError.new('must be greater than zero')
+        raise ArgumentError, 'must be greater than zero'
       else
         synchronize { @execution_interval = value }
       end
@@ -264,7 +264,7 @@ module Concurrent
     #   considered to have failed.
     def timeout_interval=(value)
       if (value = value.to_f) <= 0.0
-        raise ArgumentError.new('must be greater than zero')
+        raise ArgumentError, 'must be greater than zero'
       else
         synchronize { @timeout_interval = value }
       end
@@ -308,6 +308,7 @@ module Concurrent
     # @!visibility private
     def execute_task(completion)
       return nil unless @running.true?
+
       ScheduledTask.execute(timeout_interval, args: [completion], &method(:timeout_task))
       _success, value, reason = @executor.execute(self)
       if completion.try?
@@ -324,6 +325,7 @@ module Concurrent
     # @!visibility private
     def timeout_task(completion)
       return unless @running.true?
+
       if completion.try?
         self.value = value
         schedule_next_task

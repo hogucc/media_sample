@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "mutex_m"
+require 'mutex_m'
 
 module ActiveRecord
   module Delegation # :nodoc:
@@ -16,11 +16,11 @@ module ActiveRecord
           ActiveRecord::Associations::CollectionProxy,
           ActiveRecord::AssociationRelation
         ].each do |klass|
-          delegate = Class.new(klass) {
+          delegate = Class.new(klass) do
             include ClassSpecificRelation
-          }
+          end
           include_relation_methods(delegate)
-          mangled_name = klass.name.gsub("::", "_")
+          mangled_name = klass.name.gsub('::', '_')
           const_set mangled_name, delegate
           private_constant mangled_name
 
@@ -38,18 +38,20 @@ module ActiveRecord
       end
 
       protected
-        def include_relation_methods(delegate)
-          superclass.include_relation_methods(delegate) unless base_class?
-          delegate.include generated_relation_methods
-        end
+
+      def include_relation_methods(delegate)
+        superclass.include_relation_methods(delegate) unless base_class?
+        delegate.include generated_relation_methods
+      end
 
       private
-        def generated_relation_methods
-          @generated_relation_methods ||= GeneratedRelationMethods.new.tap do |mod|
-            const_set(:GeneratedRelationMethods, mod)
-            private_constant :GeneratedRelationMethods
-          end
+
+      def generated_relation_methods
+        @generated_relation_methods ||= GeneratedRelationMethods.new.tap do |mod|
+          const_set(:GeneratedRelationMethods, mod)
+          private_constant :GeneratedRelationMethods
         end
+      end
     end
 
     class GeneratedRelationMethods < Module # :nodoc:
@@ -100,14 +102,14 @@ module ActiveRecord
 
       private
 
-        def method_missing(method, *args, &block)
-          if @klass.respond_to?(method)
-            @klass.generate_relation_method(method)
-            scoping { @klass.public_send(method, *args, &block) }
-          else
-            super
-          end
+      def method_missing(method, *args, &block)
+        if @klass.respond_to?(method)
+          @klass.generate_relation_method(method)
+          scoping { @klass.public_send(method, *args, &block) }
+        else
+          super
         end
+      end
     end
 
     module ClassMethods # :nodoc:
@@ -117,14 +119,15 @@ module ActiveRecord
 
       private
 
-        def relation_class_for(klass)
-          klass.relation_delegate_class(self)
-        end
+      def relation_class_for(klass)
+        klass.relation_delegate_class(self)
+      end
     end
 
     private
-      def respond_to_missing?(method, _)
-        super || @klass.respond_to?(method)
-      end
+
+    def respond_to_missing?(method, _)
+      super || @klass.respond_to?(method)
+    end
   end
 end

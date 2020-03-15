@@ -1,4 +1,4 @@
-$LOAD_PATH << File.expand_path('../lib', __FILE__)
+$: << File.expand_path('lib', __dir__)
 
 require 'minitest/autorun'
 require 'skiptrace'

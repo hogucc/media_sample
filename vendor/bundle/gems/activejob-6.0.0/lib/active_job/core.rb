@@ -48,7 +48,7 @@ module ActiveJob
     module ClassMethods
       # Creates a new job instance from a hash created with +serialize+
       def deserialize(job_data)
-        job = job_data["job_class"].constantize.new
+        job = job_data['job_class'].constantize.new
         job.deserialize(job_data)
         job
       end
@@ -91,17 +91,17 @@ module ActiveJob
     # queuing adapter.
     def serialize
       {
-        "job_class"  => self.class.name,
-        "job_id"     => job_id,
-        "provider_job_id" => provider_job_id,
-        "queue_name" => queue_name,
-        "priority"   => priority,
-        "arguments"  => serialize_arguments_if_needed(arguments),
-        "executions" => executions,
-        "exception_executions" => exception_executions,
-        "locale"     => I18n.locale.to_s,
-        "timezone"   => Time.zone.try(:name),
-        "enqueued_at" => Time.now.utc.iso8601
+        'job_class' => self.class.name,
+        'job_id' => job_id,
+        'provider_job_id' => provider_job_id,
+        'queue_name' => queue_name,
+        'priority' => priority,
+        'arguments' => serialize_arguments_if_needed(arguments),
+        'executions' => executions,
+        'exception_executions' => exception_executions,
+        'locale' => I18n.locale.to_s,
+        'timezone' => Time.zone.try(:name),
+        'enqueued_at' => Time.now.utc.iso8601
       }
     end
 
@@ -132,44 +132,45 @@ module ActiveJob
     #      end
     #    end
     def deserialize(job_data)
-      self.job_id               = job_data["job_id"]
-      self.provider_job_id      = job_data["provider_job_id"]
-      self.queue_name           = job_data["queue_name"]
-      self.priority             = job_data["priority"]
-      self.serialized_arguments = job_data["arguments"]
-      self.executions           = job_data["executions"]
-      self.exception_executions = job_data["exception_executions"]
-      self.locale               = job_data["locale"] || I18n.locale.to_s
-      self.timezone             = job_data["timezone"] || Time.zone.try(:name)
-      self.enqueued_at          = job_data["enqueued_at"]
+      self.job_id               = job_data['job_id']
+      self.provider_job_id      = job_data['provider_job_id']
+      self.queue_name           = job_data['queue_name']
+      self.priority             = job_data['priority']
+      self.serialized_arguments = job_data['arguments']
+      self.executions           = job_data['executions']
+      self.exception_executions = job_data['exception_executions']
+      self.locale               = job_data['locale'] || I18n.locale.to_s
+      self.timezone             = job_data['timezone'] || Time.zone.try(:name)
+      self.enqueued_at          = job_data['enqueued_at']
     end
 
     private
-      def serialize_arguments_if_needed(arguments)
-        if arguments_serialized?
-          @serialized_arguments
-        else
-          serialize_arguments(arguments)
-        end
-      end
 
-      def deserialize_arguments_if_needed
-        if arguments_serialized?
-          @arguments = deserialize_arguments(@serialized_arguments)
-          @serialized_arguments = nil
-        end
+    def serialize_arguments_if_needed(arguments)
+      if arguments_serialized?
+        @serialized_arguments
+      else
+        serialize_arguments(arguments)
       end
+    end
 
-      def serialize_arguments(arguments)
-        Arguments.serialize(arguments)
+    def deserialize_arguments_if_needed
+      if arguments_serialized?
+        @arguments = deserialize_arguments(@serialized_arguments)
+        @serialized_arguments = nil
       end
+    end
 
-      def deserialize_arguments(serialized_args)
-        Arguments.deserialize(serialized_args)
-      end
+    def serialize_arguments(arguments)
+      Arguments.serialize(arguments)
+    end
 
-      def arguments_serialized?
-        defined?(@serialized_arguments) && @serialized_arguments
-      end
+    def deserialize_arguments(serialized_args)
+      Arguments.deserialize(serialized_args)
+    end
+
+    def arguments_serialized?
+      defined?(@serialized_arguments) && @serialized_arguments
+    end
   end
 end

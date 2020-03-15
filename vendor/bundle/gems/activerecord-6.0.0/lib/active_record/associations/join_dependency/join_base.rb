@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "active_record/associations/join_dependency/join_part"
+require 'active_record/associations/join_dependency/join_part'
 
 module ActiveRecord
   module Associations
@@ -15,6 +15,7 @@ module ActiveRecord
 
         def match?(other)
           return true if self == other
+
           super && base_klass == other.base_klass
         end
       end

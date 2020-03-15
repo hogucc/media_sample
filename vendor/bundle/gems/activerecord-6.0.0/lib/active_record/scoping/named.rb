@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require "active_support/core_ext/array"
-require "active_support/core_ext/hash/except"
-require "active_support/core_ext/kernel/singleton_class"
+require 'active_support/core_ext/array'
+require 'active_support/core_ext/hash/except'
+require 'active_support/core_ext/kernel/singleton_class'
 
 module ActiveRecord
   # = Active Record \Named \Scopes
@@ -167,20 +167,18 @@ module ActiveRecord
         #   Article.published.featured.latest_article
         #   Article.featured.titles
         def scope(name, body, &block)
-          unless body.respond_to?(:call)
-            raise ArgumentError, "The scope body needs to be callable."
-          end
+          raise ArgumentError, 'The scope body needs to be callable.' unless body.respond_to?(:call)
 
           if dangerous_class_method?(name)
             raise ArgumentError, "You tried to define a scope named \"#{name}\" " \
               "on the model \"#{self.name}\", but Active Record already defined " \
-              "a class method with the same name."
+              'a class method with the same name.'
           end
 
           if method_defined_within?(name, Relation)
             raise ArgumentError, "You tried to define a scope named \"#{name}\" " \
               "on the model \"#{self.name}\", but ActiveRecord::Relation already defined " \
-              "an instance method with the same name."
+              'an instance method with the same name.'
           end
 
           valid_scope_name?(name)
@@ -205,12 +203,12 @@ module ActiveRecord
 
         private
 
-          def valid_scope_name?(name)
-            if respond_to?(name, true) && logger
-              logger.warn "Creating scope :#{name}. " \
-                "Overwriting existing method #{self.name}.#{name}."
-            end
+        def valid_scope_name?(name)
+          if respond_to?(name, true) && logger
+            logger.warn "Creating scope :#{name}. " \
+              "Overwriting existing method #{self.name}.#{name}."
           end
+        end
       end
     end
   end

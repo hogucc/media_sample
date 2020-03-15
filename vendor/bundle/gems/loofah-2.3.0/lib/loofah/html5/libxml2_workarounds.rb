@@ -1,4 +1,3 @@
-# coding: utf-8
 require 'set'
 
 module Loofah
@@ -16,11 +15,11 @@ module Loofah
     #  see comments about CVE-2018-8048 within the tests for more information
     #
     BROKEN_ESCAPING_ATTRIBUTES = Set.new %w[
-        href
-        action
-        src
-        name
-      ]
-    BROKEN_ESCAPING_ATTRIBUTES_QUALIFYING_TAG = {"name" => "a"}
+      href
+      action
+      src
+      name
+    ]
+    BROKEN_ESCAPING_ATTRIBUTES_QUALIFYING_TAG = { 'name' => 'a' }.freeze
   end
 end

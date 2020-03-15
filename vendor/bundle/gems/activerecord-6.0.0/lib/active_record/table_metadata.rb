@@ -34,11 +34,11 @@ module ActiveRecord
     end
 
     def has_column?(column_name)
-      klass && klass.columns_hash.key?(column_name.to_s)
+      klass&.columns_hash&.key?(column_name.to_s)
     end
 
     def associated_with?(association_name)
-      klass && klass._reflect_on_association(association_name)
+      klass&._reflect_on_association(association_name)
     end
 
     def associated_table(table_name)
@@ -58,7 +58,7 @@ module ActiveRecord
     end
 
     def polymorphic_association?
-      association && association.polymorphic?
+      association&.polymorphic?
     end
 
     def aggregated_with?(aggregation_name)
@@ -70,6 +70,7 @@ module ActiveRecord
     end
 
     private
-      attr_reader :klass, :types, :arel_table, :association
+
+    attr_reader :klass, :types, :arel_table, :association
   end
 end

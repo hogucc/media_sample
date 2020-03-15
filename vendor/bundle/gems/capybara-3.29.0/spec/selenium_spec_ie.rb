@@ -55,7 +55,7 @@ end
 
 TestSessions::SeleniumIE.current_window.resize_to(800, 500)
 
-skipped_tests = %i[response_headers status_code trigger modals hover form_attribute windows]
+skipped_tests = [:response_headers, :status_code, :trigger, :modals, :hover, :form_attribute, :windows]
 
 Capybara::SpecHelper.log_selenium_driver_version(Selenium::WebDriver::IE) if ENV['CI']
 
@@ -114,7 +114,7 @@ Capybara::SpecHelper.run_specs TestSessions::SeleniumIE, 'selenium', capybara_sk
   end
 end
 
-RSpec.describe 'Capybara::Session with Internet Explorer', capybara_skip: skipped_tests do # rubocop:disable RSpec/MultipleDescribes
+RSpec.describe 'Capybara::Session with Internet Explorer', capybara_skip: skipped_tests do
   include Capybara::SpecHelper
   ['Capybara::Session', 'Capybara::Node', Capybara::RSpecMatchers].each do |examples|
     include_examples examples, TestSessions::SeleniumIE, :selenium_ie

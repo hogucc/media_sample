@@ -1,4 +1,3 @@
-require 'thread'
 require 'concurrent/delay'
 require 'concurrent/errors'
 require 'concurrent/atomic/atomic_reference'
@@ -17,7 +16,7 @@ module Concurrent
 
   # @return [Logger] Logger with provided level and output.
   def self.create_simple_logger(level = Logger::FATAL, output = $stderr)
-    # TODO (pitr-ch 24-Dec-2016): figure out why it had to be replaced, stdlogger was deadlocking
+    # TODO: (pitr-ch 24-Dec-2016): figure out why it had to be replaced, stdlogger was deadlocking
     lambda do |severity, progname, message = nil, &block|
       return false if severity < level
 
@@ -79,10 +78,10 @@ module Concurrent
     Concurrent.global_logger = create_stdlib_logger level, output
   end
 
-  # TODO (pitr-ch 27-Dec-2016): remove deadlocking stdlib_logger methods
+  # TODO: (pitr-ch 27-Dec-2016): remove deadlocking stdlib_logger methods
 
   # Suppresses all output when used for logging.
-  NULL_LOGGER   = lambda { |level, progname, message = nil, &block| }
+  NULL_LOGGER   = ->(level, progname, message = nil, &block) {}
 
   # @!visibility private
   GLOBAL_LOGGER = AtomicReference.new(create_simple_logger(Logger::WARN))
@@ -167,18 +166,18 @@ module Concurrent
 
   def self.new_fast_executor(opts = {})
     FixedThreadPool.new(
-        [2, Concurrent.processor_count].max,
-        auto_terminate:  opts.fetch(:auto_terminate, true),
-        idletime:        60, # 1 minute
-        max_queue:       0, # unlimited
-        fallback_policy: :abort # shouldn't matter -- 0 max queue
+      [2, Concurrent.processor_count].max,
+      auto_terminate: opts.fetch(:auto_terminate, true),
+      idletime: 60, # 1 minute
+      max_queue: 0, # unlimited
+      fallback_policy: :abort # shouldn't matter -- 0 max queue
     )
   end
 
   def self.new_io_executor(opts = {})
     CachedThreadPool.new(
-        auto_terminate:  opts.fetch(:auto_terminate, true),
-        fallback_policy: :abort # shouldn't matter -- 0 max queue
+      auto_terminate: opts.fetch(:auto_terminate, true),
+      fallback_policy: :abort # shouldn't matter -- 0 max queue
     )
   end
 end

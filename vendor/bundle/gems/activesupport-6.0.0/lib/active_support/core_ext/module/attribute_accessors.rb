@@ -50,7 +50,8 @@ class Module
   #   Person.new.hair_colors # => [:brown, :black, :blonde, :red]
   def mattr_reader(*syms, instance_reader: true, instance_accessor: true, default: nil)
     syms.each do |sym|
-      raise NameError.new("invalid attribute name: #{sym}") unless /\A[_A-Za-z]\w*\z/.match?(sym)
+      raise NameError, "invalid attribute name: #{sym}" unless /\A[_A-Za-z]\w*\z/.match?(sym)
+
       class_eval(<<-EOS, __FILE__, __LINE__ + 1)
         @@#{sym} = nil unless defined? @@#{sym}
 
@@ -67,11 +68,11 @@ class Module
         EOS
       end
 
-      sym_default_value = (block_given? && default.nil?) ? yield : default
+      sym_default_value = block_given? && default.nil? ? yield : default
       class_variable_set("@@#{sym}", sym_default_value) unless sym_default_value.nil?
     end
   end
-  alias :cattr_reader :mattr_reader
+  alias cattr_reader mattr_reader
 
   # Defines a class attribute and creates a class and instance writer methods to
   # allow assignment to the attribute. All class and instance methods created
@@ -117,7 +118,8 @@ class Module
   #   Person.class_variable_get("@@hair_colors") # => [:brown, :black, :blonde, :red]
   def mattr_writer(*syms, instance_writer: true, instance_accessor: true, default: nil)
     syms.each do |sym|
-      raise NameError.new("invalid attribute name: #{sym}") unless /\A[_A-Za-z]\w*\z/.match?(sym)
+      raise NameError, "invalid attribute name: #{sym}" unless /\A[_A-Za-z]\w*\z/.match?(sym)
+
       class_eval(<<-EOS, __FILE__, __LINE__ + 1)
         @@#{sym} = nil unless defined? @@#{sym}
 
@@ -134,11 +136,11 @@ class Module
         EOS
       end
 
-      sym_default_value = (block_given? && default.nil?) ? yield : default
+      sym_default_value = block_given? && default.nil? ? yield : default
       send("#{sym}=", sym_default_value) unless sym_default_value.nil?
     end
   end
-  alias :cattr_writer :mattr_writer
+  alias cattr_writer mattr_writer
 
   # Defines both class and instance accessors for class attributes.
   # All class and instance methods created will be public, even if
@@ -208,5 +210,5 @@ class Module
     mattr_reader(*syms, instance_reader: instance_reader, instance_accessor: instance_accessor, default: default, &blk)
     mattr_writer(*syms, instance_writer: instance_writer, instance_accessor: instance_accessor, default: default)
   end
-  alias :cattr_accessor :mattr_accessor
+  alias cattr_accessor mattr_accessor
 end

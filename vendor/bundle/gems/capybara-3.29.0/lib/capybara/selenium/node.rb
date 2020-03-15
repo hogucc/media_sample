@@ -147,11 +147,22 @@ class Capybara::Selenium::Node < Capybara::Driver::Node
     @tag_name ||= native.tag_name.downcase
   end
 
-  def visible?; boolean_attr(native.displayed?); end
-  def readonly?; boolean_attr(self[:readonly]); end
-  def multiple?; boolean_attr(self[:multiple]); end
-  def selected?; boolean_attr(native.selected?); end
-  alias :checked? :selected?
+  def visible?
+    boolean_attr(native.displayed?)
+  end
+
+  def readonly?
+    boolean_attr(self[:readonly])
+  end
+
+  def multiple?
+    boolean_attr(self[:multiple])
+  end
+
+  def selected?
+    boolean_attr(native.selected?)
+  end
+  alias checked? selected?
 
   def disabled?
     return true unless native.enabled?
@@ -183,7 +194,7 @@ class Capybara::Selenium::Node < Capybara::Driver::Node
     native.rect
   end
 
-protected
+  protected
 
   def scroll_if_needed
     yield
@@ -207,7 +218,7 @@ protected
     end
   end
 
-private
+  private
 
   def sibling_index(parent, node, selector)
     siblings = parent.find_xpath(selector)
@@ -394,10 +405,10 @@ private
   def each_key(keys)
     keys.each do |key|
       key = case key
-      when :ctrl then :control
-      when :command, :cmd then :meta
-      else
-        key
+            when :ctrl then :control
+            when :command, :cmd then :meta
+            else
+              key
       end
       yield key
     end

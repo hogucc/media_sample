@@ -1,15 +1,15 @@
 # frozen_string_literal: true
 
-require "byebug/helpers/reflection"
-require "byebug/byebug"
-require "byebug/context"
-require "byebug/breakpoint"
-require "byebug/interface"
-require "byebug/processors/script_processor"
-require "byebug/processors/post_mortem_processor"
-require "byebug/commands"
-require "byebug/remote"
-require "byebug/printers/plain"
+require 'byebug/helpers/reflection'
+require 'byebug/byebug'
+require 'byebug/context'
+require 'byebug/breakpoint'
+require 'byebug/interface'
+require 'byebug/processors/script_processor'
+require 'byebug/processors/post_mortem_processor'
+require 'byebug/commands'
+require 'byebug/remote'
+require 'byebug/printers/plain'
 
 #
 # Main debugger's container module. Everything is defined under this module
@@ -23,7 +23,7 @@ module Byebug
   # Configuration file used for startup commands. Default value is .byebugrc
   #
   attr_accessor :init_file
-  self.init_file = ".byebugrc"
+  self.init_file = '.byebugrc'
 
   #
   # Debugger's display expressions
@@ -59,7 +59,7 @@ module Byebug
   end
 
   def self.load_settings
-    Dir.glob(File.join(__dir__, "settings", "*.rb")).each do |file|
+    Dir.glob(File.join(__dir__, 'settings', '*.rb')).each do |file|
       require file
     end
 
@@ -100,7 +100,7 @@ module Byebug
   # @note Files will be loaded in the order specified here.
   #
   def rc_dirs
-    [ENV["HOME"], Dir.pwd].compact.uniq
+    [ENV['HOME'], Dir.pwd].compact.uniq
   end
 end
 

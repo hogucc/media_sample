@@ -39,9 +39,7 @@ class Capybara::RackTest::Node < Capybara::Driver::Node
 
     warn "Options passed to Node#set but the RackTest driver doesn't support any - ignoring" unless options.empty?
 
-    if value.is_a?(Array) && !multiple?
-      raise TypeError, "Value cannot be an Array when 'multiple' attribute is not present. Not a #{value.class}"
-    end
+    raise TypeError, "Value cannot be an Array when 'multiple' attribute is not present. Not a #{value.class}" if value.is_a?(Array) && !multiple?
 
     if radio? then set_radio(value)
     elsif checkbox? then set_checkbox(value)
@@ -133,7 +131,7 @@ class Capybara::RackTest::Node < Capybara::Driver::Node
     native == other.native
   end
 
-protected
+  protected
 
   # @api private
   def displayed_text(check_ancestor: true)
@@ -154,7 +152,7 @@ protected
     end
   end
 
-private
+  private
 
   def stale_check
     raise Capybara::RackTest::Errors::StaleElementReferenceError unless native.document == driver.dom
@@ -230,9 +228,9 @@ private
 
   def click_label
     labelled_control = if native[:for]
-      find_xpath("//input[@id='#{native[:for]}']")
-    else
-      find_xpath('.//input')
+                         find_xpath("//input[@id='#{native[:for]}']")
+                       else
+                         find_xpath('.//input')
     end.first
 
     labelled_control.set(!labelled_control.checked?) if checkbox_or_radio?(labelled_control)
@@ -258,7 +256,7 @@ private
     tag_name == 'input' && %w[checkbox radio].include?(type)
   end
 
-protected
+  protected
 
   def checkbox_or_radio?(field = self)
     field&.checkbox? || field&.radio?

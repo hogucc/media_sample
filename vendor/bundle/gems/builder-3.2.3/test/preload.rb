@@ -17,7 +17,7 @@
 module Kernel
   class << self
     attr_reader :k_added_names
-    alias_method :preload_method_added, :method_added
+    alias preload_method_added method_added
     def method_added(name)
       preload_method_added(name)
       @k_added_names ||= []
@@ -29,7 +29,7 @@ end
 class Object
   class << self
     attr_reader :o_added_names
-    alias_method :preload_method_added, :method_added
+    alias preload_method_added method_added
     def method_added(name)
       preload_method_added(name)
       @o_added_names ||= []

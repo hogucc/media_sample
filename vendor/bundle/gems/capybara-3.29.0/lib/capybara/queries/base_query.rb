@@ -4,7 +4,7 @@ module Capybara
   # @api private
   module Queries
     class BaseQuery
-      COUNT_KEYS = %i[count minimum maximum between].freeze
+      COUNT_KEYS = [:count, :minimum, :maximum, :between].freeze
 
       attr_reader :options
       attr_writer :session_options
@@ -67,7 +67,7 @@ module Capybara
         +"expected not to find #{description}" << count_message
       end
 
-    private
+      private
 
       def count_specified?
         COUNT_KEYS.any? { |key| options.key? key }

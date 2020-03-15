@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "rack/session/abstract/id"
+require 'rack/session/abstract/id'
 
 module ActionDispatch
   class Request
@@ -50,14 +50,22 @@ module ActionDispatch
         end
 
         def id(req)
-          @delegate.fetch(:id) {
+          @delegate.fetch(:id) do
             @by.send(:extract_session_id, req)
-          }
+          end
         end
 
-        def []=(k, v);        @delegate[k] = v; end
-        def to_hash;          @delegate.dup; end
-        def values_at(*args); @delegate.values_at(*args); end
+        def []=(k, v)
+          @delegate[k] = v
+        end
+
+        def to_hash
+          @delegate.dup
+        end
+
+        def values_at(*args)
+          @delegate.values_at(*args)
+        end
       end
 
       def initialize(by, req)
@@ -106,8 +114,8 @@ module ActionDispatch
         load_for_read!
         @delegate.key?(key.to_s)
       end
-      alias :key? :has_key?
-      alias :include? :has_key?
+      alias key? has_key?
+      alias include? has_key?
 
       # Returns keys of the session as Array.
       def keys
@@ -138,7 +146,7 @@ module ActionDispatch
         load_for_read!
         @delegate.dup.delete_if { |_, v| v.nil? }
       end
-      alias :to_h :to_hash
+      alias to_h to_hash
 
       # Updates the session with given Hash.
       #
@@ -194,6 +202,7 @@ module ActionDispatch
 
       def exists?
         return @exists unless @exists.nil?
+
         @exists = @by.send(:session_exists?, @req)
       end
 
@@ -217,26 +226,26 @@ module ActionDispatch
 
       private
 
-        def load_for_read!
-          load! if !loaded? && exists?
-        end
+      def load_for_read!
+        load! if !loaded? && exists?
+      end
 
-        def load_for_write!
-          load! unless loaded?
-        end
+      def load_for_write!
+        load! unless loaded?
+      end
 
-        def load!
-          id, session = @by.load_session @req
-          options[:id] = id
-          @delegate.replace(stringify_keys(session))
-          @loaded = true
-        end
+      def load!
+        id, session = @by.load_session @req
+        options[:id] = id
+        @delegate.replace(stringify_keys(session))
+        @loaded = true
+      end
 
-        def stringify_keys(other)
-          other.each_with_object({}) { |(key, value), hash|
-            hash[key.to_s] = value
-          }
+      def stringify_keys(other)
+        other.each_with_object({}) do |(key, value), hash|
+          hash[key.to_s] = value
         end
+      end
     end
   end
 end

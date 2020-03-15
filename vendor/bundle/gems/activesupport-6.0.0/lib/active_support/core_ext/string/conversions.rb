@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "date"
-require "active_support/core_ext/time/calculations"
+require 'date'
+require 'active_support/core_ext/time/calculations'
 
 class String
   # Converts a string to a Time value.
@@ -20,7 +20,7 @@ class String
   #   "12/13/2012".to_time               # => ArgumentError: argument out of range
   def to_time(form = :local)
     parts = Date._parse(self, false)
-    used_keys = %i(year mon mday hour min sec sec_fraction offset)
+    used_keys = [:year, :mon, :mday, :hour, :min, :sec, :sec_fraction, :offset]
     return if (parts.keys & used_keys).empty?
 
     now = Time.now

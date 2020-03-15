@@ -32,11 +32,9 @@ module ChildProcess
         pid, status = ::Process.waitpid2(@pid, ::Process::WNOHANG | ::Process::WUNTRACED)
         pid = nil if pid == 0 # may happen on jruby
 
-        log(:pid => pid, :status => status)
+        log(pid: pid, status: status)
 
-        if pid
-          set_exit_code(status)
-        end
+        set_exit_code(status) if pid
 
         !!pid
       rescue Errno::ECHILD
@@ -84,7 +82,6 @@ module ChildProcess
           @pid
         end
       end
-
     end # Process
   end # Unix
 end # ChildProcess

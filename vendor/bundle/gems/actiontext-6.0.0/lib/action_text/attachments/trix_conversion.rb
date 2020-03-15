@@ -19,16 +19,17 @@ module ActionText
 
       def to_trix_attachment(content = trix_attachment_content)
         attributes = full_attributes.dup
-        attributes["content"] = content if content
+        attributes['content'] = content if content
         TrixAttachment.from_attributes(attributes)
       end
 
       private
-        def trix_attachment_content
-          if partial_path = attachable.try(:to_trix_content_attachment_partial_path)
-            ActionText::Content.renderer.render(partial: partial_path, object: self, as: model_name.element)
-          end
+
+      def trix_attachment_content
+        if partial_path = attachable.try(:to_trix_content_attachment_partial_path)
+          ActionText::Content.renderer.render(partial: partial_path, object: self, as: model_name.element)
         end
+      end
     end
   end
 end

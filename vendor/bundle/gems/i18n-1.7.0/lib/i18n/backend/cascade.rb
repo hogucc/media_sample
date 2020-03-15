@@ -36,11 +36,11 @@ module I18n
       def lookup(locale, key, scope = [], options = EMPTY_HASH)
         return super unless cascade = options[:cascade]
 
-        cascade   = { :step => 1 } unless cascade.is_a?(Hash)
+        cascade   = { step: 1 } unless cascade.is_a?(Hash)
         step      = cascade[:step]   || 1
         offset    = cascade[:offset] || 1
         separator = options[:separator] || I18n.default_separator
-        skip_root = cascade.has_key?(:skip_root) ? cascade[:skip_root] : true
+        skip_root = cascade.key?(:skip_root) ? cascade[:skip_root] : true
 
         scope = I18n.normalize_keys(nil, key, scope, separator)
         key   = (scope.slice!(-offset, offset) || []).join(separator)
@@ -48,6 +48,7 @@ module I18n
         begin
           result = super
           return result unless result.nil?
+
           scope = scope.dup
         end while (!scope.empty? || !skip_root) && scope.slice!(-step, step)
       end

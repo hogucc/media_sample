@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require "active_support/log_subscriber"
-require "active_support/logger"
-require "active_support/notifications"
+require 'active_support/log_subscriber'
+require 'active_support/logger'
+require 'active_support/notifications'
 
 module ActiveSupport
   class LogSubscriber
@@ -64,11 +64,11 @@ module ActiveSupport
         end
 
         def method_missing(level, message = nil)
-          if block_given?
-            @logged[level] << yield
-          else
-            @logged[level] << message
-          end
+          @logged[level] << if block_given?
+                              yield
+                            else
+                              message
+                            end
         end
 
         def logged(level)

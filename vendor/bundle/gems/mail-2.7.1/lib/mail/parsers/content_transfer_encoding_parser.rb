@@ -1,7 +1,7 @@
-
 # frozen_string_literal: true
-require "mail/utilities"
-require "mail/parser_tools"
+
+require 'mail/utilities'
+require 'mail/parser_tools'
 
 module Mail::Parsers
   module ContentTransferEncodingParser
@@ -24,7 +24,7 @@ module Mail::Parsers
       128, 191, 128, 143, 9,
       126, 9, 59, 9, 59,
       9, 40, 9, 40, 0, 0,
-      0,
+      0
     ]
 
     class << self
@@ -35,7 +35,7 @@ module Mail::Parsers
       0, 118, 1, 24, 1, 24, 1, 24,
       118, 244, 244, 1, 24, 245, 64, 32,
       64, 32, 48, 64, 16, 118, 51, 51,
-      32, 32, 0,
+      32, 32, 0
     ]
 
     class << self
@@ -46,7 +46,7 @@ module Mail::Parsers
       0, 0, 119, 121, 146, 148, 173, 175,
       200, 319, 564, 809, 811, 836, 1082, 1147,
       1180, 1245, 1278, 1327, 1392, 1409, 1528, 1580,
-      1632, 1665, 1698,
+      1632, 1665, 1698
     ]
 
     class << self
@@ -266,7 +266,7 @@ module Mail::Parsers
       1, 1, 1, 1, 1, 1, 1, 1,
       1, 1, 1, 1, 1, 1, 1, 1,
       49, 1, 1, 1, 1, 1, 1, 1,
-      53, 1, 1, 0,
+      53, 1, 1, 0
     ]
 
     class << self
@@ -280,7 +280,7 @@ module Mail::Parsers
       19, 20, 10, 11, 10, 26, 13, 14,
       15, 16, 17, 18, 19, 20, 12, 22,
       4, 21, 23, 24, 4, 23, 22, 4,
-      23, 24, 6, 25, 6, 25,
+      23, 24, 6, 25, 6, 25
     ]
 
     class << self
@@ -294,7 +294,7 @@ module Mail::Parsers
       6, 6, 0, 0, 2, 9, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 10,
       10, 0, 11, 10, 0, 2, 3, 3,
-      5, 3, 0, 2, 3, 5,
+      5, 3, 0, 2, 3, 5
     ]
 
     class << self
@@ -305,7 +305,7 @@ module Mail::Parsers
       0, 0, 0, 0, 0, 0, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 0,
       0, 0, 0, 0, 0, 10, 0, 3,
-      0, 3, 0,
+      0, 3, 0
     ]
 
     class << self
@@ -333,7 +333,7 @@ module Mail::Parsers
     def self.parse(data)
       data = data.dup.force_encoding(Encoding::ASCII_8BIT) if data.respond_to?(:force_encoding)
 
-      content_transfer_encoding = ContentTransferEncodingStruct.new("")
+      content_transfer_encoding = ContentTransferEncodingStruct.new('')
       return content_transfer_encoding if Mail::Utilities.blank?(data)
 
       # Parser state
@@ -360,7 +360,7 @@ module Mail::Parsers
         _again = 20
         _test_eof = 30
         _out = 40
-        while true
+        loop do
           if _goto_level <= 0
             if p == pe
               _goto_level = _test_eof
@@ -376,9 +376,9 @@ module Mail::Parsers
             _inds = _index_offsets[cs]
             _slen = _key_spans[cs]
             _wide = data[p].ord
-            _trans = if (_slen > 0 &&
-                         _trans_keys[_keys] <= _wide &&
-                         _wide <= _trans_keys[_keys + 1])
+            _trans = if _slen > 0 &&
+                        _trans_keys[_keys] <= _wide &&
+                        _wide <= _trans_keys[_keys + 1]
                        _indicies[_inds + _wide - _trans_keys[_keys]]
                      else
                        _indicies[_inds + _slen]
@@ -500,15 +500,11 @@ module Mail::Parsers
               end
             end
           end
-          if _goto_level <= _out
-            break
-          end
+          break if _goto_level <= _out
         end
       end
 
-      if p != eof || cs < 21
-        raise Mail::Field::IncompleteParseError.new(Mail::ContentTransferEncodingElement, data, p)
-      end
+      raise Mail::Field::IncompleteParseError.new(Mail::ContentTransferEncodingElement, data, p) if p != eof || cs < 21
 
       content_transfer_encoding
     end

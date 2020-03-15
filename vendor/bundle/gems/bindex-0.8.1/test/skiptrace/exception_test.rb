@@ -3,31 +3,31 @@ require 'test_helper'
 module Skiptrace
   class ExceptionTest < Test
     test 'bindings returns all the bindings of where the error originated' do
-      exc = FlatFixture.()
+      exc = FlatFixture.call
 
       assert_equal 4, exc.bindings.first.source_location.last
     end
 
     test 'bindings returns all the bindings of where a custom error originate' do
-      exc = CustomErrorFixture.()
+      exc = CustomErrorFixture.call
 
       assert_equal 6, exc.bindings.first.source_location.last
     end
 
     test 'bindings goes down the stack' do
-      exc = BasicNestedFixture.()
+      exc = BasicNestedFixture.call
 
       assert_equal 14, exc.bindings.first.source_location.last
     end
 
     test 'bindings inside of an eval' do
-      exc = EvalNestedFixture.()
+      exc = EvalNestedFixture.call
 
       assert_equal 14, exc.bindings.first.source_location.last
     end
 
     test "re-raising doesn't lose bindings information" do
-      exc = ReraisedFixture.()
+      exc = ReraisedFixture.call
 
       assert_equal 6, exc.bindings.first.source_location.last
     end
@@ -51,7 +51,7 @@ module Skiptrace
     end
 
     test 'binding_locations maps closely to backtrace_locations' do
-      exc = FlatFixture.()
+      exc = FlatFixture.call
 
       exc.binding_locations.first.tap do |location|
         assert_equal 4, location.lineno

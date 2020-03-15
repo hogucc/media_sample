@@ -56,7 +56,7 @@ module Capybara
           selectors
         end
 
-      private
+        private
 
         def parse_square(strio)
           parse_block('[', ']', strio)

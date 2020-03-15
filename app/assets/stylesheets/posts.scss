@@ -1,0 +1,102 @@
+.post-form {
+  background-color: #f8faf7;
+}
+
+.post-area {
+  background-color: #fff;
+}
+
+label > input {
+  display: none;
+}
+
+.form-label {
+  color: #212529;
+  font-size: 16px;
+  font-weight: bold;
+  padding-left: 8px;
+  border-left: 3px solid #e75926;
+}
+
+.post-form-title {
+  padding: 20px;
+}
+
+.post-form-content {
+  padding: 20px;
+}
+
+.post-form-photo {
+  padding: 20px;
+}
+
+.post-form-submit {
+  margin: 20px;
+  height: 70px;
+  border-top: 0.5px solid #e0e0e0;
+}
+
+.validate {
+  display: block;
+  width: 100%;
+  padding: 6px 12px;
+  font-size: 14px;
+  color: #555;
+  background-color: #fff;
+  background-image: none;
+  border: 1px solid #ccc;
+  border-radius: 2px;
+  box-shadow: none;
+  transition: none;
+}
+
+.badge-required {
+  color: #fff;
+}
+
+.btn-post-create {
+  margin-top: 20px;
+  float: right;
+}
+
+label[for="image"] {
+  display:inline-block;
+  width: 200px;
+  height: 200px;
+  font-size: 30px;
+  color: #aab7b8;
+  background-color: #fafafa;
+  border: 2px solid #aab7b8;
+  border-style: dashed;
+  text-align: center;
+  cursor: pointer;
+  line-height: 200px;
+}
+
+#preview-thumbnails {
+  margin: 10px 0;
+}
+
+.preview-container {
+  width: 200px;
+  height: 200px;
+  position: relative;
+}
+
+.preview-item-file {
+  width: 200px;
+  height: 200px;
+}
+
+.photo-delete-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background-color: #fff;
+  text-align: center;
+  color: #aab7b8;
+  position: absolute;
+  top: 5px;
+  left: 170px;
+  box-shadow: 0 1px 2px 0 rgba(88,88,88,0.75)
+}

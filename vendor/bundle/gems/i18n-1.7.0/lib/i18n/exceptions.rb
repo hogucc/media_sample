@@ -40,7 +40,8 @@ module I18n
   class InvalidLocaleData < ArgumentError
     attr_reader :filename
     def initialize(filename, exception_message)
-      @filename, @exception_message = filename, exception_message
+      @filename = filename
+      @exception_message = exception_message
       super "can not load translations from #{filename}: #{exception_message}"
     end
   end
@@ -50,7 +51,9 @@ module I18n
       attr_reader :locale, :key, :options
 
       def initialize(locale, key, options = EMPTY_HASH)
-        @key, @locale, @options = key, locale, options.dup
+        @key = key
+        @locale = locale
+        @options = options.dup
         options.each { |k, v| self.options[k] = v.inspect if v.is_a?(Proc) }
       end
 
@@ -63,7 +66,7 @@ module I18n
       def message
         "translation missing: #{keys.join('.')}"
       end
-      alias :to_s :message
+      alias to_s message
 
       def to_exception
         MissingTranslationData.new(locale, key, options)
@@ -80,7 +83,9 @@ module I18n
   class InvalidPluralizationData < ArgumentError
     attr_reader :entry, :count, :key
     def initialize(entry, count, key)
-      @entry, @count, @key = entry, count, key
+      @entry = entry
+      @count = count
+      @key = key
       super "translation data #{entry.inspect} can not be used with :count => #{count}. key '#{key}' is missing."
     end
   end
@@ -88,7 +93,9 @@ module I18n
   class MissingInterpolationArgument < ArgumentError
     attr_reader :key, :values, :string
     def initialize(key, values, string)
-      @key, @values, @string = key, values, string
+      @key = key
+      @values = values
+      @string = string
       super "missing interpolation argument #{key.inspect} in #{string.inspect} (#{values.inspect} given)"
     end
   end
@@ -96,7 +103,8 @@ module I18n
   class ReservedInterpolationKey < ArgumentError
     attr_reader :key, :string
     def initialize(key, string)
-      @key, @string = key, string
+      @key = key
+      @string = string
       super "reserved key #{key.inspect} used in #{string.inspect}"
     end
   end
@@ -104,7 +112,8 @@ module I18n
   class UnknownFileType < ArgumentError
     attr_reader :type, :filename
     def initialize(type, filename)
-      @type, @filename = type, filename
+      @type = type
+      @filename = filename
       super "can not load translations from #{filename}, the file type #{type} is not known"
     end
   end

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "byebug/processors/command_processor"
+require 'byebug/processors/command_processor'
 
 module Byebug
   #
@@ -18,7 +18,7 @@ module Byebug
       while (input = interface.read_command(prompt))
         safely do
           command = command_list.match(input)
-          raise CommandNotFound.new(input) unless command
+          raise CommandNotFound, input unless command
 
           command.new(self, input).execute
         end
@@ -35,7 +35,7 @@ module Byebug
     # Prompt shown before reading a command.
     #
     def prompt
-      "(byebug:ctrl) "
+      '(byebug:ctrl) '
     end
 
     private

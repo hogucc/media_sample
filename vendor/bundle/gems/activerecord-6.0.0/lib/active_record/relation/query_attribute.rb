@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "active_model/attribute"
+require 'active_model/attribute'
 
 module ActiveRecord
   class Relation
@@ -42,9 +42,10 @@ module ActiveRecord
       end
 
       private
-        def infinity?(value)
-          value.respond_to?(:infinite?) && value.infinite?
-        end
+
+      def infinity?(value)
+        value.respond_to?(:infinite?) && value.infinite?
+      end
     end
   end
 end

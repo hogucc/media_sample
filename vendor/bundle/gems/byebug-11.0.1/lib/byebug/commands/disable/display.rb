@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "byebug/helpers/toggle"
+require 'byebug/helpers/toggle'
 
 module Byebug
   #
@@ -32,11 +32,11 @@ module Byebug
       end
 
       def self.short_description
-        "Disables expressions to be displayed when program stops."
+        'Disables expressions to be displayed when program stops.'
       end
 
       def execute
-        enable_disable_display("disable", @match[1])
+        enable_disable_display('disable', @match[1])
       end
     end
   end

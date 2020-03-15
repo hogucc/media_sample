@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "aws-sdk-s3"
-require "active_support/core_ext/numeric/bytes"
+require 'aws-sdk-s3'
+require 'active_support/core_ext/numeric/bytes'
 
 module ActiveStorage
   # Wraps the Amazon Simple Storage Service (S3) as an Active Storage service.
@@ -69,8 +69,8 @@ module ActiveStorage
     def url(key, expires_in:, filename:, disposition:, content_type:)
       instrument :url, key: key do |payload|
         generated_url = object_for(key).presigned_url :get, expires_in: expires_in.to_i,
-          response_content_disposition: content_disposition_with(type: disposition, filename: filename),
-          response_content_type: content_type
+                                                            response_content_disposition: content_disposition_with(type: disposition, filename: filename),
+                                                            response_content_type: content_type
 
         payload[:url] = generated_url
 
@@ -81,7 +81,7 @@ module ActiveStorage
     def url_for_direct_upload(key, expires_in:, content_type:, content_length:, checksum:)
       instrument :url, key: key do |payload|
         generated_url = object_for(key).presigned_url :put, expires_in: expires_in.to_i,
-          content_type: content_type, content_length: content_length, content_md5: checksum
+                                                            content_type: content_type, content_length: content_length, content_md5: checksum
 
         payload[:url] = generated_url
 
@@ -89,28 +89,29 @@ module ActiveStorage
       end
     end
 
-    def headers_for_direct_upload(key, content_type:, checksum:, **)
-      { "Content-Type" => content_type, "Content-MD5" => checksum }
+    def headers_for_direct_upload(_key, content_type:, checksum:, **)
+      { 'Content-Type' => content_type, 'Content-MD5' => checksum }
     end
 
     private
-      def object_for(key)
-        bucket.object(key)
+
+    def object_for(key)
+      bucket.object(key)
+    end
+
+    # Reads the object for the given key in chunks, yielding each to the block.
+    def stream(key)
+      object = object_for(key)
+
+      chunk_size = 5.megabytes
+      offset = 0
+
+      raise ActiveStorage::FileNotFoundError unless object.exists?
+
+      while offset < object.content_length
+        yield object.get(range: "bytes=#{offset}-#{offset + chunk_size - 1}").body.read.force_encoding(Encoding::BINARY)
+        offset += chunk_size
       end
-
-      # Reads the object for the given key in chunks, yielding each to the block.
-      def stream(key)
-        object = object_for(key)
-
-        chunk_size = 5.megabytes
-        offset = 0
-
-        raise ActiveStorage::FileNotFoundError unless object.exists?
-
-        while offset < object.content_length
-          yield object.get(range: "bytes=#{offset}-#{offset + chunk_size - 1}").body.read.force_encoding(Encoding::BINARY)
-          offset += chunk_size
-        end
-      end
+    end
   end
 end

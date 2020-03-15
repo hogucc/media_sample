@@ -114,7 +114,7 @@ class Capybara::RackTest::Browser
     dom.title
   end
 
-protected
+  protected
 
   def build_rack_mock_session
     reset_host! unless current_host
@@ -127,7 +127,7 @@ protected
     '/'
   end
 
-private
+  private
 
   def fragment_or_script?(path)
     path.gsub(/^#{Regexp.escape(request_path)}/, '').start_with?('#') || path.downcase.start_with?('javascript:')

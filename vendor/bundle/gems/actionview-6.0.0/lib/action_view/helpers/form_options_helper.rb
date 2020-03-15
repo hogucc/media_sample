@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-require "cgi"
-require "erb"
-require "action_view/helpers/form_helper"
-require "active_support/core_ext/string/output_safety"
-require "active_support/core_ext/array/extract_options"
-require "active_support/core_ext/array/wrap"
+require 'cgi'
+require 'erb'
+require 'action_view/helpers/form_helper'
+require 'active_support/core_ext/string/output_safety'
+require 'active_support/core_ext/array/extract_options'
+require 'active_support/core_ext/array/wrap'
 
 module ActionView
   # = Action View Form Option Helpers
@@ -461,9 +461,10 @@ module ActionView
       def option_groups_from_collection_for_select(collection, group_method, group_label_method, option_key_method, option_value_method, selected_key = nil)
         collection.map do |group|
           option_tags = options_from_collection_for_select(
-            value_for_collection(group, group_method), option_key_method, option_value_method, selected_key)
+            value_for_collection(group, group_method), option_key_method, option_value_method, selected_key
+          )
 
-          content_tag("optgroup", option_tags, label: value_for_collection(group, group_label_method))
+          content_tag('optgroup', option_tags, label: value_for_collection(group, group_label_method))
         end.join.html_safe
       end
 
@@ -532,11 +533,9 @@ module ActionView
         prompt  = options[:prompt]
         divider = options[:divider]
 
-        body = "".html_safe
+        body = ''.html_safe
 
-        if prompt
-          body.safe_concat content_tag("option", prompt_text(prompt), value: "")
-        end
+        body.safe_concat content_tag('option', prompt_text(prompt), value: '') if prompt
 
         grouped_options.each do |container|
           html_attributes = option_html_attributes(container)
@@ -548,7 +547,7 @@ module ActionView
           end
 
           html_attributes = { label: label }.merge!(html_attributes)
-          body.safe_concat content_tag("optgroup", options_for_select(container, selected_key), html_attributes)
+          body.safe_concat content_tag('optgroup', options_for_select(container, selected_key), html_attributes)
         end
 
         body
@@ -574,21 +573,19 @@ module ActionView
       # NOTE: Only the option tags are returned, you have to wrap this call in
       # a regular HTML select tag.
       def time_zone_options_for_select(selected = nil, priority_zones = nil, model = ::ActiveSupport::TimeZone)
-        zone_options = "".html_safe
+        zone_options = ''.html_safe
 
         zones = model.all
-        convert_zones = lambda { |list| list.map { |z| [ z.to_s, z.name ] } }
+        convert_zones = ->(list) { list.map { |z| [z.to_s, z.name] } }
 
         if priority_zones
-          if priority_zones.is_a?(Regexp)
-            priority_zones = zones.select { |z| z =~ priority_zones }
-          end
+          priority_zones = zones.select { |z| z =~ priority_zones } if priority_zones.is_a?(Regexp)
 
           zone_options.safe_concat options_for_select(convert_zones[priority_zones], selected)
-          zone_options.safe_concat content_tag("option", "-------------", value: "", disabled: true)
+          zone_options.safe_concat content_tag('option', '-------------', value: '', disabled: true)
           zone_options.safe_concat "\n"
 
-          zones = zones - priority_zones
+          zones -= priority_zones
         end
 
         zone_options.safe_concat options_for_select(convert_zones[zones], selected)
@@ -759,64 +756,66 @@ module ActionView
       end
 
       private
-        def option_html_attributes(element)
-          if Array === element
-            element.select { |e| Hash === e }.reduce({}, :merge!)
-          else
-            {}
-          end
-        end
 
-        def option_text_and_value(option)
-          # Options are [text, value] pairs or strings used for both.
-          if !option.is_a?(String) && option.respond_to?(:first) && option.respond_to?(:last)
-            option = option.reject { |e| Hash === e } if Array === option
-            [option.first, option.last]
-          else
-            [option, option]
-          end
+      def option_html_attributes(element)
+        if Array === element
+          element.select { |e| Hash === e }.reduce({}, :merge!)
+        else
+          {}
         end
+      end
 
-        def option_value_selected?(value, selected)
-          Array(selected).include? value
+      def option_text_and_value(option)
+        # Options are [text, value] pairs or strings used for both.
+        if !option.is_a?(String) && option.respond_to?(:first) && option.respond_to?(:last)
+          option = option.reject { |e| Hash === e } if Array === option
+          [option.first, option.last]
+        else
+          [option, option]
         end
+      end
 
-        def extract_selected_and_disabled(selected)
-          if selected.is_a?(Proc)
-            [selected, nil]
-          else
-            selected = Array.wrap(selected)
-            options = selected.extract_options!.symbolize_keys
-            selected_items = options.fetch(:selected, selected)
-            [selected_items, options[:disabled]]
-          end
-        end
+      def option_value_selected?(value, selected)
+        Array(selected).include? value
+      end
 
-        def extract_values_from_collection(collection, value_method, selected)
-          if selected.is_a?(Proc)
-            collection.map do |element|
-              public_or_deprecated_send(element, value_method) if selected.call(element)
-            end.compact
-          else
-            selected
-          end
+      def extract_selected_and_disabled(selected)
+        if selected.is_a?(Proc)
+          [selected, nil]
+        else
+          selected = Array.wrap(selected)
+          options = selected.extract_options!.symbolize_keys
+          selected_items = options.fetch(:selected, selected)
+          [selected_items, options[:disabled]]
         end
+      end
 
-        def value_for_collection(item, value)
-          value.respond_to?(:call) ? value.call(item) : public_or_deprecated_send(item, value)
+      def extract_values_from_collection(collection, value_method, selected)
+        if selected.is_a?(Proc)
+          collection.map do |element|
+            public_or_deprecated_send(element, value_method) if selected.call(element)
+          end.compact
+        else
+          selected
         end
+      end
 
-        def public_or_deprecated_send(item, value)
-          item.public_send(value)
-        rescue NoMethodError
-          raise unless item.respond_to?(value, true) && !item.respond_to?(value)
-          ActiveSupport::Deprecation.warn "Using private methods from view helpers is deprecated (calling private #{item.class}##{value})"
-          item.send(value)
-        end
+      def value_for_collection(item, value)
+        value.respond_to?(:call) ? value.call(item) : public_or_deprecated_send(item, value)
+      end
 
-        def prompt_text(prompt)
-          prompt.kind_of?(String) ? prompt : I18n.translate("helpers.select.prompt", default: "Please select")
-        end
+      def public_or_deprecated_send(item, value)
+        item.public_send(value)
+      rescue NoMethodError
+        raise unless item.respond_to?(value, true) && !item.respond_to?(value)
+
+        ActiveSupport::Deprecation.warn "Using private methods from view helpers is deprecated (calling private #{item.class}##{value})"
+        item.send(value)
+      end
+
+      def prompt_text(prompt)
+        prompt.is_a?(String) ? prompt : I18n.translate('helpers.select.prompt', default: 'Please select')
+      end
     end
 
     class FormBuilder

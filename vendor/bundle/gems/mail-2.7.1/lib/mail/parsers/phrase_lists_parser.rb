@@ -1,7 +1,7 @@
-
 # frozen_string_literal: true
-require "mail/utilities"
-require "mail/parser_tools"
+
+require 'mail/utilities'
+require 'mail/parser_tools'
 
 module Mail::Parsers
   class PhraseListsParser
@@ -31,7 +31,7 @@ module Mail::Parsers
       191, 128, 159, 144, 191,
       128, 191, 128, 143, 9, 244,
       9, 244, 9, 244, 0,
-      0, 0,
+      0, 0
     ]
 
     class << self
@@ -44,7 +44,7 @@ module Mail::Parsers
       48, 64, 16, 236, 1, 24, 236, 64,
       32, 64, 32, 48, 64, 16, 244, 244,
       1, 24, 245, 64, 32, 64, 32, 48,
-      64, 16, 236, 236, 236, 0,
+      64, 16, 236, 236, 236, 0
     ]
 
     class << self
@@ -57,7 +57,7 @@ module Mail::Parsers
       1487, 1536, 1601, 1618, 1855, 1857, 1882, 2119,
       2184, 2217, 2282, 2315, 2364, 2429, 2446, 2691,
       2936, 2938, 2963, 3209, 3274, 3307, 3372, 3405,
-      3454, 3519, 3536, 3773, 4010, 4247,
+      3454, 3519, 3536, 3773, 4010, 4247
     ]
 
     class << self
@@ -596,7 +596,7 @@ module Mail::Parsers
       19, 20, 21, 21, 21, 21, 21, 21,
       21, 21, 21, 21, 21, 21, 22, 21,
       21, 23, 24, 24, 24, 25, 1, 1,
-      0,
+      0
     ]
 
     class << self
@@ -616,7 +616,7 @@ module Mail::Parsers
       35, 36, 37, 38, 39, 40, 41, 31,
       32, 31, 45, 34, 35, 36, 37, 38,
       39, 40, 41, 33, 5, 43, 19, 44,
-      5, 43, 19, 44,
+      5, 43, 19, 44
     ]
 
     class << self
@@ -636,7 +636,7 @@ module Mail::Parsers
       9, 9, 9, 9, 9, 9, 9, 0,
       0, 3, 12, 0, 0, 0, 0, 0,
       0, 0, 0, 0, 0, 3, 13, 0,
-      7, 8, 14, 7,
+      7, 8, 14, 7
     ]
 
     class << self
@@ -649,7 +649,7 @@ module Mail::Parsers
       0, 0, 0, 0, 0, 0, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 0,
-      0, 0, 13, 14, 13, 0,
+      0, 0, 13, 14, 13, 0
     ]
 
     class << self
@@ -677,7 +677,7 @@ module Mail::Parsers
     def self.parse(data)
       data = data.dup.force_encoding(Encoding::ASCII_8BIT) if data.respond_to?(:force_encoding)
 
-      raise Mail::Field::NilParseError.new(Mail::PhraseList) if data.nil?
+      raise Mail::Field::NilParseError, Mail::PhraseList if data.nil?
 
       # Parser state
       phrase_lists = PhraseListsStruct.new([])
@@ -704,7 +704,7 @@ module Mail::Parsers
         _again = 20
         _test_eof = 30
         _out = 40
-        while true
+        loop do
           if _goto_level <= 0
             if p == pe
               _goto_level = _test_eof
@@ -720,9 +720,9 @@ module Mail::Parsers
             _inds = _index_offsets[cs]
             _slen = _key_spans[cs]
             _wide = data[p].ord
-            _trans = if (_slen > 0 &&
-                         _trans_keys[_keys] <= _wide &&
-                         _wide <= _trans_keys[_keys + 1])
+            _trans = if _slen > 0 &&
+                        _trans_keys[_keys] <= _wide &&
+                        _wide <= _trans_keys[_keys + 1]
                        _indicies[_inds + _wide - _trans_keys[_keys]]
                      else
                        _indicies[_inds + _slen]
@@ -862,15 +862,11 @@ module Mail::Parsers
               end
             end
           end
-          if _goto_level <= _out
-            break
-          end
+          break if _goto_level <= _out
         end
       end
 
-      if p != eof || cs < 42
-        raise Mail::Field::IncompleteParseError.new(Mail::PhraseListsElement, data, p)
-      end
+      raise Mail::Field::IncompleteParseError.new(Mail::PhraseListsElement, data, p) if p != eof || cs < 42
 
       phrase_lists
     end

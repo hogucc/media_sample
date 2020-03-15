@@ -1,7 +1,6 @@
-# encoding: utf-8
 # frozen_string_literal: true
-module Mail # :doc:
 
+module Mail # :doc:
   require 'date'
   require 'shellwords'
 
@@ -13,11 +12,11 @@ module Mail # :doc:
     begin
       require 'tlsmail'
     rescue LoadError
-      raise "You need to install tlsmail if you are using ruby <= 1.8.6"
+      raise 'You need to install tlsmail if you are using ruby <= 1.8.6'
     end
   end
 
-  if RUBY_VERSION >= "1.9.0"
+  if RUBY_VERSION >= '1.9.0'
     require 'mail/version_specific/ruby_1_9'
     RubyVer = Ruby19
   else
@@ -51,7 +50,7 @@ module Mail # :doc:
   #   require 'mail'
   #   Mail.eager_autoload!
   def self.eager_autoload!
-    @@autoloads.each { |_,path| require(path) }
+    @@autoloads.each { |_, path| require(path) }
   end
 
   # Autoload mail send and receive classes.
@@ -68,7 +67,7 @@ module Mail # :doc:
 
   require 'mail/envelope'
 
-  register_autoload :Parsers, "mail/parsers"
+  register_autoload :Parsers, 'mail/parsers'
 
   # Autoload header field elements and transfer encodings.
   require 'mail/elements'

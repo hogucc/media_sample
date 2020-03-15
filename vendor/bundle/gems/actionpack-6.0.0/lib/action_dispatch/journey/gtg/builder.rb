@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "action_dispatch/journey/gtg/transition_table"
+require 'action_dispatch/journey/gtg/transition_table'
 
 module ActionDispatch
   module Journey # :nodoc:
@@ -26,6 +26,7 @@ module ActionDispatch
           until dstates.empty?
             s = dstates.shift
             next if marked[s]
+
             marked[s] = true # mark s
 
             s.group_by { |state| symbol(state) }.each do |sym, ps|
@@ -47,9 +48,9 @@ module ActionDispatch
 
                   accepting = ps.find_all { |l| followpos(l).include?(DUMMY) }
 
-                  accepting.each { |accepting_state|
+                  accepting.each do |accepting_state|
                     dtrans.add_memo(to, accepting_state.memo)
-                  }
+                  end
 
                   dtrans.add_accepting(state_id[u])
                 end
@@ -77,7 +78,7 @@ module ActionDispatch
           when Nodes::Unary
             nullable?(node.left)
           else
-            raise ArgumentError, "unknown nullable: %s" % node.class.name
+            raise ArgumentError, 'unknown nullable: %s' % node.class.name
           end
         end
 
@@ -98,7 +99,7 @@ module ActionDispatch
           when Nodes::Terminal
             nullable?(node) ? [] : [node]
           else
-            raise ArgumentError, "unknown firstpos: %s" % node.class.name
+            raise ArgumentError, 'unknown firstpos: %s' % node.class.name
           end
         end
 
@@ -119,7 +120,7 @@ module ActionDispatch
           when Nodes::Unary
             lastpos(node.left)
           else
-            raise ArgumentError, "unknown lastpos: %s" % node.class.name
+            raise ArgumentError, 'unknown lastpos: %s' % node.class.name
           end
         end
 
@@ -129,35 +130,35 @@ module ActionDispatch
 
         private
 
-          def followpos_table
-            @followpos ||= build_followpos
-          end
+        def followpos_table
+          @followpos ||= build_followpos
+        end
 
-          def build_followpos
-            table = Hash.new { |h, k| h[k] = [] }
-            @ast.each do |n|
-              case n
-              when Nodes::Cat
-                lastpos(n.left).each do |i|
-                  table[i] += firstpos(n.right)
-                end
-              when Nodes::Star
-                lastpos(n).each do |i|
-                  table[i] += firstpos(n)
-                end
+        def build_followpos
+          table = Hash.new { |h, k| h[k] = [] }
+          @ast.each do |n|
+            case n
+            when Nodes::Cat
+              lastpos(n.left).each do |i|
+                table[i] += firstpos(n.right)
+              end
+            when Nodes::Star
+              lastpos(n).each do |i|
+                table[i] += firstpos(n)
               end
             end
-            table
           end
+          table
+        end
 
-          def symbol(edge)
-            case edge
-            when Journey::Nodes::Symbol
-              edge.regexp
-            else
-              edge.left
-            end
+        def symbol(edge)
+          case edge
+          when Journey::Nodes::Symbol
+            edge.regexp
+          else
+            edge.left
           end
+        end
       end
     end
   end

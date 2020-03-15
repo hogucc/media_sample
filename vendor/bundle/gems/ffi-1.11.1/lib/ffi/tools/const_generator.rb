@@ -2,7 +2,6 @@ require 'tempfile'
 require 'open3'
 
 module FFI
-
   # ConstGenerator turns C constants into ruby values.
   #
   # @example a simple example for stdio
@@ -44,23 +43,26 @@ module FFI
       @required = options[:required]
       @options = options
 
-      if block_given? then
+      if block_given?
         yield self
         calculate self.class.options.merge(options)
       end
     end
+
     # Set class options
     # These options are merged with {#initialize} options when it is called with a block.
     # @param [Hash] options
     # @return [Hash] class options
-    def self.options=(options)
-      @options = options
+    class << self
+      attr_writer :options
     end
+
     # Get class options.
     # @return [Hash] class options
-    def self.options
-      @options
+    class << self
+      attr_reader :options
     end
+
     # @param [String] name
     # @return constant value (converted if a +converter+ was defined).
     # Access a constant by name.
@@ -88,15 +90,13 @@ module FFI
       format ||= '%d'
       cast ||= ''
 
-      if converter_proc and converter then
-        raise ArgumentError, "Supply only converter or converter block"
-      end
+      raise ArgumentError, 'Supply only converter or converter block' if converter_proc && converter
 
       converter = converter_proc if converter.nil?
 
       const = Constant.new name, format, cast, ruby_name, converter
       @constants[name.to_s] = const
-      return const
+      const
     end
 
     # Calculate constants values.
@@ -126,27 +126,25 @@ module FFI
 
         output = `gcc #{options[:cppflags]} -D_DARWIN_USE_64_BIT_INODE -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -x c -Wall -Werror #{f.path} -o #{binary} 2>&1`
 
-        unless $?.success? then
+        unless $?.success?
           output = output.split("\n").map { |l| "\t#{l}" }.join "\n"
           raise "Compilation error generating constants #{@prefix}:\n#{output}"
         end
       end
 
       output = `#{binary}`
-      File.unlink(binary + (FFI::Platform.windows? ? ".exe" : ""))
+      File.unlink(binary + (FFI::Platform.windows? ? '.exe' : ''))
       output.each_line do |line|
         line =~ /^(\S+)\s(.*)$/
-        const = @constants[$1]
-        const.value = $2
+        const = @constants[Regexp.last_match(1)]
+        const.value = Regexp.last_match(2)
       end
 
-      missing_constants = @constants.select do |name, constant|
+      missing_constants = @constants.select do |_name, constant|
         constant.value.nil?
       end.map { |name,| name }
 
-      if @required and not missing_constants.empty? then
-        raise "Missing required constants for #{@prefix}: #{missing_constants.join ', '}"
-      end
+      raise "Missing required constants for #{@prefix}: #{missing_constants.join ', '}" if @required && !missing_constants.empty?
     end
 
     # Dump constants to +io+.
@@ -163,8 +161,8 @@ module FFI
     # not discovered it is not omitted.
     # @return [String]
     def to_ruby
-      @constants.sort_by { |name,| name }.map do |name, constant|
-        if constant.value.nil? then
+      @constants.sort.map do |name, constant|
+        if constant.value.nil?
           "# #{name} not available"
         else
           constant.to_ruby
@@ -179,12 +177,10 @@ module FFI
     def include(*i)
       @includes |= i.flatten
     end
-
   end
 
   # This class hold constants for {ConstGenerator}
   class ConstGenerator::Constant
-
     attr_reader :name, :format, :cast
     attr_accessor :value
 
@@ -194,7 +190,7 @@ module FFI
     # @param ruby_name alternate ruby name for {#to_ruby}
     # @param [#call] converter convert the value from a string to the appropriate
     #  type for {#to_ruby}.
-    def initialize(name, format, cast, ruby_name = nil, converter=nil)
+    def initialize(name, format, cast, ruby_name = nil, converter = nil)
       @name = name
       @format = format
       @cast = cast
@@ -224,7 +220,5 @@ module FFI
     def to_ruby
       "#{ruby_name} = #{converted_value}"
     end
-
   end
-
 end

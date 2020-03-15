@@ -15,8 +15,7 @@ require 'builder/xchar'
 
 class TestNameCollisions < Builder::Test
   module Collide
-    def xchr
-    end
+    def xchr; end
   end
 
   def test_no_collision
@@ -27,7 +26,7 @@ class TestNameCollisions < Builder::Test
 
   def test_collision
     assert_raise RuntimeError do
-      Builder.check_for_name_collision(Collide, "xchr")
+      Builder.check_for_name_collision(Collide, 'xchr')
     end
   end
 

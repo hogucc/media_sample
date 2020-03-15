@@ -38,37 +38,11 @@ module Capybara
   class Session
     include Capybara::SessionMatchers
 
-    NODE_METHODS = %i[
-      all first attach_file text check choose scroll_to scroll_by
-      click_link_or_button click_button click_link
-      fill_in find find_all find_button find_by_id find_field find_link
-      has_content? has_text? has_css? has_no_content? has_no_text?
-      has_no_css? has_no_xpath? has_xpath? select uncheck
-      has_link? has_no_link? has_button? has_no_button? has_field?
-      has_no_field? has_checked_field? has_unchecked_field?
-      has_no_table? has_table? unselect has_select? has_no_select?
-      has_selector? has_no_selector? click_on has_no_checked_field?
-      has_no_unchecked_field? query assert_selector assert_no_selector
-      assert_all_of_selectors assert_none_of_selectors assert_any_of_selectors
-      refute_selector assert_text assert_no_text
-    ].freeze
+    NODE_METHODS = [:all, :first, :attach_file, :text, :check, :choose, :scroll_to, :scroll_by, :click_link_or_button, :click_button, :click_link, :fill_in, :find, :find_all, :find_button, :find_by_id, :find_field, :find_link, :has_content?, :has_text?, :has_css?, :has_no_content?, :has_no_text?, :has_no_css?, :has_no_xpath?, :has_xpath?, :select, :uncheck, :has_link?, :has_no_link?, :has_button?, :has_no_button?, :has_field?, :has_no_field?, :has_checked_field?, :has_unchecked_field?, :has_no_table?, :has_table?, :unselect, :has_select?, :has_no_select?, :has_selector?, :has_no_selector?, :click_on, :has_no_checked_field?, :has_no_unchecked_field?, :query, :assert_selector, :assert_no_selector, :assert_all_of_selectors, :assert_none_of_selectors, :assert_any_of_selectors, :refute_selector, :assert_text, :assert_no_text].freeze
     # @api private
-    DOCUMENT_METHODS = %i[
-      title assert_title assert_no_title has_title? has_no_title?
-    ].freeze
-    SESSION_METHODS = %i[
-      body html source current_url current_host current_path
-      execute_script evaluate_script visit refresh go_back go_forward
-      within within_element within_fieldset within_table within_frame switch_to_frame
-      current_window windows open_new_window switch_to_window within_window window_opened_by
-      save_page save_and_open_page save_screenshot
-      save_and_open_screenshot reset_session! response_headers
-      status_code current_scope
-      assert_current_path assert_no_current_path has_current_path? has_no_current_path?
-    ].freeze + DOCUMENT_METHODS
-    MODAL_METHODS = %i[
-      accept_alert accept_confirm dismiss_confirm accept_prompt dismiss_prompt
-    ].freeze
+    DOCUMENT_METHODS = [:title, :assert_title, :assert_no_title, :has_title?, :has_no_title?].freeze
+    SESSION_METHODS = [:body, :html, :source, :current_url, :current_host, :current_path, :execute_script, :evaluate_script, :visit, :refresh, :go_back, :go_forward, :within, :within_element, :within_fieldset, :within_table, :within_frame, :switch_to_frame, :current_window, :windows, :open_new_window, :switch_to_window, :within_window, :window_opened_by, :save_page, :save_and_open_page, :save_screenshot, :save_and_open_screenshot, :reset_session!, :response_headers, :status_code, :current_scope, :assert_current_path, :assert_no_current_path, :has_current_path?, :has_no_current_path?].freeze + DOCUMENT_METHODS
+    MODAL_METHODS = [:accept_alert, :accept_confirm, :dismiss_confirm, :accept_prompt, :dismiss_prompt].freeze
     DSL_METHODS = NODE_METHODS + SESSION_METHODS + MODAL_METHODS
 
     attr_reader :mode, :app, :server
@@ -86,9 +60,9 @@ module Capybara
         yield config
       end
       @server = if config.run_server && @app && driver.needs_server?
-        server_options = { port: config.server_port, host: config.server_host, reportable_errors: config.server_errors }
-        server_options[:extra_middleware] = [Capybara::Server::AnimationDisabler] if config.disable_animation
-        Capybara::Server.new(@app, server_options).boot
+                  server_options = { port: config.server_port, host: config.server_host, reportable_errors: config.server_errors }
+                  server_options[:extra_middleware] = [Capybara::Server::AnimationDisabler] if config.disable_animation
+                  Capybara::Server.new(@app, server_options).boot
       end
       @touched = false
     end
@@ -131,8 +105,8 @@ module Capybara
       @server&.wait_for_pending_requests
       raise_server_error!
     end
-    alias_method :cleanup!, :reset!
-    alias_method :reset_session!, :reset!
+    alias cleanup! reset!
+    alias reset_session! reset!
 
     ##
     #
@@ -154,9 +128,7 @@ module Capybara
 
       # Force an explanation for the error being raised as the exception cause
       begin
-        if config.raise_server_errors
-          raise CapybaraError, 'Your application server raised an error - It has been raised in your test code because Capybara.raise_server_errors == true'
-        end
+        raise CapybaraError, 'Your application server raised an error - It has been raised in your test code because Capybara.raise_server_errors == true' if config.raise_server_errors
       rescue CapybaraError
         # needed to get the cause set correctly in JRuby -- otherwise we could just do raise @server.error
         raise @server.error, @server.error.message, @server.error.backtrace
@@ -192,8 +164,8 @@ module Capybara
     def html
       driver.html
     end
-    alias_method :body, :html
-    alias_method :source, :html
+    alias body html
+    alias source html
 
     ##
     #
@@ -345,7 +317,7 @@ module Capybara
         scopes.pop
       end
     end
-    alias_method :within_element, :within
+    alias within_element within
 
     ##
     #
@@ -800,9 +772,9 @@ module Capybara
 
     def config
       @config ||= if Capybara.threadsafe
-        Capybara.session_options.dup
-      else
-        Capybara::ReadOnlySessionConfig.new(Capybara.session_options)
+                    Capybara.session_options.dup
+                  else
+                    Capybara::ReadOnlySessionConfig.new(Capybara.session_options)
       end
     end
 
@@ -810,7 +782,7 @@ module Capybara
       @server&.base_url
     end
 
-  private
+    private
 
     @@instance_created = false # rubocop:disable Style/ClassVars
 

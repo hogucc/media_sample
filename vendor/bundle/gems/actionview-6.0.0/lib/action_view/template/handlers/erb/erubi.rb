@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "erubi"
+require 'erubi'
 
 module ActionView
   class Template
@@ -13,24 +13,25 @@ module ActionView
 
             # Dup properties so that we don't modify argument
             properties = Hash[properties]
-            properties[:preamble]   = ""
-            properties[:postamble]  = "@output_buffer.to_s"
-            properties[:bufvar]     = "@output_buffer"
-            properties[:escapefunc] = ""
+            properties[:preamble]   = ''
+            properties[:postamble]  = '@output_buffer.to_s'
+            properties[:bufvar]     = '@output_buffer'
+            properties[:escapefunc] = ''
 
             super
           end
 
           def evaluate(action_view_erb_handler_context)
             src = @src
-            view = Class.new(ActionView::Base) {
+            view = Class.new(ActionView::Base) do
               include action_view_erb_handler_context._routes.url_helpers
-              class_eval("define_method(:_template) { |local_assigns, output_buffer| #{src} }", defined?(@filename) ? @filename : "(erubi)", 0)
-            }.empty
+              class_eval("define_method(:_template) { |local_assigns, output_buffer| #{src} }", defined?(@filename) ? @filename : '(erubi)', 0)
+            end.empty
             view._run(:_template, nil, {}, ActionView::OutputBuffer.new)
           end
 
-        private
+          private
+
           def add_text(text)
             return if text.empty?
 
@@ -46,21 +47,21 @@ module ActionView
             end
           end
 
-          BLOCK_EXPR = /\s*((\s+|\))do|\{)(\s*\|[^|]*\|)?\s*\Z/
+          BLOCK_EXPR = /\s*((\s+|\))do|\{)(\s*\|[^|]*\|)?\s*\Z/.freeze
 
           def add_expression(indicator, code)
             flush_newline_if_pending(src)
 
-            if (indicator == "==") || @escape
-              src << "@output_buffer.safe_expr_append="
-            else
-              src << "@output_buffer.append="
-            end
+            src << if (indicator == '==') || @escape
+                     '@output_buffer.safe_expr_append='
+                   else
+                     '@output_buffer.append='
+                   end
 
             if BLOCK_EXPR.match?(code)
-              src << " " << code
+              src << ' ' << code
             else
-              src << "(" << code << ");"
+              src << '(' << code << ');'
             end
           end
 

@@ -2,13 +2,10 @@ require 'concurrent/thread_safe/util'
 require 'concurrent/thread_safe/util/volatile'
 
 module Concurrent
-
   # @!visibility private
   module ThreadSafe
-
     # @!visibility private
     module Util
-
       # Provides a cheapest possible (mainly in terms of memory usage) +Mutex+
       # with the +ConditionVariable+ bundled in.
       #
@@ -28,10 +25,11 @@ module Concurrent
       #       end
       #     end
       #   end
-      # 
+      #
       # @!visibility private
       module CheapLockable
         private
+
         engine = defined?(RUBY_ENGINE) && RUBY_ENGINE
         if engine == 'rbx'
           # Making use of the Rubinius' ability to lock via object headers to avoid the overhead of the extra Mutex objects.
@@ -55,7 +53,7 @@ module Concurrent
             ensure
               Rubinius.lock(self)
 
-              unless signaled or waiters.delete(wchan)
+              unless signaled || waiters.delete(wchan)
                 # we timed out, but got signaled afterwards (e.g. while waiting to
                 # acquire @lock), so pass that signal on to the next waiter
                 waiters.shift << true unless waiters.empty?
@@ -86,8 +84,6 @@ module Concurrent
             JRuby.reference0(self).notify_all
           end
         else
-          require 'thread'
-
           extend Volatile
           attr_volatile :mutex
 

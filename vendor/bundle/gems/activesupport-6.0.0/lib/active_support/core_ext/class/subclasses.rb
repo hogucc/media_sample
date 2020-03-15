@@ -3,7 +3,7 @@
 class Class
   begin
     # Test if this Ruby supports each_object against singleton_class
-    ObjectSpace.each_object(Numeric.singleton_class) { }
+    ObjectSpace.each_object(Numeric.singleton_class) {}
 
     # Returns an array with all classes that are < than its receiver.
     #
@@ -22,6 +22,7 @@ class Class
       descendants = []
       ObjectSpace.each_object(singleton_class) do |k|
         next if k.singleton_class?
+
         descendants.unshift k unless k == self
       end
       descendants
@@ -45,7 +46,8 @@ class Class
   #
   #   Foo.subclasses # => [Bar]
   def subclasses
-    subclasses, chain = [], descendants
+    subclasses = []
+    chain = descendants
     chain.each do |k|
       subclasses << k unless chain.any? { |c| c > k }
     end

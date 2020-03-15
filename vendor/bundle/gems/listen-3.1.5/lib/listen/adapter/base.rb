@@ -18,11 +18,11 @@ module Listen
 
         @configured = nil
 
-        fail 'No directories to watch!' if config.directories.empty?
+        raise 'No directories to watch!' if config.directories.empty?
 
         defaults = self.class.const_get('DEFAULTS')
         @options = Listen::Options.new(config.adapter_options, defaults)
-      rescue
+      rescue StandardError
         _log_exception 'adapter config failed: %s:%s called from: %s', caller
         raise
       end
@@ -71,17 +71,15 @@ module Listen
 
         calling_stack = caller.dup
         Listen::Internals::ThreadPool.add do
-          begin
-            @snapshots.values.each do |snapshot|
-              _timed('Record.build()') { snapshot.record.build }
-            end
-            _run
-          rescue
-            msg = 'run() in thread failed: %s:\n'\
-              ' %s\n\ncalled from:\n %s'
-            _log_exception(msg, calling_stack)
-            raise # for unit tests mostly
+          @snapshots.values.each do |snapshot|
+            _timed('Record.build()') { snapshot.record.build }
           end
+          _run
+        rescue StandardError
+          msg = 'run() in thread failed: %s:\n'\
+            ' %s\n\ncalled from:\n %s'
+          _log_exception(msg, calling_stack)
+          raise # for unit tests mostly
         end
       end
 
@@ -95,16 +93,15 @@ module Listen
 
       private
 
-      def _stop
-      end
+      def _stop; end
 
       def _timed(title)
         start = Time.now.to_f
         yield
         diff = Time.now.to_f - start
         Listen::Logger.info format('%s: %.05f seconds', title, diff)
-      rescue
-        Listen::Logger.warn "#{title} crashed: #{$ERROR_INFO.inspect}"
+      rescue StandardError
+        Listen::Logger.warn "#{title} crashed: #{$!.inspect}"
         raise
       end
 
@@ -121,8 +118,8 @@ module Listen
       def _log_exception(msg, caller_stack)
         formatted = format(
           msg,
-          $ERROR_INFO,
-          $ERROR_POSITION * "\n",
+          $!,
+          $@ * "\n",
           caller_stack * "\n"
         )
 

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "byebug/command"
+require 'byebug/command'
 
 module Byebug
   #
@@ -30,18 +30,18 @@ module Byebug
     end
 
     def self.short_description
-      "Saves current byebug session to a file"
+      'Saves current byebug session to a file'
     end
 
     def execute
-      file = File.open(@match[1] || Setting[:savefile], "w")
+      file = File.open(@match[1] || Setting[:savefile], 'w')
 
       save_breakpoints(file)
       save_catchpoints(file)
       save_displays(file)
       save_settings(file)
 
-      print pr("save.messages.done", path: file.path)
+      print pr('save.messages.done', path: file.path)
       file.close
     end
 

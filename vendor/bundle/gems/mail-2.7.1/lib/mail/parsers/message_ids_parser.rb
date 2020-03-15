@@ -1,7 +1,7 @@
-
 # frozen_string_literal: true
-require "mail/utilities"
-require "mail/parser_tools"
+
+require 'mail/utilities'
+require 'mail/parser_tools'
 
 module Mail::Parsers
   module MessageIdsParser
@@ -93,7 +93,7 @@ module Mail::Parsers
       128, 191, 128, 159, 144,
       191, 128, 191, 128, 143,
       9, 60, 9, 60, 9, 60,
-      0, 0, 0,
+      0, 0, 0
     ]
 
     class << self
@@ -127,7 +127,7 @@ module Mail::Parsers
       48, 64, 16, 244, 1, 24, 56, 1,
       24, 56, 236, 212, 244, 244, 1, 24,
       245, 64, 32, 64, 32, 48, 64, 16,
-      52, 52, 52, 0,
+      52, 52, 52, 0
     ]
 
     class << self
@@ -149,19 +149,19 @@ module Mail::Parsers
       7134, 7167, 7216, 7281, 7298, 7535, 7772, 7867,
       7962, 8027, 8060, 8125, 8158, 8207, 8272, 8289,
       8534, 8779, 8781, 8806, 9052, 9117, 9150, 9215,
-      9248, 9297, 9362, 9379, 9616, 9861, 10106, 10108,
-      10133, 10370, 10427, 10429, 10454, 10511, 10576, 10609,
-      10674, 10707, 10756, 10821, 10838, 11084, 11149, 11182,
-      11247, 11280, 11329, 11394, 11411, 11413, 11438, 11675,
-      11912, 11914, 11939, 12176, 12421, 12666, 12668, 12693,
-      12930, 13176, 13241, 13274, 13339, 13372, 13421, 13486,
-      13503, 13748, 13750, 13775, 13840, 13873, 13938, 13971,
-      14020, 14085, 14102, 14347, 14592, 14594, 14619, 14856,
-      14913, 14915, 14940, 14997, 15243, 15308, 15341, 15406,
-      15439, 15488, 15553, 15570, 15815, 15817, 15842, 15899,
-      15901, 15926, 15983, 16220, 16433, 16678, 16923, 16925,
-      16950, 17196, 17261, 17294, 17359, 17392, 17441, 17506,
-      17523, 17576, 17629, 17682,
+      9248, 9297, 9362, 9379, 9616, 9861, 10_106, 10_108,
+      10_133, 10_370, 10_427, 10_429, 10_454, 10_511, 10_576, 10_609,
+      10_674, 10_707, 10_756, 10_821, 10_838, 11_084, 11_149, 11_182,
+      11_247, 11_280, 11_329, 11_394, 11_411, 11_413, 11_438, 11_675,
+      11_912, 11_914, 11_939, 12_176, 12_421, 12_666, 12_668, 12_693,
+      12_930, 13_176, 13_241, 13_274, 13_339, 13_372, 13_421, 13_486,
+      13_503, 13_748, 13_750, 13_775, 13_840, 13_873, 13_938, 13_971,
+      14_020, 14_085, 14_102, 14_347, 14_592, 14_594, 14_619, 14_856,
+      14_913, 14_915, 14_940, 14_997, 15_243, 15_308, 15_341, 15_406,
+      15_439, 15_488, 15_553, 15_570, 15_815, 15_817, 15_842, 15_899,
+      15_901, 15_926, 15_983, 16_220, 16_433, 16_678, 16_923, 16_925,
+      16_950, 17_196, 17_261, 17_294, 17_359, 17_392, 17_441, 17_506,
+      17_523, 17_576, 17_629, 17_682
     ]
 
     class << self
@@ -2379,7 +2379,7 @@ module Mail::Parsers
       1, 1, 1, 1, 393, 1, 1, 1,
       1, 1, 1, 1, 1, 1, 1, 1,
       1, 1, 1, 1, 1, 1, 1, 1,
-      9, 1, 1, 0,
+      9, 1, 1, 0
     ]
 
     class << self
@@ -2436,7 +2436,7 @@ module Mail::Parsers
       204, 205, 206, 207, 197, 198, 197, 211,
       200, 201, 202, 203, 204, 205, 206, 207,
       199, 209, 35, 210, 5, 35, 210, 209,
-      35, 210,
+      35, 210
     ]
 
     class << self
@@ -2493,7 +2493,7 @@ module Mail::Parsers
       26, 26, 26, 26, 0, 0, 1, 29,
       0, 0, 0, 0, 0, 0, 0, 0,
       0, 30, 30, 31, 32, 0, 1, 3,
-      3, 4,
+      3, 4
     ]
 
     class << self
@@ -2527,7 +2527,7 @@ module Mail::Parsers
       0, 0, 0, 0, 0, 0, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 0,
-      30, 0, 3, 0,
+      30, 0, 3, 0
     ]
 
     class << self
@@ -2555,7 +2555,7 @@ module Mail::Parsers
     def self.parse(data)
       data = data.dup.force_encoding(Encoding::ASCII_8BIT) if data.respond_to?(:force_encoding)
 
-      raise Mail::Field::NilParseError.new(Mail::MessageIdsElement) if data.nil?
+      raise Mail::Field::NilParseError, Mail::MessageIdsElement if data.nil?
 
       # Parser state
       message_ids = MessageIdsStruct.new([])
@@ -2582,7 +2582,7 @@ module Mail::Parsers
         _again = 20
         _test_eof = 30
         _out = 40
-        while true
+        loop do
           if _goto_level <= 0
             if p == pe
               _goto_level = _test_eof
@@ -2598,9 +2598,9 @@ module Mail::Parsers
             _inds = _index_offsets[cs]
             _slen = _key_spans[cs]
             _wide = data[p].ord
-            _trans = if (_slen > 0 &&
-                         _trans_keys[_keys] <= _wide &&
-                         _wide <= _trans_keys[_keys + 1])
+            _trans = if _slen > 0 &&
+                        _trans_keys[_keys] <= _wide &&
+                        _wide <= _trans_keys[_keys + 1]
                        _indicies[_inds + _wide - _trans_keys[_keys]]
                      else
                        _indicies[_inds + _slen]
@@ -2838,15 +2838,11 @@ module Mail::Parsers
               end
             end
           end
-          if _goto_level <= _out
-            break
-          end
+          break if _goto_level <= _out
         end
       end
 
-      if p != eof || cs < 208
-        raise Mail::Field::IncompleteParseError.new(Mail::MessageIdsElement, data, p)
-      end
+      raise Mail::Field::IncompleteParseError.new(Mail::MessageIdsElement, data, p) if p != eof || cs < 208
 
       message_ids
     end

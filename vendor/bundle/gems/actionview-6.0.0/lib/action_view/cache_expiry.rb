@@ -7,7 +7,7 @@ module ActionView
         @cache_expiry = CacheExpiry.new(watcher: watcher)
       end
 
-      def before(target)
+      def before(_target)
         @cache_expiry.clear_cache_if_necessary
       end
     end
@@ -42,13 +42,13 @@ module ActionView
 
     private
 
-      def dirs_to_watch
-        fs_paths = all_view_paths.grep(FileSystemResolver)
-        fs_paths.map(&:path).sort.uniq
-      end
+    def dirs_to_watch
+      fs_paths = all_view_paths.grep(FileSystemResolver)
+      fs_paths.map(&:path).sort.uniq
+    end
 
-      def all_view_paths
-        ActionView::ViewPaths.all_view_paths.flat_map(&:paths)
-      end
+    def all_view_paths
+      ActionView::ViewPaths.all_view_paths.flat_map(&:paths)
+    end
   end
 end

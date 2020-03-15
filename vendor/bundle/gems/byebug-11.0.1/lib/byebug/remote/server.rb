@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "socket"
+require 'socket'
 
 module Byebug
   module Remote

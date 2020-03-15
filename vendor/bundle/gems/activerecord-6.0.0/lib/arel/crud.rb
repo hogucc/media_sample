@@ -7,11 +7,11 @@ module Arel # :nodoc: all
     def compile_update(values, pk)
       um = UpdateManager.new
 
-      if Nodes::SqlLiteral === values
-        relation = @ctx.from
-      else
-        relation = values.first.first.relation
-      end
+      relation = if Nodes::SqlLiteral === values
+                   @ctx.from
+                 else
+                   values.first.first.relation
+                 end
       um.key = pk
       um.table relation
       um.set values
