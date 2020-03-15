@@ -2,6 +2,10 @@
   margin-left: 10px;
 }
 
+.card-list {
+  max-width: 1280px;
+}
+
 .card {
   display: inline-block;
 }
@@ -20,4 +24,8 @@
 
 .card-detail {
   padding: 10px 10px 30px 20px;
+}
+
+.post-delete-btn {
+  padding: 0 24px;
 }

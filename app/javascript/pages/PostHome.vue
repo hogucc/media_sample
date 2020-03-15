@@ -1,17 +1,17 @@
 <template>
   <div class="container">
-    <div class="row">
+    <div class="row card-list">
       <div class="col s7 m7" v-for="(post, index) in posts" v-bind:key="post.id">
         <div class="card">
-          <div class="card-image">
-            <img :src="post.image.url"/>
-          </div>
+                      <img :src="post.image.url" class="card-image"/>
           <div class="card-content" v-on:click="toggleShowPost(index)">
             <div class="card-title">
               {{post.title}}
             </div>
             <div class="card-more">
-              <button class="btn" v-on:click="deletePost(post.id)">削除</button>
+              <div class="post-delete-btn">
+                <font-awesome-icon icon="trash-alt" size="lg" v-on:click="deletePost(post.id)"/>
+              </div>
               <div v-if="show[index]">
                 <font-awesome-icon icon="angle-up" size="lg"/>
               </div>
@@ -57,6 +57,7 @@
         this.$set(this.show , key, !this.show[key])
       },
       deletePost(id) {
+        console.log(id);
         axios.delete(`/api/v1/posts/${id}`).then(res => {
           this.posts = [];
           this.fetchPosts();

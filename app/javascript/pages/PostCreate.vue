@@ -25,7 +25,7 @@
                   :src="uploadedImage"
                   alt=""
                 />
-                <div class="delete-btn" v-show="canDisplayRemoveIcon" v-on:click="remove">
+                <div class="photo-delete-btn" v-show="canDisplayRemoveIcon" v-on:click="remove">
                   <font-awesome-icon icon="times" />
                 </div>
               </div>
