@@ -6,7 +6,6 @@ import { fas } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
 library.add(fas)
-//= require materialize-sprockets
 Vue.component('font-awesome-icon', FontAwesomeIcon)
 
 const app = new Vue({
