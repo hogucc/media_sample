@@ -12,7 +12,7 @@ gem 'sqlite3', :group => [:development, :test]
 # Use postgreSQL as the database for Active Record
 gem 'pg', :group => :production
 # Use Puma as the app server
-gem 'puma', '~> 3.12'
+gem 'puma', '~> 4.3'
 # Use SCSS for stylesheets
 gem 'sass-rails', '~> 5'
 # Transpile app-like JavaScript. Read more: https://github.com/rails/webpacker
